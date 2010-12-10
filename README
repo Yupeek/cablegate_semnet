@@ -6,28 +6,33 @@ Wikileaks CableGate Data Extraction Application
 - Inserts data to a local MongoDB
 - Dumps data to various formats
 
-for an example, please see https://gist.github.com/722901
+INSTALL
 
-data from typecode's original readme follows the dashed line below.
+  # python setup.py install
 
---- 
+  this will check dependencies
 
-Prerequisites:
+OTHER PREREQUISITES
+
   - Local copy of the cablegate website
   - MongoDB (www.mongodb.org)
 
-JSON example =
-{
-"_id" : "XXX",
-"origin" : "CONFIDENTIAL",
-"date_time" : "2000-00-00 00:00",
-"classification" : "2000-00-00 00:00",
-"body" : "[text]",
-"header" : "[header]",
-"reference_id" : "XXX"
-}
+USAGE
 
-Usage:
-  - start mongod
+  - start mongod daemon
   - run 'python process_into_mongo.py'
   - export all the data running 'mongoexport -d wikileaks -c cables -o dump/cables.json'
+  - soon other export formats (CSV, etc) ...
+
+JSON OUTPUT
+
+for example =
+{
+  "_id" : "XXX",
+  "origin" : "EMBASSY NAME",
+  "date_time" : "2000-00-00 00:00",
+  "classification" : "TAG",
+  "body" : "[text]",
+  "header" : "[header]",
+  "reference_id" : "XXX"
+}
