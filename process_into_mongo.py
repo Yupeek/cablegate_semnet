@@ -120,19 +120,17 @@ class Processor():
     cable_id = cable_table.findAll('tr')[1].findAll('td')[0]\
       .contents[1].contents[0]
     if db.cables.find_one({'_id':cable_id}):
-      self.counts['files_not_processed'] = self.counts['files_not_processed'] + 1
-      logging.info('Processor.extract_content["CABLE ALREADY EXISTS"]')
-      self.print_counts()
-      return
+      logging.info('Processor.extract_content["CABLE ALREADY EXISTS : OVERWRITTEN"]')
+      db.cables.remove({'_id':cable_id})
       
     cable = Cable(raw)
     cable['_id'] = cable_id
     cable['reference_id'] = cable_id
     cable['date_time'] = cable_table.findAll('tr')[1].findAll('td')[1]\
       .contents[1].contents[0]
-    cable['classification'] = cable_table.findAll('tr')[1].findAll('td')[2]\
+    cable['classification'] = cable_table.findAll('tr')[1].findAll('td')[3]\
       .contents[1].contents[0]
-    cable['origin'] = cable_table.findAll('tr')[1].findAll('td')[3]\
+    cable['origin'] = cable_table.findAll('tr')[1].findAll('td')[4]\
       .contents[1].contents[0]
     cable['header'] = nltk.clean_html(str(soup.findAll(['pre'])[0]))
     cable['body'] = nltk.clean_html(str(soup.findAll(['pre'])[1]))
