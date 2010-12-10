@@ -29,17 +29,11 @@ from distutils.core import setup
 setup (
     name = 'cablegate-db',
     packages = find_packages(),
-    # Declare your packages' dependencies here, for eg:
     install_requires = ['pymongo','bson','beautifulsoup','nltk'],
     scripts = ['process_into_mongo.py'],
     version = __version__,
     url = __url__,
     long_description = __longdescr__,
     license = __license__,
-    keywords = __keywords__,
-    author = __author__,
-    author_email = __author_email__,
     classifiers = __classifiers__,
-    #test_suite = "unittest.TinasoftUnitTests",
-    #dependency_links = DEPS,
 )
