@@ -1,3 +1,0 @@
-[submodule "data/cablegate/cablegate.wikileaks.org"]
-	path = data/cablegate/cablegate.wikileaks.org
-	url = git://github.com/anarchivist/cablegate-data.git

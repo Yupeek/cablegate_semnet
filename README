@@ -1,8 +1,10 @@
-Wikileaks CableGate Processing
-mark@matienzo.org (based on work by andrew@typeslashcode.com)
+Wikileaks CableGate Data Processing Application
+(thanks to https://github.com/anarchivist/cablegate)
 
-used andrew's existing code to start coming up with a generic parser
-that will scrape data from the cables in HTML form and create python objects.
+- Reads the local copy of the cablegate site
+- Parses cables with NLTK and BeautifulSoup
+- Inserts data to a local MongoDB
+- Dumps data to various formats
 
 for an example, please see https://gist.github.com/722901
 
@@ -11,25 +13,21 @@ data from typecode's original readme follows the dashed line below.
 --- 
 
 Prerequisites:
-  HTTrack (http://www.httrack.com/httrack-3.43-9C.tar.gz)
-    *to update mirror of cablegate site
-  MongoDB (www.mongodb.org)
-    *database to store parsed cables
-    *ouputs json dump
+  - Local copy of the cablegate website
+  - MongoDB (www.mongodb.org)
 
-Functionality:
-  Will update Cablegate Web Mirror, and pull all existing cables into a 
-    MongoDB Collection where their 'Reference ID' is their '_id', and they
-    contain the following properties:
-      'reference_id','date_time','classification','origin','header','body'
+JSON example =
+{
+"_id" : "XXX",
+"origin" : "CONFIDENTIAL",
+"date_time" : "2000-00-00 00:00",
+"classification" : "2000-00-00 00:00",
+"body" : "[text]",
+"header" : "[header]",
+"reference_id" : "XXX"
+}
 
 Usage:
-  Make sure that mongod is running. The software is configured to access
-    Mongod at it's default location, so change that if necessary.
-  Confirm that httrack and mongoexport are accesable in your PATH.
-  run 'python process_into_mongo.py'
-  after that
-  run 'mongoexport -d wikileaks -c cables -o dump/cables.json'
-  
-Notes:
-  The Tornado app that is there right now serves no function. To come..?
+  - start mongod
+  - run 'python process_into_mongo.py'
+  - export all the data running 'mongoexport -d wikileaks -c cables -o dump/cables.json'
