@@ -105,7 +105,7 @@ class Processor():
     cable_id = cable_table.findAll('tr')[1].findAll('td')[0]\
       .contents[1].contents[0]
     if db.cables.find_one({'_id':cable_id}):
-      logging.info('Processor.extract_content["CABLE ALREADY EXISTS : OVERWRITTEN"]')
+      logging.info('Processor.extract_content["CABLE ALREADY EXISTS : OVERWRITTING"]')
       db.cables.remove({'_id':cable_id})
       
     cable = Cable(raw)
