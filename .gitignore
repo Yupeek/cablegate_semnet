@@ -1,0 +1,3 @@
+*.pyc
+data/cablegate/cablegate.wikileaks.org/*
+dump/*
