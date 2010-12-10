@@ -56,10 +56,7 @@ class CableGateMirror():
 
 class Processor():
   
-  data_directory = 'data/cablegate/cablegate.wikileaks.org/cable'
-  
-  country_dictionary_path = 'data/countries.csv'
-  countries = []
+  data_directory = 'data/cablegate.wikileaks.org/cable'
   country_frequency = nltk.probability.FreqDist()
   
   file_regex = re.compile("\.html$")
@@ -72,23 +69,11 @@ class Processor():
   
   def __init__(self):
     logging.info('Processor()')
-    self.load_countries()
     self.process()
   
   def process(self):
     logging.info('Processor.process')
     self.read_files()
-  
-  def load_countries(self):
-    logging.info('Processor.load_countries')
-    try:
-      file = open(self.country_dictionary_path,'r')
-    except OSError:
-      logging.warning('Processor.CANNOT OPEN FILE '+path)
-      return
-    countries = csv.reader(file, delimiter=',')
-    for row in countries:
-      self.countries.append(row[1].lower())
     
   def read_files(self):
     logging.info('Processor.read_files')

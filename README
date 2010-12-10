@@ -14,7 +14,7 @@ INSTALL
 
 OTHER PREREQUISITES
 
-  - Local copy of the cablegate website
+  - Local copy of the cablegate website to copy into data/cablegate/cablegate.wikileaks.org/
   - MongoDB (www.mongodb.org)
 
 USAGE
