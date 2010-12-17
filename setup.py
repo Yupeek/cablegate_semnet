@@ -29,7 +29,7 @@ from distutils.core import setup
 setup (
     name = 'cablegate-db',
     packages = find_packages(),
-    install_requires = ['pymongo','bson','beautifulsoup','nltk'],
+    install_requires = ['pymongo','bson','beautifulsoup','nltk','TinasoftPytextminer'],
     scripts = ['process_into_mongo.py'],
     version = __version__,
     url = __url__,

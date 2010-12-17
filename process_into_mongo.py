@@ -1,48 +1,34 @@
 import logging
 import os
+from os.path import join
 import re
-import sys
-import xml
-import csv
-import subprocess
-
+import yaml
 import nltk
-
-sys.path.append("lib")
 import pymongo
 from BeautifulSoup import BeautifulSoup
+
+import tinasoft
+from tinasoft.pytextminer import PyTextMiner, tagger, filtering, stemmer, stopwords, tokenizer, corpus, whitelist
 
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 mongo_conn = pymongo.Connection('localhost', 27017)
 db = mongo_conn['wikileaks']
 
-class Cable():
-  
+class Cable(PyTextMiner):
   raw = ""
-  attrs = {}
-  
+ 
   def __init__(self,raw):
-    logging.info('Cable()')
     self.raw = raw
+    PyTextMiner.__init__(self, ["empty"])
   
-  def __getitem__(self,name):
-    if name == 'raw':
-      return self.raw
-    if name in self.attrs:
-      return self.attrs[name]
-    else:
-      return None
-    
-  def __setitem__(self,name,value):
-    self.attrs[name] = value
-    
   def get(self):
-    return self.attrs
+    del self.raw
+    return self.__dict__
     
 class CableGateMirror():
   
-  mirror_directory = 'data/cablegate/'
+  #mirror_directory = 'data/cablegate/'
   
   def __init__(self):
     logging.info('CableGateMirror()')
@@ -50,15 +36,12 @@ class CableGateMirror():
     
   def update(self):
     logging.info('CableGateMirror.update')
-    #subprocess.call(["httrack",'--update'],cwd=self.mirror_directory)
     Processor()
     
 
 class Processor():
   
-  data_directory = 'data/cablegate.wikileaks.org/cable'
-  country_frequency = nltk.probability.FreqDist()
-  
+  data_directory = 'data/cablegate.wikileaks.org/cable'  
   file_regex = re.compile("\.html$")
   
   counts = {
@@ -68,15 +51,9 @@ class Processor():
   }
   
   def __init__(self):
-    logging.info('Processor()')
-    self.process()
-  
-  def process(self):
-    logging.info('Processor.process')
     self.read_files()
     
   def read_files(self):
-    logging.info('Processor.read_files')
     try:
       for root, dirs, files in os.walk(self.data_directory):
         for name in files:
@@ -101,25 +78,32 @@ class Processor():
     logging.info('Processor.extract_content')
     
     soup = BeautifulSoup(raw)
+    
     cable_table = soup.find("table", { "class" : "cable" })
+    
     cable_id = cable_table.findAll('tr')[1].findAll('td')[0]\
       .contents[1].contents[0]
+    
     if db.cables.find_one({'_id':cable_id}):
       logging.info('Processor.extract_content["CABLE ALREADY EXISTS : OVERWRITTING"]')
       db.cables.remove({'_id':cable_id})
       
     cable = Cable(raw)
     cable['_id'] = cable_id
-    cable['reference_id'] = cable_id
+    cable['id'] = cable_id
+    cable['label'] = cable_id
     cable['date_time'] = cable_table.findAll('tr')[1].findAll('td')[1]\
       .contents[1].contents[0]
     cable['classification'] = cable_table.findAll('tr')[1].findAll('td')[3]\
       .contents[1].contents[0]
     cable['origin'] = cable_table.findAll('tr')[1].findAll('td')[4]\
       .contents[1].contents[0]
-    cable['header'] = nltk.clean_html(str(soup.findAll(['pre'])[0]))
-    cable['body'] = nltk.clean_html(str(soup.findAll(['pre'])[1]))
-    
+    #cable['header'] = nltk.clean_html(str(soup.findAll(['pre'])[0]))
+    cable['content'] = nltk.clean_html(str(soup.findAll(['pre'])[1]))
+      # here extract title between to expressions
+    #SUBJECT: xxx &#x000A;&#x000A;
+    res=re.match(r"SUBJECT:(.+)\&\#x000A\;\&\#x000A;", cable['content'])
+    cable['label']
     db.cables.insert(cable.get())
     
     self.counts['files_processed'] = self.counts['files_processed'] + 1
@@ -139,5 +123,88 @@ class Processor():
   def dump_json(self):
     logging.info('Processor.dump_json')
     
-CableGateMirror()
+#CableGateMirror()
     
+class Exporter(object):
+  """
+  Reads all database entries to produce a network
+  """
+  def __init__(self,minoccs=1):
+    self.config = yaml.safe_load(file("config.yaml",'rU'))
+    print self.config
+    white = self.extract_cables(minoccs)
+    
+  def extract_cables(self,minoccs):
+    filters = self._get_extraction_filters()
+    cursor = db.cables.find()
+    cable_gen = self.cable_generator()
+    newwl = whitelist.Whitelist("cablegate", "cablegate")
+    # instanciate the tagger, takes times on learning
+    postagger = tagger.TreeBankPosTagger(
+      training_corpus_size = 10000,
+      trained_pickle = "tagger.pickle"
+    )
+    try:
+      while 1:
+        # gets the next document
+        document, year = cable_gen.next()
+        document['edges']['Corpus'][year]=1
+        # extract and filter ngrams
+        docngrams = tokenizer.TreeBankWordTokenizer.extract(
+            document,
+            self.config,
+            filters,
+            postagger,
+            stemmer.Nltk()
+        )
+        ### updates newwl to prepare export
+        if  year not in newwl['corpus']:
+            newwl['corpus'][year] = corpus.Corpus(year)
+        newwl['corpus'][year].addEdge('Document', document['id'], 1)
+
+        for ng in docngrams.itervalues():
+          newwl.addContent( ng, year, document['id'] )
+          newwl.addEdge("NGram", ng['id'], 1)
+        newwl.storage.flushNGramQueue()
+            
+    except StopIteration:
+      whitelist_exporter = Writer("whitelist://cable_extraction.csv")
+      (filepath, newwl) = whitelist_exporter.write_whitelist(newwl, minoccs)
+      return newwl
+    
+  def cable_generator(self):
+    """
+    generator of cables from mongodb
+    """
+    self.total_cables = db.cables.count()
+    cursor = db.cables.find()
+    while self.total_cables > 0:
+      logging.info("remaining %d cables to process"%self.total_cables)
+      cable = cursor.next() 
+      yield (cable, cable['date_time'][:4])
+      self.total_cables -= 1
+    self.total_cables = db.cables.count()
+    return
+
+  def _get_extraction_filters(self):
+    """
+    returns extraction filters
+    """
+    filters = [filtering.PosTagValid(
+      config = {
+        'rules': re.compile(self.config['datasets']['postag_valid'])
+      }
+    )]
+    filters += [stopwords.StopWords(
+      "file://%s"%join(
+        self.config['general']['basedirectory'],
+        self.config['general']['shared'],
+        self.config['general']['stopwords']
+      )
+    )]
+    return filters  
+
+  def index_cables(self):
+    return
+  
+Exporter(1)
