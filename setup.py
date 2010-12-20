@@ -29,7 +29,7 @@ from distutils.core import setup
 setup (
     name = 'cablegate_semnet',
     packages = find_packages(),
-    install_requires = ['pymongo','bson','beautifulsoup','nltk','TinasoftPytextminer'],
+    install_requires = ['bson','beautifulsoup','nltk','TinasoftPytextminer'],
     scripts = ['cablegate_semnet.py'],
     version = __version__,
     url = __url__,

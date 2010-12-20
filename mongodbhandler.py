@@ -15,10 +15,11 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import pymongo
-
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
-class CablegateMongo(pymongo.Connection):
-    def __init__(self, database_name, hostname):
-        pymongo.Connection.__init__(self, hostname, 27017)
+from pymongo import Connection
+MONGODB_PORT = 27017
+
+class CablegateMongo(Connection):
+    def __init__(self, hostname='localhost'):
+        Connection.__init__(self, hostname, MONGODB_PORT)

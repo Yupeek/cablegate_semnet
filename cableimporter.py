@@ -22,12 +22,13 @@ from os.path import join
 import re
 import nltk
 from BeautifulSoup import BeautifulSoup
+from datamodel import Cable
 
-class CableImporter(objects):
+class CableImporter(object):
   
     """
     Reads and parses all available cables and updates the mongodb
-    usage : mirror = CableGateMirror(wikileaksdb, 'data/cablegate.wikileaks.org/cable')
+    usage : mirror = CableGateMirror(wikileaksdb, 'data/cablegate.wikileaks.org')
     """
     
     file_regex = re.compile("\.html$")
@@ -39,7 +40,7 @@ class CableImporter(objects):
     }
   
     def __init__(self, db, data_directory):
-        self.data_directory = data_directory
+        self.data_directory = join(data_directory, "cable")
         self.db = db
         self.read_files()
     
@@ -74,23 +75,27 @@ class CableImporter(objects):
         
         cable_id = cable_table.findAll('tr')[1].findAll('td')[0].contents[1].contents[0]
         
-        if db.cables.find_one({'_id':cable_id}):
+        if self.db.cables.find_one({'_id':cable_id}):
             logging.info('Processor.extract_content["CABLE ALREADY EXISTS : OVERWRITTING"]')
-            db.cables.remove({'_id':cable_id})
+            self.db.cables.remove({'_id':cable_id})
           
-        cable = Cable(raw)
-        cable['_id'] = cable_id
-        cable['id'] = cable_id
-        cable['label'] = cable_id
-        cable['date_time'] = cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0]
-        cable['classification'] = cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0]
-        cable['origin'] = cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0]
-        cable['content'] = nltk.clean_html(str(soup.findAll(['pre'])[1]))
-        # here extract title between to expressions
-        # example : s"SUBJECT: xxx &#x000A;&#x000A;"
-        res=re.match(r"SUBJECT:(.+)\&\#x000A\;\&\#x000A;", cable['content'])
-        cable['label']
-        db.cables.insert(cable.get())
+        kwarguments = {
+            '_id' : cable_id,
+            'id' : cable_id,
+            'label' : cable_id,
+            'date_time' : cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0],
+            'classification' : cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
+            'origin' : cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
+            'content' : nltk.clean_html(str(soup.findAll(['pre'])[1]))
+        }
+            
+        cable = Cable()
+        cable.update( kwarguments )
+        cable._parseLabel()
+        
+        print cable
+        
+        self.db.cables.insert(cable.__dict__)
         
         self.counts['files_processed'] = self.counts['files_processed'] + 1
         self.print_counts()

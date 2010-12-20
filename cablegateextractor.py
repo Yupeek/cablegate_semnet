@@ -13,7 +13,6 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import yaml
 
 class CableExtractor(object):
   """
@@ -21,9 +20,8 @@ class CableExtractor(object):
   usage :
   extractor = Exporter(minoccs=2)
   """
-  def __init__(self,minoccs=1):
-    self.config = yaml.safe_load(file("config.yaml",'rU'))
-    print self.config
+  def __init__(self,config, minoccs=1):
+    self.config = config
     white = self.extract_cables(minoccs)
     
   def extract_cables(self,minoccs):

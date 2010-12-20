@@ -15,22 +15,11 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from hashlib import sha256
 from uuid import uuid4
-import codecs
+import re
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
-class Cable(dict):
-  raw = ""
-  def __init__(self, raw, *args, **kwargs):
-    self.raw = raw
-    dict.__init__(self, *args, **kwargs)
-  
-  def get(self):
-    del self.raw
-    return self.__dict__
-  
-  
 def getNodeLabel(tokens):
     """
      method forming clean unicode labels from token list
@@ -72,9 +61,9 @@ class GraphNode(dict):
     id = None
     
     def __init__(self, *args, **kwargs):
-      dict.__init__(self, *args, **kwargs)
-      if None in [self.label, self.content, self.id]:
-        raise RuntimeError("incomplete %s class initialization"%self.__class__.__name__)
+        dict.__init__(self)
+        #if self.label is None or self.content is None or self.id is None:
+        #    raise RuntimeError("incomplete %s class initialization"%self.__class__.__name__)
         
     def _addUniqueEdge( self, type, key, value ):
         """
@@ -136,11 +125,21 @@ class GraphNode(dict):
         except AttributeError, a:
             return False
 
-class Document(GraphNode):
-    """
-    accepts only once to write an edge to a NGram
-    all other edges accept multiples writes
-    """
+class Cable(GraphNode):
+    
+    raw = ""
+    
+    def __init__(self, *args, **kwargs): 
+        GraphNode.__init__(self, *args, **kwargs)
+        
+    def _parseLabel(self):
+        #res = re.search(r"SUBJECT:(.+)\&\#x000A\;\&\#x000A;", self.content, re.I|re.M)
+        #if res is None: return
+        #findlabel = res.group(0)
+        #if findlabel is None: return
+        #self.label = findlabel
+        return
+    
     def addEdge(self, type, key, value):
       if type in ["NGram"]:
           return self._addUniqueEdge( type, key, value )
@@ -149,15 +148,15 @@ class Document(GraphNode):
       else:
           return self._addEdge( type, key, value )
 
-  
+
 class NGram(GraphNode):
     """
     accepts only once to write an edge to a Document
     all other edges accept multiples writes
     """
     def __init__(self, *args, **kwargs):
-      GraphNode.__init__(self, *args, **kwargs)
-      self.edges.update({'postag': {}, 'forms': {}})
+        GraphNode.__init__(self, *args, **kwargs)
+        self.edges.update({'postag': {}, 'forms': {}})
       
     def addEdge(self, type, key, value):
         if type in ["Document"]:
