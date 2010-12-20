@@ -93,8 +93,6 @@ class CableImporter(object):
         cable.update( kwarguments )
         cable._parseLabel()
         
-        print cable
-        
         self.db.cables.insert(cable.__dict__)
         
         self.counts['files_processed'] = self.counts['files_processed'] + 1

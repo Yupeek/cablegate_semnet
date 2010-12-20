@@ -97,33 +97,6 @@ class GraphNode(dict):
             self['edges'][type][key] = value
         return True
 
-    def __getitem__(self, key):
-        """
-        compatibility with the dict class
-        """
-        return getattr( self, key, None )
-
-    def __setitem__(self, key, value):
-        """
-        compatibility with the dict class
-        """
-        setattr( self, key, value )
-
-    def __delitem__(self, key):
-        """
-        compatibility with the dict class
-        """
-        delattr(self, key)
-
-    def __contains__(self, key):
-        """
-        compatibility with the dict class
-        """
-        try:
-            getattr(self, key, None)
-            return True
-        except AttributeError, a:
-            return False
 
 class Cable(GraphNode):
     
@@ -133,7 +106,7 @@ class Cable(GraphNode):
         GraphNode.__init__(self, *args, **kwargs)
         
     def _parseLabel(self):
-        #res = re.search(r"SUBJECT:(.+)\&\#x000A\;\&\#x000A;", self.content, re.I|re.M)
+        #res = re.search(r"SUBJECT:(.+)\&\#x000A\;\&\#x000A;", self['content'], re.I|re.M)
         #if res is None: return
         #findlabel = res.group(0)
         #if findlabel is None: return
