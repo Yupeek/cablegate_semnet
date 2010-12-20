@@ -15,8 +15,8 @@
 
 __version__="0.1"
 
-__url__="https://github.com/elishowk/cablegate-db"
-__longdescr__="Wikileaks CableGate Data Extraction Applications"
+__url__="https://github.com/elishowk/cablegate_semnet"
+__longdescr__="Wikileaks CableGate Semantic Network Creator"
 __license__="GNU General Public License v3"
 
 __classifiers__= [
@@ -27,10 +27,10 @@ from setuptools import find_packages
 from distutils.core import setup
 
 setup (
-    name = 'cablegate-db',
+    name = 'cablegate_semnet',
     packages = find_packages(),
     install_requires = ['pymongo','bson','beautifulsoup','nltk','TinasoftPytextminer'],
-    scripts = ['process_into_mongo.py'],
+    scripts = ['cablegate_semnet.py'],
     version = __version__,
     url = __url__,
     long_description = __longdescr__,
