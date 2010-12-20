@@ -13,7 +13,7 @@ http://datadevroom.couch.it/
 
 ##Audience
 
- - intermediate
+ - intermediate (to confirm)
 
 ##Abstract
 
@@ -31,27 +31,27 @@ This networks will contents to parties :
 ###Cablegate-semnet python softwar
 
 
-This sofware illustrates common methods of text-mining taking advantage of Python built-in functions () as well as some external and famous libraries (NLTK, BeautifulSoup, ).
+This sofware illustrates common methods of text-mining taking advantage of Python built-in functions as well as some external and famous libraries (NLTK, BeautifulSoup, ).
 It also demonstrate the simplicity and power of Mongo DB in tasks of document indexing and information extraction.
 
- - Reads the local copy of the cablegate site
- - Parses cables with NLTK and BeautifulSoup
- - Inserts cables into Mongo DB
+ - Reads the local copy of the cablegate site, using built-in OS file handling and some Regular Expressions
+ - Parses cables with NLTK (http://nltk.org), BeautifulSoup (http://www.crummy.com/software/BeautifulSoup/) and built-in regular expressions
+ - Inserts cables into Mongo DB (using Python Mongo DB driver)
  - Automatic more relevant word NGram with NLTK
- - Produces a network in a Gephi compatible format (GEXF)
- - Dumps data to various formats
+ - Produces a network in a Gephi compatible format ([GEXF](http://gexf.net))
+ - optional : Dumps data to various formats
 
 ##INSTALLATION AND USAGE
 
-$ python setup.py develop
+`python setup.py develop`
   
  - this will check and install required dependencies
 
 ###PREREQUISITES
 
-- Local copy of the cablegate website to copy into data/cablegate.wikileaks.org/
-- MongoDB (www.mongodb.org)
-- fetch manually a stable version of pymongo for your system : http://api.mongodb.org/python/1.9%2B/index.html
+- Local copy of the cablegate torrent into data/cablegate.wikileaks.org/
+- MongoDB (http://www.mongodb.org)
+- please fetch manually a stable version of pymongo for your system (the pypi one is broken) : http://api.mongodb.org/python/1.9%2B/index.html
   
 
 ###USAGE
@@ -59,14 +59,14 @@ $ python setup.py develop
   - start your mongod daemon
   - find command-line help :
   
-$ python cablegate_semnet.py -h
+`python cablegate_semnet.py -h`
   - to export all the data run:
-$ mongoexport -d cables -c cables -o dump/cables.json
+`mongoexport -d cables -c cables -o dump/cables.json`
 
 
 ###JSON OUTPUT
 
-cable = {
+`cable = {
   "_id" : "XXX",
   "origin" : "EMBASSY NAME",
   "date_time" : "2000-00-00 00:00",
@@ -74,4 +74,4 @@ cable = {
   "content" : "text",
   "label" : "label",
   "id" : "XXX"
-}
+}`
