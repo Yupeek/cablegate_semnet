@@ -1,9 +1,7 @@
 #Mapping Cablegate thematics using Python, MongoDB and Gephi
 
 
-FOSDEM data dev room
-Brussels, Feb 5-7 2011
-http://datadevroom.couch.it/
+Talk proposal : [FOSDEM data dev room](http://datadevroom.couch.it/), Brussels, Feb 5-7 2011, 
 
 ##Speakers
 
@@ -31,13 +29,13 @@ This networks will contents to parties :
 ###Cablegate-semnet python softwar
 
 
-This sofware illustrates common methods of text-mining taking advantage of Python built-in functions as well as some external and famous libraries (NLTK, BeautifulSoup, ).
-It also demonstrate the simplicity and power of Mongo DB in tasks of document indexing and information extraction.
+This sofware illustrates common methods of text-mining taking advantage of Python built-in functions as well as some external and famous libraries (NLTK, BeautifulSoup).
+It also demonstrate the simplicity and power of [Mongo DB](http://mongodb.org) in tasks of document indexing and information extraction.
 
  - Reads the local copy of the cablegate site, using built-in OS file handling and some Regular Expressions
- - Parses cables with NLTK (http://nltk.org), BeautifulSoup (http://www.crummy.com/software/BeautifulSoup/) and built-in regular expressions
- - Inserts cables into Mongo DB (using Python Mongo DB driver)
- - Automatic more relevant word NGram with NLTK
+ - Parses cables with [NLTK](http://nltk.org)'s HTML cleaning feature, [BeautifulSoup](http://www.crummy.com/software/BeautifulSoup/)'s HTML parser and Python's regular expressions
+ - Inserts cables into Mongo DB, using [Python Mongo DB driver](http://api.mongodb.org/python/1.9%2B/index.html)
+ - Automatically extracts relevant word NGram with NLTK
  - Produces a network in a Gephi compatible format ([GEXF](http://gexf.net))
  - optional : Dumps data to various formats
 
@@ -60,7 +58,9 @@ It also demonstrate the simplicity and power of Mongo DB in tasks of document in
   - find command-line help :
   
 `python cablegate_semnet.py -h`
+
   - to export all the data run:
+  
 `mongoexport -d cables -c cables -o dump/cables.json`
 
 
