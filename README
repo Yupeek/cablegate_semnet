@@ -20,9 +20,12 @@ OTHER PREREQUISITES
 USAGE
 
   - start mongod daemon
-  - run 'python process_into_mongo.py'
-  - export all the data running 'mongoexport -d wikileaks -c cables -o dump/cables.json'
-  - soon other export formats (CSV, etc) ...
+  - run 'python cablegate_semnet.py h'
+  - to export all the data run:
+      'mongoexport -d wikileaks -c cables -o dump/cables.json'
+      
+  - produce the semantic networks : soon...
+  - export formats : GEXF graph, CSV, etc, to come soon
 
 JSON OUTPUT
 
@@ -32,7 +35,7 @@ for example =
   "origin" : "EMBASSY NAME",
   "date_time" : "2000-00-00 00:00",
   "classification" : "TAG",
-  "body" : "[text]",
-  "header" : "[header]",
-  "reference_id" : "XXX"
+  "content" : "text",
+  "label" : "label",
+  "id" : "XXX"
 }
