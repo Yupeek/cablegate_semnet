@@ -8,17 +8,17 @@ general:
     # following directories or files a under "basedirectory"
     user: 'user'
     shared: 'shared'
+# extraction settings
+extraction:
     userstopwords: 'user_stopwords.csv'
     # stopwords are under share
-    stopwords: 'shared/stopwords/en.txt'
-# extraction settings
-datasets:
+    stopwords: 'stopwords/en.txt'
     doc_extraction:
         # the following values can be document object fields:
         # - defined by one of the field's value
         # - constants required fields : 'content'/'label'/'id'
         - 'content'
-        - 'title'
+        - 'label'
     # tina csv columns declaration
     # will ignore undeclared fields
     # and warn not found optional fields
@@ -68,7 +68,7 @@ datasets:
     tagger: 'shared/tagger.pickle'
     # change this Reg Expression to change NGram extraction filtering
     postag_valid: '^((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,)(CD.,)?)+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,))+?)*?$'
-datamining:
+graph:
     template: 'shared/gexf/gexf.default.template'
     # default values if no params are passed to gexf exporter
     DocumentGraph:

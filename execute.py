@@ -19,23 +19,26 @@ from optparse import OptionParser
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
+from mongodbhandler import CablegateDatabase
 from cableimporter import CableImporter
-from mongodbhandler import CablegateMongo
-from datamodel import Cable, getNodeId, getNodeLabel, updateNodesEdges, NGram
-from cablegateextractor import CableExtractor
+from cableextractor import CableExtractor
 
 import yaml
 
-from tinasoft.pytextminer import tagger, filtering, stemmer, stopwords, tokenizer, corpus, whitelist
-
-if __name__ == "__main__":
+def get_parser():
     parser = OptionParser()
     parser.add_option("-a", "--archive", dest="archive", help="cablegate archive path", metavar="FILE")
     parser.add_option("-o", "--occurrences", dest="minoccs", help="minimum keyphrase occurrence", metavar="int")
     parser.add_option("-c", "--config", dest="config", help="config yaml file path", metavar="FILE")
+    return parser
+
+if __name__ == "__main__":
+    parser = get_parser()
     (options, args) = parser.parse_args()
     print options, args
     
     config = yaml.safe_load( file( options.config, 'rU' ) )
-    db = CablegateMongo("localhost")
-    CableImporter(db["cables"], options.archive)
+   
+    mongoconnection = CablegateDatabase("localhost")
+    importer = CableImporter( mongoconnection["cablegate"], options.archive )
+    extractor = CableExtractor(mongoconnection["cablegate"], config, int(options.minoccs))
