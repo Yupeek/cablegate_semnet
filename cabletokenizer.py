@@ -49,6 +49,9 @@ class NGramizer(object):
     then cleans the punctuation
     before tokenizing using nltk.TreebankWordTokenizer()
     """
+    def __init__(self, storage):
+        self.storage = storage
+    
     def extract(self, doc, config, filters, tagger, stemmer):
         """
         sanitizes content and label texts
@@ -66,12 +69,12 @@ class NGramizer(object):
             tagger
         )
         try:
-            aggregated_ngrams = {}
+            #aggregated_ngrams = {}
             while 1:
                 nextsent = sentenceTaggedTokens.next()
                 # updates the doc's ngrams
                 aggregated_ngrams = self.ngramize(
-                    aggregated_ngrams,
+                    #aggregated_ngrams,
                     minSize = ngramMin,
                     maxSize = ngramMax,
                     tagTokens = nextsent,
@@ -79,7 +82,7 @@ class NGramizer(object):
                     stemmer = stemmer
                 )
         except StopIteration, stopit:
-            return aggregated_ngrams
+            return
         
     def selectcontent(self, config, doc):
         """
@@ -125,7 +128,7 @@ class NGramizer(object):
         for sent in sentences:
             yield tagger.tag(nltk_treebank_tokenizer.tokenize(sent))
 
-    def ngramize(self, ngrams, minSize, maxSize, tagTokens, filters, stemmer):
+    def ngramize(self, minSize, maxSize, tagTokens, filters, stemmer):
         """
         common ngramizing method
         returns a dict of filtered NGram instances
@@ -136,6 +139,7 @@ class NGramizer(object):
         # content is the list of words from tagTokens
         content = tagger.TreeBankPosTagger.getContent(tagTokens)
         stemmedcontent = []
+        doc_ngrams = []
         for word in content:
              stemmedcontent += [stemmer.stem(word)]
         # tags is the list of tags from tagTokens
@@ -146,22 +150,43 @@ class NGramizer(object):
                     # updates document's ngrams cache
                     ngid = getNodeId(stemmedcontent[i:n+i])
                     label = getNodeLabel(content[i:n+i])
-                    if ngid in ngrams:
+                    ngram = self.storage.ngrams.find_one({'id': ngid})
+                    if ngram is not None:
+                        if ngid not in doc_ngrams:
+                            self.storage.ngrams.update(
+                                { 'id': ngid },
+                                {
+                                    "$inc" : {
+                                        'weight': 1
+                                    }
+                                }
+                            )
+                        self.storage.ngrams.update(
+                            { 'id': ngid },
+                            {
+                                "$inc" : {
+                                    'edges': {
+                                        'label' : { label: 1 }
+                                    }
+                                },
+                                'edges': {
+                                    'postag' : { label: tags[i:n+i] }
+                                }
+                            }
+                        )
                         upedges = {
                             'label': { label : 1 },
                             'postag': { label : tags[i:n+i] }
                         }
-                        ngrams[ngid] = updateNodeEdges( upedges, ngrams[ngid] )
-                        ngrams[ngid].updateMajorForm()
-                        ngrams[ngid]['dococcs'] += 1
                     else:
+                        doc_ngrams += [ngid]
                         # id made from the stemmedcontent and label made from the real tokens
                         ngdict = {
                             'content': content[i:n+i],
                             '_id': ngid,
                             'id': ngid,
                             'label': label,
-                            'dococcs': 1,
+                            'weight': 1,
                             'edges': {
                                 'postag' : { label : tags[i:n+i] },
                                 'label': { label : 1 }

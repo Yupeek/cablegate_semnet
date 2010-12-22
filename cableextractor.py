@@ -38,7 +38,7 @@ class CableExtractor(object):
             training_corpus_size = 10000,
             trained_pickle = self.config['extraction']['tagger']
         )
-        self.index_cables(NGramizer(), filters, postagger, minoccs)
+        self.index_cables(NGramizer(self.storage), filters, postagger, minoccs)
       
     def index_cables(self, ngramizer, filters, postagger, minoccs):
         """
