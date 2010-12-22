@@ -2,19 +2,15 @@
 # application main params
 general:
     # where all path and following file are located
+    loglevel: 'debug'
     basedirectory: '.'
     locale: 'en_US.UTF-8'
     # following directories or files a under "basedirectory"
-    index: 'index'
-    dbenv: 'db'
-    log: 'log'
-    loglevel: 'debug'
     user: 'user'
     shared: 'shared'
-    source_file_directory: 'source_files'
     userstopwords: 'user_stopwords.csv'
     # stopwords are under share
-    stopwords: 'stopwords/en.txt'
+    stopwords: 'shared/stopwords/en.txt'
 # extraction settings
 datasets:
     doc_extraction:
@@ -72,8 +68,6 @@ datasets:
     tagger: 'shared/tagger.pickle'
     # change this Reg Expression to change NGram extraction filtering
     postag_valid: '^((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,)(CD.,)?)+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,))+?)*?$'
-    #postag_valid: '^((VB.?,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,))+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VB.?,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,))+?)*?$'
-    #postag_valid: '^((VB.?,|JJ.?,|\?,){0,2}?(N.?,|\?,))+?((IN.?,|CC.?,|\?,)((VB.?,|JJ.?,|\?,){0,2}?(N.?,|\?,))+?)*?$'
 datamining:
     template: 'shared/gexf/gexf.default.template'
     # default values if no params are passed to gexf exporter
@@ -84,8 +78,8 @@ datamining:
         nodethreshold:
             - 1.00
             - 'inf'
-        proximity: 'sharedNGrams'
-        #proximity: 'logJaccard'
+        #proximity: 'sharedNGrams'
+        proximity: 'logJaccard'
     NGramGraph:
         edgethreshold:
             - 0.0001

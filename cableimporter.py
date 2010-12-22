@@ -34,49 +34,52 @@ class CableImporter(object):
     file_regex = re.compile("\.html$")
     
     counts = {
-      'files_to_process':0,
-      'files_processed':0,
+      'cables_processed':0,
       'files_not_processed':0
     }
   
     def __init__(self, db, data_directory):
         self.data_directory = join(data_directory, "cable")
         self.db = db
-        self.read_files()
+        self.walk_archive()
     
-    def read_files(self):
-        logging.info('Processor.read_files')
+    def walk_archive(self):
+        """
+        Walks the archive directory
+        """
         try:
             for root, dirs, files in os.walk(self.data_directory):
                 for name in files:
                     if self.file_regex.search(name) is not None:
-                        path = root+"/"+name
-                        self.counts['files_to_process'] = self.counts['files_to_process'] + 1
+                        path = join( root, name )
                         self.read_file(path)
         except OSError, oserr:
             logging.error("%s"%oserr)
   
     def read_file(self,path):
-        logging.info('Processor.read_file')
+        """
+        Reads the cable file
+        """
+        logging.info('CableImporter.read_file')
         try:
             file = open(path)
         except OSError:
             logging.warning('Processor.read_file : CANNOT OPEN FILE %s, skipping...s'%path)
-            self.counts['files_not_processed'] = self.counts['files_not_processed'] + 1
+            self.counts['files_not_processed'] += 1
             return
         self.extract_content(file.read())
     
     def extract_content(self,raw):
-        logging.info('Processor.extract_content')
-        
+        """
+        Content extractor
+        """
         soup = BeautifulSoup(raw)
-        
         cable_table = soup.find("table", { "class" : "cable" })
         
         cable_id = cable_table.findAll('tr')[1].findAll('td')[0].contents[1].contents[0]
         
-        if self.db.cables.find_one({'_id':cable_id}):
-            logging.info('Processor.extract_content["CABLE ALREADY EXISTS : OVERWRITTING"]')
+        if self.db.cables.find_one( {'_id':cable_id} ):
+            logging.info('CABLE ALREADY EXISTS : OVERWRITING')
             self.db.cables.remove({'_id':cable_id})
           
         kwarguments = {
@@ -94,18 +97,8 @@ class CableImporter(object):
         cable._parseLabel()
         
         self.db.cables.insert(cable.__dict__)
-        
-        self.counts['files_processed'] = self.counts['files_processed'] + 1
+        self.counts['cables_processed'] +=  1
         self.print_counts()
-        
-        if (self.counts['files_processed'] + self.counts['files_not_processed'])\
-          == self.counts['files_to_process']:
-          self.dump_json()
     
     def print_counts(self):
-        logging.info(str(self.counts['files_to_process'])+" | "+\
-            str(self.counts['files_processed'])+" | "+\
-            str(self.counts['files_not_processed']))
-    
-    def dump_json(self):
-        logging.info('Processor.dump_json')
+        logging.info("cables processed = %d, cables impossible to process = %d"%(self.counts['cables_processed'], self.counts['files_not_processed']))
