@@ -20,10 +20,10 @@ import nltk
 import re
 import string
 
-from tinasoft.pytextminer import ngram
 from tinasoft.pytextminer import tagger
 from tinasoft.pytextminer import filtering
-from tinasoft.pytextminer import PyTextMiner
+
+from datamodel import NGram, getNodeId, getNodeLabel, updateNodeEdges   
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
@@ -65,7 +65,6 @@ class NGramizer(object):
             ),
             tagger
         )
-
         try:
             aggregated_ngrams = {}
             while 1:
@@ -145,35 +144,33 @@ class NGramizer(object):
             for n in range(minSize, maxSize + 1):
                 if len(content) >= i + n:
                     # updates document's ngrams cache
-                    ngid = ngram.NGram.getNormId(stemmedcontent[i:n+i])
-                    label = " ".join(content[i:n+i])
+                    ngid = getNodeId(stemmedcontent[i:n+i])
+                    label = getNodeLabel(content[i:n+i])
                     if ngid in ngrams:
-                        ngrams[ngid].addForm( content[i:n+i], tags[i:n+i], 1 )
-                        if label in ngrams[ngid]['edges']['label']:
-                            ngrams[ngid]['edges']['label'][label] += 1
-                        else:
-                            ngrams[ngid]['edges']['label'][label] = 1
-                        ngrams[ngid]['edges']['postag'][label] = tags[i:n+i]
-                        self.addEdge('postag', form_label, form_postag)
-                        ordered_forms = sorted(ngrams[ngid]['edges']['label'])
+                        upedges = {
+                            'label': { label : 1 },
+                            'postag': { label : tags[i:n+i] }
+                        }
+                        ngrams[ngid] = updateNodeEdges( upedges, ngrams[ngid] )
                         ngrams[ngid].updateMajorForm()
                         ngrams[ngid]['dococcs'] += 1
                     else:
-                        # id made from the stemmedcontent and label from the real tokens
-                        
-                        ng = {
+                        # id made from the stemmedcontent and label made from the real tokens
+                        ngdict = {
                             'content': content[i:n+i],
                             '_id': ngid,
+                            'id': ngid,
                             'label': label,
                             'dococcs': 1,
                             'edges': {
-                                'NGram': {},
-                                'Document': {},
                                 'postag' : { label : tags[i:n+i] },
                                 'label': { label : 1 }
-                            }
+                            },
+                            'postag' : tags[i:n+i]
                         }
+                        ngram = NGram(ngdict)
                         # application defined filtering
-                        if filtering.apply_filters(ng, filters) is True:
-                            ngrams[ngid] = ng
+                        if filtering.apply_filters(ngram, filters) is True:
+                            ngrams[ngid] = ngram
+                            logging.debug(ngram['label'])
         return ngrams

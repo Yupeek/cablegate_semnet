@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 from os.path import join
 import re
-from datamodel import Cable, NGram, getNodeId, getNodeLabel, updateNodesEdges
+from datamodel import Cable
 from cabletokenizer import NGramizer
 
 from tinasoft.pytextminer import stopwords, filtering, tagger, stemmer
@@ -48,7 +48,6 @@ class CableExtractor(object):
             if cable is None:
                 logging.warning("cable %d not founf in the database, skipping"%cable_id)
                 continue
-            print cable
             document = Cable(cable)
             # extract and filter ngrams
             docngrams = ngramizer.extract(

@@ -90,10 +90,10 @@ class CableImporter(object):
             'date_time' : cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0],
             'classification' : cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
             'origin' : cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
-            'content' : nltk.clean_html( str( soup.findAll(['pre'])[1] ) )
+            'content' : unicode( nltk.clean_html( str( soup.findAll(['pre'])[1] ) ), encoding="utf_8", errors="replace" )
         }
         document = Cable(cable)
-        logging.debug(document.data)
+        
         # auto overwriting existing '_id'
         self.db.cables.save(document.data)
         self.counts['cables_processed'] +=  1

@@ -40,5 +40,5 @@ if __name__ == "__main__":
     config = yaml.safe_load( file( options.config, 'rU' ) )
    
     mongoconnection = CablegateDatabase("localhost")
-    importer = CableImporter( mongoconnection["cablegate"], options.archive )
+    #importer = CableImporter( mongoconnection["cablegate"], options.archive )
     extractor = CableExtractor(mongoconnection["cablegate"], config, int(options.minoccs))

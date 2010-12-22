@@ -30,7 +30,7 @@ def getNodeLabel(tokens):
     else:
         return label
   
-def updateNodesEdges(updateedges, toupdate):
+def updateNodeEdges(updateedges, toupdate):
     """
     increments an object's edges with the candidate object's edges
     """
@@ -43,7 +43,7 @@ def getNodeId(tokens):
     """
     Common method constructing an ID str for all GraphNode objects
     """
-    convert = getNodeLabel(content)
+    convert = getNodeLabel(tokens).lower() 
     return sha256( convert.encode( 'ascii', 'replace' ) ).hexdigest()
   
 class NetworkNode(UserDict):
@@ -135,3 +135,21 @@ class NGram(NetworkNode):
             return self._overwriteEdge( type, key, value )
         else:
             return self._addEdge( type, key, value )
+        
+    def updateMajorForm(self):
+        """
+        updates major form of a nlemma
+        """
+        self.label = self.getLabel()
+        self.content = self.label.split(" ")
+        self.postag = self['edges']['postag'][self.label]
+
+    def getLabel(self):
+        """
+        returns the major form label or None
+        """
+        ordered_forms = sorted(self['edges']['label'])
+        if len(ordered_forms) > 0:
+            return ordered_forms[-1]
+        else:
+            return self.label
