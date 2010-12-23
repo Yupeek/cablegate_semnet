@@ -5,7 +5,7 @@ Talk proposal : [FOSDEM data dev room](http://datadevroom.couch.it/), Brussels, 
 
 ##Speakers
 
- - Julian Bilcke : software developer for the TINA project (http://tinasoft.eu), contributor for the Gephi project. Contact me on twitter.com/flngr.
+ - Julian Bilcke : software developer for the [TINA project](http://tinasoft.eu), contributor for the [Gephi project](http://gephi.org). Follow me at [@flngr](http://twitter.com/flngr).
  - Elias Showk : (contacts, short bio)
 
 ##Audience
@@ -38,14 +38,14 @@ It also demonstrate the simplicity and power of [Mongo DB](http://mongodb.org) i
  - Produces a network in a Gephi compatible format ([GEXF](http://gexf.net))
  - optional : Dumps data to various formats
 
-### Gephi Software
+### Gephi demonstration
 
-You can try Gephi yourself by downloading it from http://gephi.org/users/download/
-It is a Java and OpenGL-based software, and should work on most platforms. 
-For any question try http://forum.gephi.org or @Gephi on Twitter.
-
-You can follow the 5-min tutorial here: http://gephi.org/users/quick-start/
-
+- How to import data with Gephi, and basic visualization features
+- How to remove meaningless content using the data table, sorting and filtering
+- How to highlight meaningful elements using cluster detection, ranking, coloration
+- How to customize the graph appearance, and export the map to PDF and the web
+ 
+ such data, filter it to remove
 ##INSTALLATION AND USAGE
 
 `python setup.py develop`
@@ -58,6 +58,11 @@ You can follow the 5-min tutorial here: http://gephi.org/users/quick-start/
 - MongoDB (http://www.mongodb.org)
 - please fetch manually a stable version of pymongo for your system (the pypi one is broken) : http://api.mongodb.org/python/1.9%2B/index.html
   
+#### Gephi Software
+
+- You can try Gephi yourself by downloading it from the [downloads page](http://gephi.org/users/download/).
+- For any question try the [Gephi forums](http://forum.gephi.org) or [@Gephi](http://twitter.com/gephi) on Twitter.
+- You can follow the 5-min tutorial here: [quick-start tutorial](http://gephi.org/users/quick-start/)
 
 ###USAGE
 
