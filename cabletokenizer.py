@@ -33,15 +33,23 @@ nltk_treebank_tokenizer = nltk.TreebankWordTokenizer()
 # We consider following rules to apply whatever be the langage.
 # ... is an ellipsis, put spaces around before splitting on spaces
 # (make it a token)
-ellipfind_re = re.compile(ur"(\.\.\.)", re.IGNORECASE|re.VERBOSE)
-ellipfind_subst = ur" ... "
+#ellipfind_re = re.compile(ur"(\.\.\.)", re.IGNORECASE|re.VERBOSE)
+#ellipfind_subst = ur" . "
 # A regexp to put spaces if missing after alone marks.
-punct1find_re = re.compile(ur"(["+string.punctuation+"])([^ ])", re.IGNORECASE|re.VERBOSE)
+punct1find_re = re.compile(ur"(["+string.punctuation+"])([^\s])", re.IGNORECASE|re.VERBOSE)
 punct1find_subst = ur"\1 \2"
 # A regexp to put spaces if missing before alone marks.
-punct2find_re = re.compile(ur"([^ ])([["+string.punctuation+"])", re.IGNORECASE|re.VERBOSE)
+punct2find_re = re.compile(ur"([^\s])([["+string.punctuation+"])", re.IGNORECASE|re.VERBOSE)
 punct2find_subst = ur"\1 \2"
-
+# A regexp to remove multiple minus signs
+multisign_re = re.compile(ur"\-+", re.IGNORECASE|re.VERBOSE)
+multisign_subst = ur" \. "
+# A regexp to match non-alphanumeric
+#nonalphanum_re = re.compile(ur"[^ \w\s]", re.IGNORECASE|re.VERBOSE)
+#nonalphanum_subst = ur""
+# A regexp to match html entities
+htmlentities_re = re.compile(ur"\&\#x[\d]{1,3}[A-Za-z]{1}\;", re.IGNORECASE|re.VERBOSE)
+htmlentities_subst = ur" \. "
 
 class NGramizer(object):
     """
@@ -49,32 +57,33 @@ class NGramizer(object):
     then cleans the punctuation
     before tokenizing using nltk.TreebankWordTokenizer()
     """
-    def __init__(self, storage):
+    def __init__(self, storage, config):
         self.storage = storage
+        self.config = config
     
-    def extract(self, doc, config, filters, tagger, stemmer):
+    def extract(self, doc, filters, tagger, stemmer):
         """
         sanitizes content and label texts
         tokenizes it
         POS tags the tokens
         constructs the resulting NGram objects
         """
-        ngramMin = config['ngramMin']
-        ngramMax = config['ngramMax']
+        ngramMin = self.config['ngramMin']
+        ngramMax = self.config['ngramMax']
 
         sentenceTaggedTokens = self.tokenize(
             self.sanitize(
-                self.selectcontent(config, doc)
+                self.selectcontent(doc)
             ),
             tagger
         )
         try:
-            #aggregated_ngrams = {}
+            aggregated_ngrams = []
             while 1:
                 nextsent = sentenceTaggedTokens.next()
                 # updates the doc's ngrams
                 aggregated_ngrams = self.ngramize(
-                    #aggregated_ngrams,
+                    aggregated_ngrams,
                     minSize = ngramMin,
                     maxSize = ngramMax,
                     tagTokens = nextsent,
@@ -82,14 +91,15 @@ class NGramizer(object):
                     stemmer = stemmer
                 )
         except StopIteration, stopit:
+            logging.info("finished extraction on cable %s"%doc['_id'])
             return
         
-    def selectcontent(self, config, doc):
+    def selectcontent(self, doc):
         """
         Adds content fields from application's configuration
         """
         customContent = ""
-        for field in config['doc_extraction']:
+        for field in self.config['doc_extraction']:
             try:
                 customContent += " . " + doc[ field ]
             except Exception, exc:
@@ -100,23 +110,34 @@ class NGramizer(object):
     
     def sanitize(self, input):
         """
-        basic @input text sanitizing
+        @input content text to sanitize
         @return str: text
         """
         # Put blanks before and after '...' (extract ellipsis).
         # Put space between punctuation ;!?:, and following text if space missing.
         # Put space between text and punctuation ;!?:, if space missing.
-        punct2find_re.sub(
-            punct2find_subst,
-            punct1find_re.sub(
-                punct1find_subst,
-                ellipfind_re.sub(
-                    ellipfind_subst,
-                    input
-                )
+        output = multisign_re.sub(
+            multisign_subst,
+            htmlentities_re.sub(
+                htmlentities_subst,
+                input
             )
+           #punct2find_re.sub(
+           #     punct2find_subst,
+           #     punct1find_re.sub(
+           #         punct1find_subst,
+           #         htmlentities_re.sub(
+           #             htmlentities_subst,
+           #             input
+           #         )
+           #     )
+           #)
         )
-        return string.strip(input)
+        stripoutput = string.strip(output)
+        if len(stripoutput) >= self.config['minWordSize']:
+            return stripoutput
+        else:
+            return ""
 
     def tokenize(self, text, tagger):
         """
@@ -126,20 +147,21 @@ class NGramizer(object):
         """
         sentences = nltk.sent_tokenize(text)
         for sent in sentences:
-            yield tagger.tag(nltk_treebank_tokenizer.tokenize(sent))
+            yield tagger.tag(
+                nltk_treebank_tokenizer.tokenize(
+                    sent
+                )
+            )
 
-    def ngramize(self, minSize, maxSize, tagTokens, filters, stemmer):
+    def ngramize(self, doc_ngrams, minSize, maxSize, tagTokens, filters, stemmer):
         """
         common ngramizing method
         returns a dict of filtered NGram instances
-        using the optional stopwords object to filter by ngram length
-
         @tagTokens == [[word1 tokens], [word2 tokens], etc]
         """
         # content is the list of words from tagTokens
         content = tagger.TreeBankPosTagger.getContent(tagTokens)
         stemmedcontent = []
-        doc_ngrams = []
         for word in content:
              stemmedcontent += [stemmer.stem(word)]
         # tags is the list of tags from tagTokens
@@ -149,9 +171,11 @@ class NGramizer(object):
                 if len(content) >= i + n:
                     # updates document's ngrams cache
                     ngid = getNodeId(stemmedcontent[i:n+i])
+                    
                     label = getNodeLabel(content[i:n+i])
                     ngram = self.storage.ngrams.find_one({'id': ngid})
                     if ngram is not None:
+                        # first time encoutered within the current document
                         if ngid not in doc_ngrams:
                             self.storage.ngrams.update(
                                 { 'id': ngid },
@@ -161,6 +185,7 @@ class NGramizer(object):
                                     }
                                 }
                             )
+                        # general edges updates
                         self.storage.ngrams.update(
                             { 'id': ngid },
                             {
@@ -196,6 +221,7 @@ class NGramizer(object):
                         ngram = NGram(ngdict)
                         # application defined filtering
                         if filtering.apply_filters(ngram, filters) is True:
-                            ngrams[ngid] = ngram
+                            doc_ngrams += [ngid]
+                            self.storage.ngrams.insert(ngram.data)
                             logging.debug(ngram['label'])
-        return ngrams
+        return doc_ngrams

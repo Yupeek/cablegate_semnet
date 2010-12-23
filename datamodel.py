@@ -126,7 +126,7 @@ class NGram(NetworkNode):
     """
     def __init__(self, dict=None, **kwargs): 
         NetworkNode.__init__(self, dict, **kwargs)
-        self['edges'].update({'postag': {}, 'forms': {}})
+        self['edges'].update({'postag': {}, 'label': {}})
       
     def addEdge(self, type, key, value):
         if type in ["Document"]:

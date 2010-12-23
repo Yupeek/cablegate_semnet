@@ -18,7 +18,7 @@ extraction:
         # - defined by one of the field's value
         # - constants required fields : 'content'/'label'/'id'
         - 'content'
-        - 'label'
+        #- 'label'
     # tina csv columns declaration
     # will ignore undeclared fields
     # and warn not found optional fields
@@ -62,9 +62,10 @@ extraction:
     # extraction size
     ngramMin: 1
     ngramMax: 4
+    minWordSize: 3
     # tagger learning on 2 x training_tagger_size sentences of tagged nltk corpus
     training_tagger_size: 10000
-    # under "basedirectory" directory, delete this file to regenerate a new one on next starting
+    # under "basedirectory" directory, delete this file to regenerate a new one
     tagger: 'shared/tagger.pickle'
     # change this Reg Expression to change NGram extraction filtering
     postag_valid: '^((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,)(CD.,)?)+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,))+?)*?$'

@@ -38,7 +38,7 @@ class CableExtractor(object):
             training_corpus_size = 10000,
             trained_pickle = self.config['extraction']['tagger']
         )
-        self.index_cables(NGramizer(self.storage), filters, postagger, minoccs)
+        self.index_cables(NGramizer(self.storage, self.config['extraction']), filters, postagger, minoccs)
       
     def index_cables(self, ngramizer, filters, postagger, minoccs):
         """
@@ -52,18 +52,11 @@ class CableExtractor(object):
             # extract and filter ngrams
             docngrams = ngramizer.extract(
                 document,
-                self.config['extraction'],
                 filters,
                 postagger,
                 stemmer.Nltk()
             )
-            for ng in docngrams.itervalues():
-                logging.debug(ng.__dict__)
-                #newwl.addContent( ng, year, document['id'] )
-                #newwl.addEdge("NGram", ng['id'], 1)
-            #nlemmas = tokenizer.TreeBankWordTokenizer.group(docngrams, whitelist)
-            #### inserts/updates NGram and update document obj
-            #self._insert_NGram_Document(nlemmas, document, corpusNum, overwrite)
+            print docngrams
         logging.info("CableExtractor.extract_cables is done")
 
     def _insert_NGram_Document(self, docngrams):
