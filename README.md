@@ -5,9 +5,8 @@ Talk proposal : [FOSDEM data dev room](http://datadevroom.couch.it/), Brussels, 
 
 ##Speakers
 
- - Julian Bilcke : (contacts, short bio)
+ - Julian Bilcke : software developer for the TINA project (http://tinasoft.eu), contributor for the Gephi project. Contact me on twitter.com/flngr.
  - Elias Showk : (contacts, short bio)
-
 
 ##Audience
 
@@ -15,21 +14,21 @@ Talk proposal : [FOSDEM data dev room](http://datadevroom.couch.it/), Brussels, 
 
 ##Abstract
 
-We propose to present a complete work-flow of textual data analysis, from acquisition to visual exploration of the network of its thematics. Through the presentation of a simple software specifically developed for this talk (http://github.com/elishowk/cablegate-semnet), we would like to provide an overview of productive and widely used softwares and libraries in text analysis, then introduce the basic usage of Gephi, a network analysis software (http://gephi.org).
+We propose to present a complete work-flow of textual data analysis, from acquisition to visual exploration of the network of its thematics. Through the presentation of a simple software specifically developed for this talk (http://github.com/elishowk/cablegate-semnet), we would like to provide an overview of productive and widely used softwares and libraries in text analysis, then introduce some features of Gephi, an open-source network visualization & analysis software (http://gephi.org), using data collected with cablegate-semnet.
 
 ###Data used and methodology
 
-The presentation will focus on Wikileak’s cablegate data, and specially on the full text of all published diplomatic cables yet. The goal is to produce a weighted network.
+The presentation will focus on Wikileaks' cablegate data, and specially on the full text of all published diplomatic cables yet. The goal is to produce a weighted network.
 
 This networks will contents to parties :
  - cables nodes linked by co-occurrences,
- - word ngrams nodes linked by an adaptation of the Jaccard similarity index.
+ - word n-grams nodes linked by an adaptation of the Jaccard similarity index.
 
 
-###Cablegate-semnet python softwar
+###Cablegate-semnet python software
 
 
-This sofware illustrates common methods of text-mining taking advantage of Python built-in functions as well as some external and famous libraries (NLTK, BeautifulSoup).
+This software illustrates common methods of text-mining taking advantage of Python built-in functions as well as some external and famous libraries (NLTK, BeautifulSoup).
 It also demonstrate the simplicity and power of [Mongo DB](http://mongodb.org) in tasks of document indexing and information extraction.
 
  - Reads the local copy of the cablegate site, using built-in OS file handling and some Regular Expressions
@@ -38,6 +37,14 @@ It also demonstrate the simplicity and power of [Mongo DB](http://mongodb.org) i
  - Automatically extracts relevant word NGram with NLTK
  - Produces a network in a Gephi compatible format ([GEXF](http://gexf.net))
  - optional : Dumps data to various formats
+
+### Gephi Software
+
+You can try Gephi yourself by downloading it from http://gephi.org/users/download/
+It is a Java and OpenGL-based software, and should work on most platforms. 
+For any question try http://forum.gephi.org or @Gephi on Twitter.
+
+You can follow the 5-min tutorial here: http://gephi.org/users/quick-start/
 
 ##INSTALLATION AND USAGE
 
