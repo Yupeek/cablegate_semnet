@@ -40,12 +40,12 @@ It also demonstrate the simplicity and power of [Mongo DB](http://mongodb.org) i
 
 ### Gephi demonstration
 
-- How to import data with Gephi, and basic visualization features
+- How to import a network data file
+- Overview of basic visualization features
 - How to remove meaningless content using the data table, sorting and filtering
 - How to highlight meaningful elements using cluster detection, ranking, coloration
 - How to customize the graph appearance, and export the map to PDF and the web
  
- such data, filter it to remove
 ##INSTALLATION AND USAGE
 
 `python setup.py develop`
