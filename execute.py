@@ -23,6 +23,8 @@ from mongodbhandler import CablegateDatabase
 from cableimporter import CableImporter
 from cableextractor import CableExtractor
 
+from datamodel import NGram
+
 import yaml
 
 def get_parser():
@@ -42,3 +44,6 @@ if __name__ == "__main__":
     mongoconnection = CablegateDatabase("localhost")
     #importer = CableImporter( mongoconnection["cablegate"], options.archive )
     extractor = CableExtractor(mongoconnection["cablegate"], config, int(options.minoccs))
+    for ngram in mongoconnection["cablegate"].ngrams.find().limit(10):
+        obj = NGram(ngram)
+        logging.debug( obj.data )

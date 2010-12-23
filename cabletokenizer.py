@@ -61,7 +61,7 @@ class NGramizer(object):
         self.storage = storage
         self.config = config
     
-    def extract(self, doc, filters, tagger, stemmer):
+    def extract(self, documentObj, filters, tagger, stemmer):
         """
         sanitizes content and label texts
         tokenizes it
@@ -73,7 +73,7 @@ class NGramizer(object):
 
         sentenceTaggedTokens = self.tokenize(
             self.sanitize(
-                self.selectcontent(doc)
+                self.selectcontent(documentObj)
             ),
             tagger
         )
@@ -83,6 +83,7 @@ class NGramizer(object):
                 nextsent = sentenceTaggedTokens.next()
                 # updates the doc's ngrams
                 aggregated_ngrams = self.ngramize(
+                    documentObj,
                     aggregated_ngrams,
                     minSize = ngramMin,
                     maxSize = ngramMax,
@@ -91,7 +92,7 @@ class NGramizer(object):
                     stemmer = stemmer
                 )
         except StopIteration, stopit:
-            logging.info("finished extraction on cable %s"%doc['_id'])
+            logging.info("finished extraction on cable %s"%documentObj['_id'])
             return
         
     def selectcontent(self, doc):
@@ -139,7 +140,7 @@ class NGramizer(object):
                 )
             )
 
-    def ngramize(self, doc_ngrams, minSize, maxSize, tagTokens, filters, stemmer):
+    def ngramize(self, document, doc_ngrams, minSize, maxSize, tagTokens, filters, stemmer):
         """
         common ngramizing method
         returns a dict of filtered NGram instances
@@ -160,23 +161,14 @@ class NGramizer(object):
                     label = getNodeLabel(content[i:n+i])
                     ngram = self.storage.ngrams.find_one({'id': ngid})
                     if ngram is not None:
-                        # first time encoutered within the current document
-                        if ngid not in doc_ngrams:
-                            self.storage.ngrams.update(
-                                { '_id': ngid },
-                                {
-                                    "$inc" : {
-                                        'weight': 1
-                                    }
-                                }
-                            )
                         # general edges updates
                         self.storage.ngrams.update(
                             { '_id': ngid },
                             {
                                 "$inc" : {
                                     'edges': {
-                                        'label' : { label: 1 }
+                                        'label' : { label : 1 },
+                                        'Document' : { document['id'] : 1 }
                                     }
                                 },
                                 'edges': {
@@ -184,9 +176,8 @@ class NGramizer(object):
                                 }
                             }
                         )
-                        #logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'weight': 1 }) )
+                        logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'edges': 1 }) )
                     else:
-                        doc_ngrams += [ngid]
                         # id made from the stemmedcontent and label made from the real tokens
                         ngdict = {
                             'content': content[i:n+i],
@@ -196,7 +187,8 @@ class NGramizer(object):
                             'weight': 1,
                             'edges': {
                                 'postag' : { label : tags[i:n+i] },
-                                'label': { label : 1 }
+                                'label': { label : 1 },
+                                'Document': { document['id'] : 1 }
                             },
                             'postag' : tags[i:n+i]
                         }
@@ -205,5 +197,4 @@ class NGramizer(object):
                         if filtering.apply_filters(ngram, filters) is True:
                             doc_ngrams += [ngid]
                             self.storage.ngrams.insert(ngram.data)
-                            #logging.debug(ngram['label'])
         return doc_ngrams
