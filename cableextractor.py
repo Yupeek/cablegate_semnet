@@ -56,26 +56,9 @@ class CableExtractor(object):
                 postagger,
                 stemmer.Nltk()
             )
-            print docngrams
+
         logging.info("CableExtractor.extract_cables is done")
 
-    def _insert_NGram_Document(self, docngrams):
-        """
-        Inserts NGrams to storage
-        """
-        for ngid, ng in docngrams.iteritems():
-            # increments document-ngram edge
-            docOccs = ng['occs']
-            del ng['occs']
-            
-            ng.addEdge( 'Document', document['id'], docOccs )
-            storedNG = self.storage.find_one( { 'id': ng['id'] } )
-            if storedNG is None:
-                self.storage.save( ng.__dict__ )
-            else:
-                storedNG = PyTextminer.updateEdges( ng['edges'], storedNG )
-                storedNG.updateMajorForm()
-                self.storage.save( ng.__dict__ )
     
     def _get_extraction_filters(self):
       """
