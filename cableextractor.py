@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 from os.path import join
 import re
-from datamodel import Cable
+
 from cabletokenizer import NGramizer
 
 from tinasoft.pytextminer import stopwords, filtering, tagger, stemmer
@@ -38,6 +38,7 @@ class CableExtractor(object):
             training_corpus_size = 10000,
             trained_pickle = self.config['extraction']['tagger']
         )
+        self.storage.ngrams.remove()
         self.index_cables(NGramizer(self.storage, self.config['extraction']), filters, postagger, minoccs)
       
     def index_cables(self, ngramizer, filters, postagger, minoccs):
@@ -47,11 +48,9 @@ class CableExtractor(object):
         for cable in self.storage.cables.find():
             if cable is None:
                 logging.warning("cable %d not founf in the database, skipping"%cable_id)
-                continue
-            document = Cable(cable)
             # extract and filter ngrams
             docngrams = ngramizer.extract(
-                document,
+                cable,
                 filters,
                 postagger,
                 stemmer.Nltk()

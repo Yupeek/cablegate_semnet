@@ -37,16 +37,18 @@ nltk_treebank_tokenizer = nltk.TreebankWordTokenizer()
 #ellipfind_subst = ur" . "
 # A regexp to put spaces if missing after alone marks.
 punct1find_re = re.compile(ur"(["+string.punctuation+"])([^\s])", re.IGNORECASE|re.VERBOSE)
-punct1find_subst = ur"\1 \2"
 # A regexp to put spaces if missing before alone marks.
 punct2find_re = re.compile(ur"([^\s])([["+string.punctuation+"])", re.IGNORECASE|re.VERBOSE)
-punct2find_subst = ur"\1 \2"
+punct_subst = ur"\1 \2"
+
 # A regexp to remove multiple minus signs
 multisign_re = re.compile(ur"-+", re.IGNORECASE|re.VERBOSE)
 multisign_subst = ur" \. "
+
 # A regexp to match non-alphanumeric
 #nonalphanum_re = re.compile(ur"[^ \w\s]", re.IGNORECASE|re.VERBOSE)
 #nonalphanum_subst = ur""
+
 # A regexp to match html entities
 htmlentities_re = re.compile(ur"\&\#x[\d]{1,3}[A-Za-z]{1}\;", re.IGNORECASE|re.VERBOSE)
 htmlentities_subst = ur" \. "
@@ -114,17 +116,24 @@ class NGramizer(object):
         @input content text to sanitize
         @return str: text
         """
+        # TODO ?
         # Put blanks before and after '...' (extract ellipsis).
         # Put space between punctuation ;!?:, and following text if space missing.
         # Put space between text and punctuation ;!?:, if space missing.
-        output = multisign_re.sub(
-            multisign_subst,
-            htmlentities_re.sub(
-                htmlentities_subst,
-                input
-            )
+        output = punct2find_re.sub(
+            punct_subst,
+            punct1find_re.sub(
+                punct_subst,
+                multisign_re.sub(
+                    multisign_subst,
+                    htmlentities_re.sub(
+                        htmlentities_subst,
+                        input
+                    )
+                )
+            )  
         )
-        return string.strip(output)
+        return output.strip()
 
     def tokenize(self, text, tagger):
         """
@@ -159,7 +168,7 @@ class NGramizer(object):
                     # updates document's ngrams cache
                     ngid = getNodeId(stemmedcontent[i:n+i])
                     label = getNodeLabel(content[i:n+i])
-                    ngram = self.storage.ngrams.find_one({'id': ngid})
+                    ngram = self.storage.ngrams.find_one({'_id': ngid})
                     if ngram is not None:
                         # general edges updates
                         self.storage.ngrams.update(
@@ -168,7 +177,7 @@ class NGramizer(object):
                                 "$inc" : {
                                     'edges': {
                                         'label' : { label : 1 },
-                                        'Document' : { document['id'] : 1 }
+                                        'Document' : { document['_id'] : 1 }
                                     }
                                 },
                                 'edges': {
@@ -176,10 +185,10 @@ class NGramizer(object):
                                 }
                             }
                         )
-                        logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'edges': 1 }) )
+                        #logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'edges': 1 }) )
                     else:
                         # id made from the stemmedcontent and label made from the real tokens
-                        ngdict = {
+                        ngram = {
                             'content': content[i:n+i],
                             '_id': ngid,
                             'id': ngid,
@@ -192,9 +201,9 @@ class NGramizer(object):
                             },
                             'postag' : tags[i:n+i]
                         }
-                        ngram = NGram(ngdict)
                         # application defined filtering
                         if filtering.apply_filters(ngram, filters) is True:
                             doc_ngrams += [ngid]
-                            self.storage.ngrams.insert(ngram.data)
+                            self.storage.ngrams.insert(ngram)
+                            #logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'edges': 1 }) )
         return doc_ngrams

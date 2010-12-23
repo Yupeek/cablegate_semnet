@@ -24,8 +24,6 @@ import re
 import nltk
 from BeautifulSoup import BeautifulSoup
 
-from datamodel import Cable
-
 class CableImporter(object):
   
     """
@@ -44,6 +42,7 @@ class CableImporter(object):
         self.data_directory = join(data_directory, "cable")
         self.db = db
         self.cable_id = []
+        self.db.cables
         self.walk_archive()
     
     def walk_archive(self):
@@ -92,10 +91,10 @@ class CableImporter(object):
             'origin' : cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
             'content' : unicode( nltk.clean_html( str( soup.findAll(['pre'])[1] ) ), encoding="utf_8", errors="replace" )
         }
-        document = Cable(cable)
+        #document = Cable(cable)
         
         # auto overwriting existing '_id'
-        self.db.cables.save(document.data)
+        self.db.cables.save(cable)
         self.counts['cables_processed'] +=  1
         self.cable_id += [cable_id]
         self.print_counts()
