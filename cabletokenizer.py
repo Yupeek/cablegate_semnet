@@ -42,7 +42,7 @@ punct1find_subst = ur"\1 \2"
 punct2find_re = re.compile(ur"([^\s])([["+string.punctuation+"])", re.IGNORECASE|re.VERBOSE)
 punct2find_subst = ur"\1 \2"
 # A regexp to remove multiple minus signs
-multisign_re = re.compile(ur"\-+", re.IGNORECASE|re.VERBOSE)
+multisign_re = re.compile(ur"-+", re.IGNORECASE|re.VERBOSE)
 multisign_subst = ur" \. "
 # A regexp to match non-alphanumeric
 #nonalphanum_re = re.compile(ur"[^ \w\s]", re.IGNORECASE|re.VERBOSE)
@@ -122,22 +122,8 @@ class NGramizer(object):
                 htmlentities_subst,
                 input
             )
-           #punct2find_re.sub(
-           #     punct2find_subst,
-           #     punct1find_re.sub(
-           #         punct1find_subst,
-           #         htmlentities_re.sub(
-           #             htmlentities_subst,
-           #             input
-           #         )
-           #     )
-           #)
         )
-        stripoutput = string.strip(output)
-        if len(stripoutput) >= self.config['minWordSize']:
-            return stripoutput
-        else:
-            return ""
+        return string.strip(output)
 
     def tokenize(self, text, tagger):
         """
@@ -168,17 +154,16 @@ class NGramizer(object):
         tags = tagger.TreeBankPosTagger.getTag(tagTokens)
         for i in range(len(content)):
             for n in range(minSize, maxSize + 1):
-                if len(content) >= i + n:
+                if len(content) >= i+n:
                     # updates document's ngrams cache
                     ngid = getNodeId(stemmedcontent[i:n+i])
-                    
                     label = getNodeLabel(content[i:n+i])
                     ngram = self.storage.ngrams.find_one({'id': ngid})
                     if ngram is not None:
                         # first time encoutered within the current document
                         if ngid not in doc_ngrams:
                             self.storage.ngrams.update(
-                                { 'id': ngid },
+                                { '_id': ngid },
                                 {
                                     "$inc" : {
                                         'weight': 1
@@ -187,7 +172,7 @@ class NGramizer(object):
                             )
                         # general edges updates
                         self.storage.ngrams.update(
-                            { 'id': ngid },
+                            { '_id': ngid },
                             {
                                 "$inc" : {
                                     'edges': {
@@ -199,10 +184,7 @@ class NGramizer(object):
                                 }
                             }
                         )
-                        upedges = {
-                            'label': { label : 1 },
-                            'postag': { label : tags[i:n+i] }
-                        }
+                        #logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'weight': 1 }) )
                     else:
                         doc_ngrams += [ngid]
                         # id made from the stemmedcontent and label made from the real tokens
@@ -223,5 +205,5 @@ class NGramizer(object):
                         if filtering.apply_filters(ngram, filters) is True:
                             doc_ngrams += [ngid]
                             self.storage.ngrams.insert(ngram.data)
-                            logging.debug(ngram['label'])
+                            #logging.debug(ngram['label'])
         return doc_ngrams
