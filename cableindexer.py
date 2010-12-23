@@ -23,13 +23,13 @@ from cabletokenizer import NGramizer
 
 from tinasoft.pytextminer import stopwords, filtering, tagger, stemmer
 
-class CableExtractor(object):
+class CableIndexer(object):
     """
     Reads all database entries to produce a network
     usage :
       extractor = Exporter(minoccs=2)
     """
-    def __init__(self, storage, config, minoccs=1):
+    def __init__(self, storage, config):
         self.storage = storage
         self.config = config
         filters = self._get_extraction_filters()
@@ -39,9 +39,9 @@ class CableExtractor(object):
             trained_pickle = self.config['extraction']['tagger']
         )
         self.storage.ngrams.remove()
-        self.index_cables(NGramizer(self.storage, self.config['extraction']), filters, postagger, minoccs)
+        self.index_cables(NGramizer(self.storage, self.config['extraction']), filters, postagger)
       
-    def index_cables(self, ngramizer, filters, postagger, minoccs):
+    def index_cables(self, ngramizer, filters, postagger):
         """
         gets the a document from storage then extract n-grams
         """

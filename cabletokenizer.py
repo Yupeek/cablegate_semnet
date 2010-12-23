@@ -201,34 +201,38 @@ class NGramizer(object):
                         
                     else:
                         # id made from the stemmedcontent and label made from the real tokens
-                        ngram = {
-                            '_id': ngid,
-                            'id': ngid,
-                            'label': label,
-                            'content': content[i:n+i],
-                            'edges': {
-                                'postag' : { label : tags[i:n+i] },
-                                'label': { label : 1 },
-                                'Document': { document['id'] : 1 }
-                            },
-                            'postag' : tags[i:n+i]
-                        }
-                        # application defined filtering
-                        if filtering.apply_filters(ngram, filters) is True:
-                            doc_ngrams += [ngid]
-                            self.storage.ngrams.insert(ngram)
-                            self.storage.cables.update(
-                                { '_id': document['id'] },
-                                {
-                                    '$inc': {
-                                        'edges': {
-                                            'NGram': {
-                                                ngid : 1
+                        try:
+                            ngram = {
+                                '_id': ngid,
+                                'id': ngid,
+                                'label': label,
+                                'content': content[i:n+i],
+                                'edges': {
+                                    'postag' : { label : tags[i:n+i] },
+                                    'label': { label : 1 },
+                                    'Document': { document['id'] : 1 }
+                                },
+                                'postag' : tags[i:n+i]
+                            }
+                            # application defined filtering
+                            if filtering.apply_filters(ngram, filters) is True:
+                                doc_ngrams += [ngid]
+                                self.storage.ngrams.insert(ngram)
+                                self.storage.cables.update(
+                                    { '_id': document['id'] },
+                                    {
+                                        '$inc': {
+                                            'edges': {
+                                                'NGram': {
+                                                    ngid : 1
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            )
-                            #logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'edges': 1 }) )
+                                )
+                                #logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'edges': 1 }) )
+                                
+                        except Exception, exc:
+                            logging.error("error inserting new ngram %s : %s"%(label, exc))
                             
         return doc_ngrams

@@ -21,16 +21,16 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 from mongodbhandler import CablegateDatabase
 from cableimporter import CableImporter
-from cableextractor import CableExtractor
-
-from datamodel import NGram
+from cableindexer import CableIndexer
+from cablenetwork import CoocNetwork
 
 import yaml
 
 def get_parser():
     parser = OptionParser()
+    parser.add_option("-e", "--execute", dest="execute", help="execution action", metavar="FILE")
     parser.add_option("-a", "--archive", dest="archive", help="cablegate archive path", metavar="FILE")
-    parser.add_option("-o", "--occurrences", dest="minoccs", help="minimum keyphrase occurrence", metavar="int")
+    parser.add_option("-o", "--occurrences", dest="minoccs", help="minimum keyphrases' occurrences", metavar="int")
     parser.add_option("-c", "--config", dest="config", help="config yaml file path", metavar="FILE")
     return parser
 
@@ -42,8 +42,14 @@ if __name__ == "__main__":
     config = yaml.safe_load( file( options.config, 'rU' ) )
    
     mongoconnection = CablegateDatabase("localhost")
-    #importer = CableImporter( mongoconnection["cablegate"], options.archive )
-    extractor = CableExtractor(mongoconnection["cablegate"], config, int(options.minoccs))
-    for ngram in mongoconnection["cablegate"].ngrams.find().limit(10):
-        obj = NGram(ngram)
-        logging.debug( obj.data )
+    if options.execute == 'import':
+        importer = CableImporter( mongoconnection["cablegate"], options.archive )
+    if options.execute == 'index':
+        extractor = CableIndexer(mongoconnection["cablegate"], config)
+    if options.execute == 'graph':
+        extractor = CoocGraph(mongoconnection["cablegate"], config, int(options.minoccs))
+    if options.execute == 'print':
+        for ngram in mongoconnection["cablegate"].ngrams.find().limit(10):
+            logging.debug( ngram )
+        for doc in mongoconnection["cablegate"].cables.find().limit(2):
+            logging.debug( doc )
