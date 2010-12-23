@@ -94,7 +94,7 @@ class NGramizer(object):
                     stemmer = stemmer
                 )
         except StopIteration, stopit:
-            logging.info("finished extraction on cable %s"%documentObj['_id'])
+            logging.info("finished extraction of %d ngrams on cable %s"%(len(aggregated_ngrams),documentObj['_id']))
             return
         
     def selectcontent(self, doc):
@@ -185,15 +185,27 @@ class NGramizer(object):
                                 }
                             }
                         )
+                        self.storage.cables.update(
+                            { '_id': document['id'] },
+                            {
+                                '$inc': {
+                                    'edges': {
+                                        'NGram': {
+                                            ngid : 1
+                                        }
+                                    }
+                                }
+                            }
+                        )
                         #logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'edges': 1 }) )
+                        
                     else:
                         # id made from the stemmedcontent and label made from the real tokens
                         ngram = {
-                            'content': content[i:n+i],
                             '_id': ngid,
                             'id': ngid,
                             'label': label,
-                            'weight': 1,
+                            'content': content[i:n+i],
                             'edges': {
                                 'postag' : { label : tags[i:n+i] },
                                 'label': { label : 1 },
@@ -205,5 +217,18 @@ class NGramizer(object):
                         if filtering.apply_filters(ngram, filters) is True:
                             doc_ngrams += [ngid]
                             self.storage.ngrams.insert(ngram)
+                            self.storage.cables.update(
+                                { '_id': document['id'] },
+                                {
+                                    '$inc': {
+                                        'edges': {
+                                            'NGram': {
+                                                ngid : 1
+                                            }
+                                        }
+                                    }
+                                }
+                            )
                             #logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'edges': 1 }) )
+                            
         return doc_ngrams

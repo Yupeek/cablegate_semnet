@@ -47,7 +47,7 @@ class CableExtractor(object):
         """
         for cable in self.storage.cables.find():
             if cable is None:
-                logging.warning("cable %d not founf in the database, skipping"%cable_id)
+                logging.warning("cable %d not found in the database, skipping"%cable_id)
             # extract and filter ngrams
             docngrams = ngramizer.extract(
                 cable,
@@ -60,19 +60,26 @@ class CableExtractor(object):
 
     
     def _get_extraction_filters(self):
-      """
-      returns extraction filters
-      """
-      filters = [filtering.PosTagValid(
-          config = {
-              'rules': re.compile(self.config['extraction']['postag_valid'])
-          }
-      )]
-      filters += [stopwords.StopWords(
-          "file://%s"%join(
-              self.config['general']['basedirectory'],
-              self.config['general']['shared'],
-              self.config['extraction']['stopwords']
-          )
-      )]
-      return filters
+        """
+        returns extraction filters
+        """
+        filters = [filtering.WordSizeFilter(
+            config = {
+                'rules': {
+                    'minWordSize': self.config['extraction']['minWordSize']
+                }
+            }
+        )]
+        filters += [filtering.PosTagValid(
+            config = {
+                'rules': re.compile(self.config['extraction']['postag_valid'])
+            }
+        )]
+        filters += [stopwords.StopWords(
+            "file://%s"%join(
+                self.config['general']['basedirectory'],
+                self.config['general']['shared'],
+                self.config['extraction']['stopwords']
+            )
+        )]
+        return filters
