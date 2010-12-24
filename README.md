@@ -1,6 +1,6 @@
 #Mapping Wikileaks' Cablegate thematics using Python, MongoDB and Gephi
 
-Talk proposal for [FOSDEM's data dev room](http://datadevroom.couch.it/), Brussels, Feb 5-7 2011, 
+Talk proposal for [FOSDEM's data dev room](http://datadevroom.couch.it/), Brussels, Feb 5 2011, 
 
 ##Speakers
 
