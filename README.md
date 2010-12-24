@@ -15,15 +15,13 @@ We are two software engineers at Centre National de la Recherche Scientifique (F
 
 ##Abstract
 
-We propose to present a complete work-flow of textual data analysis, from acquisition to visual exploration of the network of its thematics. Through the presentation of a [simple software specifically developed for this talk](http://github.com/elishowk/cablegate_semnet), we will cover a set of productive and widely used softwares and libraries in text analysis, then introduce some features of [Gephi](http://gephi.org), an open-source network visualization & analysis software, using the data collected and transformed with [cablegate-semnet](http://github.com/elishowk/cablegate_semnet).
+We propose to present a complete work-flow of textual data analysis, from acquisition to visual exploration of a complex network. Through the presentation of a [simple software specifically developed for this talk](http://github.com/elishowk/cablegate_semnet), we will cover a set of productive and widely used softwares and libraries in text analysis, then introduce some features of [Gephi](http://gephi.org), an open-source network visualization & analysis software, using the data collected and transformed with [cablegate-semnet](http://github.com/elishowk/cablegate_semnet).
 
 ###Data used and methodology
 
-The presentation will focus on Wikileaks' cablegate data, and specially on the full text of all published diplomatic cables yet. The goal is to produce a weighted network.
+The presentation will focus on Wikileaks' cablegate data, and specially on the full text of all published diplomatic cables yet. The goal is to produce a weighted network. This network will contain two categories of nodes :
 
-This networks will contain to categories of nodes :
-
- - text thematics nodes linked by co-occurrences,
+ - thematics nodes linked by co-occurrences, automatically extracted from full-text
  - leaked cables nodes linked by a custom similarity index (adaptation of [Jaccard similarity index](http://en.wikipedia.org/wiki/Jaccard_index)).
  
 Both categories will be linked by occurrences.
@@ -32,15 +30,15 @@ Both categories will be linked by occurrences.
 
  - speaker : Elias
 
-This software illustrates common methods of text-mining taking advantage of Python built-in functions as well as some external and famous libraries (NLTK, BeautifulSoup).
+This software illustrates common methods of text-mining taking advantage of Python built-in functions as well as some external and famous libraries ([NLTK](http://nltk.org), [BeautifulSoup](http://www.crummy.com/software/BeautifulSoup/)).
 It also demonstrate the simplicity and power of [Mongo DB](http://mongodb.org) in tasks like document indexing and information extraction.
 
 The talk will focus on the following topics :
 
- - Parses cables with [NLTK](http://nltk.org)'s HTML cleaning feature, [BeautifulSoup](http://www.crummy.com/software/BeautifulSoup/)'s HTML parser and [Python's regular expressions](http://docs.python.org/library/re.html)
- - Inserts cables into Mongo DB, using [Python Mongo DB driver](http://api.mongodb.org/python/1.9%2B/index.html)
- - Automatically extracts relevant words NGram with NLTK and updating Mongo DB collections
- - Processes the network with [Mongo DB's map/reduce](http://www.mongodb.org/display/DOCS/MapReduce) to get relationship between mapped entities.
+ - Parses cables with NLTK's HTML cleaner, BeautifulSoup's HTML parser and [Python's regular expressions](http://docs.python.org/library/re.html)
+ - Inserts cables into Mongo DB using its internal JSON format, and presenting [the Python driver for Mongo DB](http://api.mongodb.org/python/1.9%2B/index.html)
+ - Extracts relevant keyphrases with NLTK : part-of-speech tagging, stemming, keyphrases selection based on a grammar, Mongo DB atomic modifiers.
+ - Pre-processes the network with [Mongo DB's map/reduce capabilities](http://www.mongodb.org/display/DOCS/MapReduce) to get edges' weight between nodes.
  - Exports the network in a Gephi compatible format ([GEXF](http://gexf.net)) using [Tenjin template engine](http://www.kuwata-lab.com/tenjin/)
 
 
@@ -48,7 +46,7 @@ The talk will focus on the following topics :
 
  - speaker : Julian
 
-Cablegate-semnet has a quite naive automatic selection of text thematics and produces a network containing some noise. On the other hand, the two types of nodes implies three types of edges so that we can expect a [dense graph](http://en.wikipedia.org/wiki/Dense_graph). The aim of this second part is to demonstrate Gephi's features in network post-processing, with a focus on :
+Cablegate-semnet has a quite naive automatic selection of text thematics and produces a network of thousands of nodes but containing some noise. On the other hand, the presence of two types of nodes implies three types of edges so that we can expect a [dense graph](http://en.wikipedia.org/wiki/Dense_graph). As a conclusion, we produce a weighted network quite rich in information, so the aim of this second part is to demonstrate Gephi's features in network post-processing, with a focus on :
 
 - How to import a network data file
 - Overview of basic visualization features
