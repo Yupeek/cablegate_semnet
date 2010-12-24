@@ -22,8 +22,8 @@ The presentation will focus on Wikileaks' cablegate data, and specially on the f
 
 This networks will contents to parties :
 
- # cables nodes linked by co-occurrences,
- # word n-grams nodes linked by an adaptation of the Jaccard similarity index.
+ - cables nodes linked by co-occurrences,
+ - word n-grams nodes linked by an adaptation of the Jaccard similarity index.
 
 
 ###Cablegate-semnet python software
