@@ -43,7 +43,7 @@ class CableIndexer(object):
       
     def index_cables(self, ngramizer, filters, postagger):
         """
-        gets the a document from storage then extract n-grams
+        gets the all cables from storage then extract n-grams
         """
         for cable in self.storage.cables.find():
             if cable is None:

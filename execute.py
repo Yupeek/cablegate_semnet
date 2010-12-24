@@ -51,5 +51,5 @@ if __name__ == "__main__":
     if options.execute == 'print':
         for ngram in mongoconnection["cablegate"].ngrams.find().limit(10):
             logging.debug( ngram )
-        for doc in mongoconnection["cablegate"].cables.find().limit(2):
+        for doc in mongoconnection["cablegate"].cables.find({"$ne": { edges.NGram.length: 0 }}).limit(2):
             logging.debug( doc )

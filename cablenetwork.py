@@ -16,7 +16,7 @@
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
-from bson.code import Code
+from pymongo import bson
 
 class CoocNetwork(object):
     """
@@ -31,36 +31,36 @@ class CoocNetwork(object):
         """
         execute a map-reduce operation on mongodb documents to produce the coocurrence edges matrix
         """
-        result = self.storage.cables.map_reduce( self.get_mapper(), self.get_reducer() )
+        result = self.storage.cables.map_reduce( self.get_mapper(), self.get_reducer(), out="cooccurrences", verbose="true" )
         logging.info("CableExtractor.map_reduce is done")
 
     def get_mapper(self):
-        return Code(
-            function() {
-                for (var ngramid in this.edges.NGram) {
-                    var coocslice = {};
-                    for (var neighbourid in this.edges.NGram) {
-                        if (neighbourid != ngramid) {
-                            coocslice[neighbourid] = 1;
-                        }
-                    }
-                    emit(ngramid, coocslice);
-                }
-            }
+        return bson.code.Code(
+            "function() {"
+            "    for (var ngramid in this.edges.NGram) {"
+            "        var coocslice = {};"
+            "        for (var neighbourid in this.edges.NGram[ngramid]) {"
+            "            if (neighbourid != ngramid) {"
+            "                coocslice[neighbourid] = 1;"
+            "            }"
+            "        }"
+            "        emit(ngramid, coocslice);"
+            "    }"
+            "}"
         )
         
     def get_reducer(self):
-        return Code(
-            function(ngramid, coocslices) {
-                totalcooc = {};
-                for ( var slice in coocslices ) {
-                    for ( var neighbourid in slice ) {
-                        if ( neighbourid in totalcooc )
-                            totalcooc[neighbourid] += slice[neighbourid]
-                        else
-                            totalcooc[neighbourid] = slice[neighbourid]
-                    }
-                }
-                return totalcooc;
-            }
+        return bson.code.Code(
+            "function(ngramid, coocslices) {"
+            "    totalcooc = {};"
+            "    for ( var slice in coocslices ) {"
+            "        for ( var neighbourid in slice ) {"
+            "            if ( neighbourid in totalcooc )"
+            "                totalcooc[neighbourid] += slice[neighbourid];"
+            "            else"
+            "                totalcooc[neighbourid] = slice[neighbourid];"
+            "        }"   
+            "    }"
+            "    return totalcooc;"
+            "}"
         )

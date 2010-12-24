@@ -171,17 +171,18 @@ class NGramizer(object):
                     ngram = self.storage.ngrams.find_one({'_id': ngid})
                     if ngram is not None:
                         # general edges updates
+                        #ngram.edges.label[label] += 1;
+                        #ngram.edges.Document[document['_id']] += 1;
+                        #ngram.edges.postag[label] = tags[i:n+i];
                         self.storage.ngrams.update(
                             { '_id': ngid },
                             {
                                 "$inc" : {
-                                    'edges': {
-                                        'label' : { label : 1 },
-                                        'Document' : { document['_id'] : 1 }
-                                    }
+                                    'edges.label': { label : 1 },
+                                    'edges.Document' : { document['_id'] : 1 }
                                 },
-                                'edges': {
-                                    'postag' : { label: tags[i:n+i] }
+                                "$set": {
+                                    'edges.postag' : { label: tags[i:n+i] }
                                 }
                             }
                         )
@@ -189,11 +190,7 @@ class NGramizer(object):
                             { '_id': document['id'] },
                             {
                                 '$inc': {
-                                    'edges': {
-                                        'NGram': {
-                                            ngid : 1
-                                        }
-                                    }
+                                    'edges.NGram': { ngid : 1 }
                                 }
                             }
                         )
@@ -221,12 +218,8 @@ class NGramizer(object):
                                 self.storage.cables.update(
                                     { '_id': document['id'] },
                                     {
-                                        '$inc': {
-                                            'edges': {
-                                                'NGram': {
-                                                    ngid : 1
-                                                }
-                                            }
+                                        '$set': {
+                                            'edges.NGram': { ngid : 1 }
                                         }
                                     }
                                 )
