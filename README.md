@@ -6,7 +6,7 @@ Talk proposal : [FOSDEM data dev room](http://datadevroom.couch.it/), Brussels, 
 ##Speakers
 
  - Julian Bilcke : software developer for the [TINA project](http://tinasoft.eu), contributor for the [Gephi project](http://gephi.org). Follow me at [@flngr](http://twitter.com/flngr).
- - Elias Showk : (contacts, short bio)
+ - (Elias Showk)[http://github.com/elishowk/] : software engineer at Centre National de la Recherche Scientifique (France). Developer for the [TINA project](http://tinasoft.eu). Its key areas of work are text-mining, building data applications engines with non-relational databases and customized HTTP servers.
 
 ##Audience
 
@@ -14,15 +14,16 @@ Talk proposal : [FOSDEM data dev room](http://datadevroom.couch.it/), Brussels, 
 
 ##Abstract
 
-We propose to present a complete work-flow of textual data analysis, from acquisition to visual exploration of the network of its thematics. Through the presentation of a simple software specifically developed for this talk (http://github.com/elishowk/cablegate-semnet), we would like to provide an overview of productive and widely used softwares and libraries in text analysis, then introduce some features of Gephi, an open-source network visualization & analysis software (http://gephi.org), using data collected with cablegate-semnet.
+We propose to present a complete work-flow of textual data analysis, from acquisition to visual exploration of the network of its thematics. Through the presentation of a (simple software specifically developed for this talk)[http://github.com/elishowk/cablegate-semnet], we will cover a set of productive and widely used softwares and libraries in text analysis, then introduce some features of (Gephi)[http://gephi.org], an open-source network visualization & analysis software, using the data collected and transformed with (cablegate-semnet)[http://github.com/elishowk/cablegate-semnet].
 
 ###Data used and methodology
 
 The presentation will focus on Wikileaks' cablegate data, and specially on the full text of all published diplomatic cables yet. The goal is to produce a weighted network.
 
 This networks will contents to parties :
- - cables nodes linked by co-occurrences,
- - word n-grams nodes linked by an adaptation of the Jaccard similarity index.
+
+ # cables nodes linked by co-occurrences,
+ # word n-grams nodes linked by an adaptation of the Jaccard similarity index.
 
 
 ###Cablegate-semnet python software
