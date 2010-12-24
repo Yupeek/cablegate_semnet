@@ -1,12 +1,11 @@
-#Mapping Cablegate thematics using Python, MongoDB and Gephi
+#Mapping Wikileaks' Cablegate thematics using Python, MongoDB and Gephi
 
-
-Talk proposal : [FOSDEM data dev room](http://datadevroom.couch.it/), Brussels, Feb 5-7 2011, 
+Talk proposal for [FOSDEM's data dev room](http://datadevroom.couch.it/), Brussels, Feb 5-7 2011, 
 
 ##Speakers
 
  - Julian Bilcke : software developer for the [TINA project](http://tinasoft.eu), contributor for the [Gephi project](http://gephi.org). Follow me at [@flngr](http://twitter.com/flngr).
- - (Elias Showk)[http://github.com/elishowk/] : software engineer at Centre National de la Recherche Scientifique (France). Developer for the [TINA project](http://tinasoft.eu). Its key areas of work are text-mining, building data applications engines with non-relational databases and customized HTTP servers.
+ - (Elias Showk)[http://github.com/elishowk/] : software engineer at Centre National de la Recherche Scientifique (France). Developer for the [TINA project](http://tinasoft.eu). Its key areas of work are text-mining, building data applications engines with non-relational databases and customized HTTP servers. Its current main programming language is Python, but also occasionally codes Javascript/JQuery or Perl. Follow me [@elishowk](http://identi.ca/elishowk)
 
 ##Audience
 
@@ -22,8 +21,9 @@ The presentation will focus on Wikileaks' cablegate data, and specially on the f
 
 This networks will contents to parties :
 
- # text thematics nodes linked by co-occurrences,
- # leaked cables nodes linked by a custom similarity index (adaptation of [Jaccard similarity index](http://en.wikipedia.org/wiki/Jaccard_index)).
+ - text thematics nodes linked by co-occurrences,
+ - leaked cables nodes linked by a custom similarity index (adaptation of [Jaccard similarity index](http://en.wikipedia.org/wiki/Jaccard_index)).
+
 
 
 ###1st Part : Cablegate-semnet python software internals demonstration
