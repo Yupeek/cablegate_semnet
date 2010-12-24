@@ -29,7 +29,7 @@ class CableIndexer(object):
     usage :
       extractor = Exporter(minoccs=2)
     """
-    def __init__(self, storage, config):
+    def __init__(self, storage, config, overwrite=True):
         self.storage = storage
         self.config = config
         filters = self._get_extraction_filters()
@@ -38,16 +38,20 @@ class CableIndexer(object):
             training_corpus_size = 10000,
             trained_pickle = self.config['extraction']['tagger']
         )
-        self.storage.ngrams.remove()
-        self.index_cables(NGramizer(self.storage, self.config['extraction']), filters, postagger)
+        self.index_cables(NGramizer(self.storage, self.config['extraction']), filters, postagger, overwrite)
       
-    def index_cables(self, ngramizer, filters, postagger):
+    def index_cables(self, ngramizer, filters, postagger, overwrite):
         """
         gets the all cables from storage then extract n-grams
         """
+        if overwrite is True:
+            self.storage.ngrams.remove()
         for cable in self.storage.cables.find():
             if cable is None:
                 logging.warning("cable %d not found in the database, skipping"%cable_id)
+                continue
+            if overwrite is True:
+                self._erase_cable_edges(cable)
             # extract and filter ngrams
             docngrams = ngramizer.extract(
                 cable,
@@ -58,6 +62,17 @@ class CableIndexer(object):
 
         logging.info("CableExtractor.extract_cables is done")
 
+    def _erase_cable_edges(self, cable):
+        self.storage.cables.update(
+            {'_id': cable['_id']},
+            { '$set': {
+                    "edges": {
+                        'NGram' : {},
+                        'Document': {}
+                    }
+                }
+            }
+        )
     
     def _get_extraction_filters(self):
         """

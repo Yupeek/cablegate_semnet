@@ -30,18 +30,14 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 nltk_treebank_tokenizer = nltk.TreebankWordTokenizer()
 
-# We consider following rules to apply whatever be the langage.
-# ... is an ellipsis, put spaces around before splitting on spaces
-# (make it a token)
-#ellipfind_re = re.compile(ur"(\.\.\.)", re.IGNORECASE|re.VERBOSE)
-#ellipfind_subst = ur" . "
-# A regexp to put spaces if missing after alone marks.
+# We consider following rules to apply before tokenizing
+# A regexp to put spaces if missing after/before alone marks.
 punct1find_re = re.compile(ur"(["+string.punctuation+"])([^\s])", re.IGNORECASE|re.VERBOSE)
 # A regexp to put spaces if missing before alone marks.
 punct2find_re = re.compile(ur"([^\s])([["+string.punctuation+"])", re.IGNORECASE|re.VERBOSE)
 punct_subst = ur"\1 \2"
 
-# A regexp to remove multiple minus signs
+# A regexp to remove multiple minus signs in cables
 multisign_re = re.compile(ur"-+", re.IGNORECASE|re.VERBOSE)
 multisign_subst = ur" \. "
 
@@ -49,9 +45,9 @@ multisign_subst = ur" \. "
 #nonalphanum_re = re.compile(ur"[^ \w\s]", re.IGNORECASE|re.VERBOSE)
 #nonalphanum_subst = ur""
 
-# A regexp to match html entities
+# A regexp to match html entities like '&#x000A;'
 htmlentities_re = re.compile(ur"\&\#x[\d]{1,3}[A-Za-z]{1}\;", re.IGNORECASE|re.VERBOSE)
-htmlentities_subst = ur" \. "
+htmlentities_subst = ur" "
 
 class NGramizer(object):
     """
@@ -178,11 +174,11 @@ class NGramizer(object):
                             { '_id': ngid },
                             {
                                 "$inc" : {
-                                    'edges.label': { label : 1 },
-                                    'edges.Document' : { document['_id'] : 1 }
+                                    'edges.label['+label+']' : 1,
+                                    'edges.Document['+document['_id']+']' : 1
                                 },
                                 "$set": {
-                                    'edges.postag' : { label: tags[i:n+i] }
+                                    'edges.postag['+label+']' : tags[i:n+i]
                                 }
                             }
                         )
@@ -194,7 +190,6 @@ class NGramizer(object):
                                 }
                             }
                         )
-                        #logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'edges': 1 }) )
                         
                     else:
                         # id made from the stemmedcontent and label made from the real tokens
@@ -207,7 +202,8 @@ class NGramizer(object):
                                 'edges': {
                                     'postag' : { label : tags[i:n+i] },
                                     'label': { label : 1 },
-                                    'Document': { document['id'] : 1 }
+                                    'Document': { document['id'] : 1 },
+                                    'NGram': {}
                                 },
                                 'postag' : tags[i:n+i]
                             }
@@ -219,7 +215,7 @@ class NGramizer(object):
                                     { '_id': document['id'] },
                                     {
                                         '$set': {
-                                            'edges.NGram': { ngid : 1 }
+                                            'edges.NGram['+ngid+']': 1
                                         }
                                     }
                                 )

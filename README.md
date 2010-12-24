@@ -4,8 +4,10 @@ Talk proposal for [FOSDEM's data dev room](http://datadevroom.couch.it/), Brusse
 
 ##Speakers
 
- - Julian Bilcke : software developer for the [TINA project](http://tinasoft.eu), contributor for the [Gephi project](http://gephi.org). Follow me at [@flngr](http://twitter.com/flngr).
- - [Elias Showk](http://github.com/elishowk) : software engineer at Centre National de la Recherche Scientifique (France). Developer for the [TINA project](http://tinasoft.eu). Its key areas of work are text-mining, building data applications engines with non-relational databases and customized HTTP servers. Its current main programming language is Python, but also occasionally codes Javascript/JQuery or Perl. Follow me [@elishowk](http://identi.ca/elishowk)
+We are two software engineers at Centre National de la Recherche Scientifique (France) working on the [TINA project](http://tinasoft.eu).
+
+ - [Julian Bilcke](http://github.com/jbilcke) : contributor for the [Gephi project](http://gephi.org). Follow me at [@flngr](http://twitter.com/flngr).
+ - [Elias Showk](http://github.com/elishowk) : Its key areas of work are text-mining with python, building data applications engines with non-relational databases and customized HTTP servers. Also codes Javascript/JQuery/HTML5 web interfaces and, less recently, Perl/Moose/Catalyst modules. Follow me [@elishowk](http://identi.ca/elishowk)
 
 ##Audience
 
@@ -28,6 +30,7 @@ Both categories will be linked by occurrences.
 
 ###1st Part : Cablegate-semnet python software internals demonstration
 
+ - speaker : Elias
 
 This software illustrates common methods of text-mining taking advantage of Python built-in functions as well as some external and famous libraries (NLTK, BeautifulSoup).
 It also demonstrate the simplicity and power of [Mongo DB](http://mongodb.org) in tasks like document indexing and information extraction.
@@ -42,6 +45,8 @@ The talk will focus on the following topics :
 
 
 ###2nd part : Gephi demonstration
+
+ - speaker : Julian
 
 Cablegate-semnet has a quite naive automatic selection of text thematics and produces a network containing some noise. On the other hand, the two types of nodes implies three types of edges so that we can expect a [dense graph](http://en.wikipedia.org/wiki/Dense_graph). The aim of this second part is to demonstrate Gephi's features in network post-processing, with a focus on :
 

@@ -28,9 +28,9 @@ import yaml
 
 def get_parser():
     parser = OptionParser()
-    parser.add_option("-e", "--execute", dest="execute", help="execution action", metavar="FILE")
-    parser.add_option("-a", "--archive", dest="archive", help="cablegate archive path", metavar="FILE")
-    parser.add_option("-o", "--occurrences", dest="minoccs", help="minimum keyphrases' occurrences", metavar="int")
+    parser.add_option("-e", "--execute", dest="execute", help="execution action")
+    parser.add_option("-a", "--archive", dest="archive", help="cablegate archive path")
+    parser.add_option("-m", "--minoccurrences", dest="minoccs", help="minimum keyphrases' occurrences", type="int")
     parser.add_option("-c", "--config", dest="config", help="config yaml file path", metavar="FILE")
     return parser
 
@@ -45,9 +45,9 @@ if __name__ == "__main__":
     if options.execute == 'import':
         importer = CableImporter( mongoconnection["cablegate"], options.archive )
     if options.execute == 'index':
-        extractor = CableIndexer(mongoconnection["cablegate"], config)
+        extractor = CableIndexer(mongoconnection["cablegate"], config, True)
     if options.execute == 'graph':
-        extractor = CoocGraph(mongoconnection["cablegate"], config, int(options.minoccs))
+        extractor = CoocGraph(mongoconnection["cablegate"], config, options.minoccs)
     if options.execute == 'print':
         for ngram in mongoconnection["cablegate"].ngrams.find().limit(10):
             logging.debug( ngram )
