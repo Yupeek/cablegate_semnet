@@ -16,26 +16,27 @@
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
-from pymongo import bson
+from pymongo import code
 
 class CoocNetwork(object):
     """
     Reads all database entries to produce a network
     """
-    def __init__(self, storage, config, minoccs=1):
+    def __init__(self, storage, config, mincoocs=1):
         self.storage = storage
         self.config = config
-        self.map_reduce(minoccs)
+        self.cooc_map_reduce(mincoocs)
       
-    def map_reduce(self, ngramizer, filters, postagger, minoccs):
+    def cooc_map_reduce(self, mincoocs):
         """
         execute a map-reduce operation on mongodb documents to produce the coocurrence edges matrix
         """
         result = self.storage.cables.map_reduce( self.get_mapper(), self.get_reducer(), out="cooccurrences", verbose="true" )
-        logging.info("CableExtractor.map_reduce is done")
+        logging.info("CableExtractor.map_reduce is done : %d result produced"%result.count())
+        return result
 
-    def get_mapper(self):
-        return bson.code.Code(
+    def get_mapper(self):   
+        return code.Code(
             "function() {"
             "    for (var ngramid in this.edges.NGram) {"
             "        var coocslice = {};"
@@ -50,7 +51,7 @@ class CoocNetwork(object):
         )
         
     def get_reducer(self):
-        return bson.code.Code(
+        return code.Code(
             "function(ngramid, coocslices) {"
             "    totalcooc = {};"
             "    for ( var slice in coocslices ) {"

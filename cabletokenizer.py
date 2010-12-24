@@ -174,11 +174,11 @@ class NGramizer(object):
                             { '_id': ngid },
                             {
                                 "$inc" : {
-                                    'edges.label['+label+']' : 1,
-                                    'edges.Document['+document['_id']+']' : 1
+                                    'edges.label["'+label+'"]' : 1,
+                                    'edges.Document["'+document['_id']+'"]' : 1
                                 },
                                 "$set": {
-                                    'edges.postag['+label+']' : tags[i:n+i]
+                                    'edges.postag["'+label+'"]' : tags[i:n+i]
                                 }
                             }
                         )
@@ -186,7 +186,7 @@ class NGramizer(object):
                             { '_id': document['id'] },
                             {
                                 '$inc': {
-                                    'edges.NGram': { ngid : 1 }
+                                    'edges.NGram["'+ngid+'"]' : 1
                                 }
                             }
                         )
@@ -202,7 +202,7 @@ class NGramizer(object):
                                 'edges': {
                                     'postag' : { label : tags[i:n+i] },
                                     'label': { label : 1 },
-                                    'Document': { document['id'] : 1 },
+                                    'Document': { document['_id'] : 1 },
                                     'NGram': {}
                                 },
                                 'postag' : tags[i:n+i]
@@ -210,12 +210,12 @@ class NGramizer(object):
                             # application defined filtering
                             if filtering.apply_filters(ngram, filters) is True:
                                 doc_ngrams += [ngid]
-                                self.storage.ngrams.insert(ngram)
+                                self.storage.ngrams.save(ngram)
                                 self.storage.cables.update(
-                                    { '_id': document['id'] },
+                                    { '_id': document['_id'] },
                                     {
                                         '$set': {
-                                            'edges.NGram['+ngid+']': 1
+                                            'edges.NGram["'+ngid+'"]': 1
                                         }
                                     }
                                 )
