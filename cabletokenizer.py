@@ -167,28 +167,17 @@ class NGramizer(object):
                     ngram = self.storage.ngrams.find_one({'_id': ngid})
                     if ngram is not None:
                         # general edges updates
-                        #ngram.edges.label[label] += 1;
-                        #ngram.edges.Document[document['_id']] += 1;
-                        #ngram.edges.postag[label] = tags[i:n+i];
-                        self.storage.ngrams.update(
+                        ngram.edges.label[label] += 1;
+                        ngram.edges.Document[document['_id']] += 1;
+                        ngram.edges.postag[label] = tags[i:n+i];
+                        self.storage.ngrams.save(
                             { '_id': ngid },
-                            {
-                                "$inc" : {
-                                    'edges.label["'+label+'"]' : 1,
-                                    'edges.Document["'+document['_id']+'"]' : 1
-                                },
-                                "$set": {
-                                    'edges.postag["'+label+'"]' : tags[i:n+i]
-                                }
-                            }
+                            ngram
                         )
-                        self.storage.cables.update(
-                            { '_id': document['id'] },
-                            {
-                                '$inc': {
-                                    'edges.NGram["'+ngid+'"]' : 1
-                                }
-                            }
+                        document.edges.NGram[ngid] += 1
+                        self.storage.cables.save(
+                            { '_id': document['_id'] },
+                            document
                         )
                         
                     else:
@@ -211,16 +200,11 @@ class NGramizer(object):
                             if filtering.apply_filters(ngram, filters) is True:
                                 doc_ngrams += [ngid]
                                 self.storage.ngrams.save(ngram)
-                                self.storage.cables.update(
+                                document.edges.NGram[ngid] += 1
+                                self.storage.cables.save(
                                     { '_id': document['_id'] },
-                                    {
-                                        '$set': {
-                                            'edges.NGram["'+ngid+'"]': 1
-                                        }
-                                    }
-                                )
-                                #logging.debug( self.storage.ngrams.find_one({ '_id': ngid }, { 'edges': 1 }) )
-                                
+                                    document
+                                )  
                         except Exception, exc:
                             logging.error("error inserting new ngram %s : %s"%(label, exc))
                             

@@ -45,7 +45,7 @@ class CableIndexer(object):
         gets the all cables from storage then extract n-grams
         """
         if overwrite is True:
-            self.storage.ngrams.remove()
+            self.storage.ngrams.drop_collection()
         for cable in self.storage.cables.find():
             if cable is None:
                 logging.warning("cable %d not found in the database, skipping"%cable_id)

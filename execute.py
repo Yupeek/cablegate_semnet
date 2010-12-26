@@ -32,6 +32,7 @@ def get_parser():
     parser.add_option("-a", "--archive", dest="archive", help="cablegate archive path")
     parser.add_option("-m", "--minoccurrences", dest="minoccs", help="minimum keyphrases' occurrences", type="int")
     parser.add_option("-c", "--config", dest="config", help="config yaml file path", metavar="FILE")
+    parser.add_option("-o", "--overwrite", dest="overwrite", help="overwrite database contents", metavar="bool")
     return parser
 
 if __name__ == "__main__":
@@ -43,7 +44,7 @@ if __name__ == "__main__":
    
     mongoconnection = CablegateDatabase("localhost")
     if options.execute == 'import':
-        importer = CableImporter( mongoconnection["cablegate"], options.archive )
+        importer = CableImporter( mongoconnection["cablegate"], options.archive, False )
     if options.execute == 'index':
         extractor = CableIndexer(mongoconnection["cablegate"], config, True)
     if options.execute == 'graph':
