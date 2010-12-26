@@ -32,7 +32,7 @@ def get_parser():
     parser.add_option("-a", "--archive", dest="archive", help="cablegate archive path")
     parser.add_option("-m", "--minoccurrences", dest="minoccs", help="minimum keyphrases' occurrences", type="int")
     parser.add_option("-c", "--config", dest="config", help="config yaml file path", metavar="FILE")
-    parser.add_option("-o", "--overwrite", dest="overwrite", help="overwrite database contents", metavar="bool")
+    parser.add_option("-o", "--overwrite", dest="overwrite", help="overwrite database contents", type="int")
     return parser
 
 if __name__ == "__main__":
@@ -44,9 +44,9 @@ if __name__ == "__main__":
    
     mongoconnection = CablegateDatabase("localhost")
     if options.execute == 'import':
-        importer = CableImporter( mongoconnection["cablegate"], options.archive, True )
+        importer = CableImporter( mongoconnection["cablegate"], options.archive, bool(options.overwrite) )
     if options.execute == 'index':
-        extractor = CableIndexer(mongoconnection["cablegate"], config, True)
+        extractor = CableIndexer(mongoconnection["cablegate"], config, bool(options.overwrite))
     if options.execute == 'graph':
         cooccurrences = CoocNetwork(mongoconnection["cablegate"], config, options.minoccs)
     if options.execute == 'print':

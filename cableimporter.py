@@ -87,7 +87,7 @@ class CableImporter(object):
         try:
             #import pdb; pdb.set_trace()
             contentsoup = BeautifulSoup(raw, parseOnlyThese = self.contentsoup)
-            cablecontent = contentsoup.findAll("pre")[1].contents[1].contents[0]
+            cablecontent = unicode( nltk.clean_html( str( contentsoup.findAll("pre")[1] ) ), encoding="utf_8", errors="replace" )
             del raw
 
             cable = {
@@ -98,7 +98,7 @@ class CableImporter(object):
                 'date_time' : cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0],
                 'classification' : cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
                 'origin' : cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
-                'content' : unicode( nltk.clean_html( str(cablecontent) ), encoding="utf_8", errors="replace" ),
+                'content' : cablecontent,
                 'edges': {
                     'NGram': {},
                     'Document': {}
