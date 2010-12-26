@@ -20,7 +20,7 @@ from os.path import join
 import re
 
 from cabletokenizer import NGramizer
-
+from datamodel import initEdges
 from tinasoft.pytextminer import stopwords, filtering, tagger, stemmer
 
 class CableIndexer(object):
@@ -51,7 +51,7 @@ class CableIndexer(object):
                 logging.warning("cable %d not found in the database, skipping"%cable_id)
                 continue
             if overwrite is True:
-                cable = self._erase_cable_edges(cable)
+                cable = initEdges(cable)
             # extract and filter ngrams
             docngrams = ngramizer.extract(
                 cable,
@@ -61,11 +61,6 @@ class CableIndexer(object):
             )
 
         logging.info("CableExtractor.extract_cables is done")
-
-    def _erase_cable_edges(self, cable):
-        cable["edges"]['NGram'] = {}
-        cable["edges"]['Document'] = {}
-        return cable
     
     def _get_extraction_filters(self):
         """

@@ -43,6 +43,8 @@ class CableImporter(object):
         self.cable_id = []
         self.tablesoup = SoupStrainer("table", attrs={ "class" : "cable" })
         self.contentsoup = SoupStrainer("pre")
+        if overwrite is True and "cables" in self.db.collection_names():
+            self.db.cables.remove()
         self.walk_archive(overwrite)
     
     def walk_archive(self, overwrite):
@@ -75,16 +77,15 @@ class CableImporter(object):
         """
         Cable Content extractor
         """
-        tablesoup = BeautifulSoup(raw, parseOnlyThese = self.tablesoup)
-        cable_table = tablesoup.find("table")
-        cable_id = cable_table.findAll('tr')[1].findAll('td')[0].contents[1].contents[0]
-
         if overwrite is False and self.db.cables.find_one( {'_id': cable_id} ) is not None:   
             logging.info('CABLE ALREADY EXISTS : SKIPPING')
             self.cable_id += [cable_id]
             self.print_counts()
             return
         try:
+            tablesoup = BeautifulSoup(raw, parseOnlyThese = self.tablesoup)
+            cable_table = tablesoup.find("table")
+            cable_id = cable_table.findAll('tr')[1].findAll('td')[0].contents[1].contents[0]
             #import pdb; pdb.set_trace()
             contentsoup = BeautifulSoup(raw, parseOnlyThese = self.contentsoup)
             cablecontent = unicode( nltk.clean_html( str( contentsoup.findAll("pre")[1] ) ), encoding="utf_8", errors="replace" )

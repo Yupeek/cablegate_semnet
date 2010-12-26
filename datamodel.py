@@ -88,6 +88,12 @@ def addEdge( node, type, key, value ):
         node['edges'][type][key] = value
     return node
 
+def initEdges(node):
+    if 'edges' not in node:
+        node['edges']={}
+    node["edges"]['NGram'] = {}
+    node["edges"]['Document'] = {}
+    return node
 
 #class Cable(NetworkNode):
 #    
