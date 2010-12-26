@@ -31,6 +31,7 @@ def get_parser():
     parser.add_option("-e", "--execute", dest="execute", help="execution action")
     parser.add_option("-a", "--archive", dest="archive", help="cablegate archive path")
     parser.add_option("-m", "--minoccurrences", dest="minoccs", help="minimum keyphrases' occurrences", type="int")
+    parser.add_option("-n", "--mincooccurrences", dest="mincoocs", help="minimum keyphrases' cooccurrences", type="int")
     parser.add_option("-c", "--config", dest="config", help="config yaml file path", metavar="FILE")
     parser.add_option("-o", "--overwrite", dest="overwrite", help="overwrite database contents", type="int")
     return parser
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     if options.execute == 'index':
         extractor = CableIndexer(mongoconnection["cablegate"], config, bool(options.overwrite))
     if options.execute == 'graph':
-        cooccurrences = CoocNetwork(mongoconnection["cablegate"], config, options.minoccs)
+        cooccurrences = CoocNetwork(mongoconnection["cablegate"], config, options.minoccs, options.mincoocs)
     if options.execute == 'print':
         for ngram in mongoconnection["cablegate"].ngrams.find().limit(10):
             logging.debug( ngram )

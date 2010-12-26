@@ -170,15 +170,9 @@ class NGramizer(object):
                         ngram = overwriteEdge( ngram, 'postag', label, tags[i:n+i])
                         ngram = addEdge( ngram, 'Document', document['_id'], 1)
                         ngram = addEdge( ngram, 'label', label, 1)
-                        self.storage.ngrams.save(
-                            { '_id': ngid },
-                            ngram
-                        )
+                        self.storage.ngrams.save(ngram)
                         document = addEdge( document, 'NGram', ngid, 1 )
-                        self.storage.cables.save(
-                            { '_id': document['_id'] },
-                            document
-                        )
+                        self.storage.cables.save(document) 
                         
                     else:
                         # id made from the stemmedcontent and label made from the real tokens
@@ -201,10 +195,7 @@ class NGramizer(object):
                                 doc_ngrams += [ngid]
                                 self.storage.ngrams.save(ngram)
                                 document = addEdge( document, 'NGram', ngid, 1 )
-                                self.storage.cables.save(
-                                    { '_id': document['_id'] },
-                                    document
-                                )  
+                                self.storage.cables.save(document)  
                         except Exception, exc:
                             logging.error("error inserting new ngram %s : %s"%(label, exc))
                             
