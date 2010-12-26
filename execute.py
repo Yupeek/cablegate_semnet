@@ -44,7 +44,7 @@ if __name__ == "__main__":
    
     mongoconnection = CablegateDatabase("localhost")
     if options.execute == 'import':
-        importer = CableImporter( mongoconnection["cablegate"], options.archive, False )
+        importer = CableImporter( mongoconnection["cablegate"], options.archive, True )
     if options.execute == 'index':
         extractor = CableIndexer(mongoconnection["cablegate"], config, True)
     if options.execute == 'graph':

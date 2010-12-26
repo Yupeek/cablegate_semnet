@@ -46,92 +46,87 @@ def getNodeId(tokens):
     convert = getNodeLabel(tokens).lower() 
     return sha256( convert.encode( 'ascii', 'replace' ) ).hexdigest()
   
-class NetworkNode(UserDict):
-    """
-    is a the parent class
-    """
-    defaults = {
-        'label': None,
-        'content': None,
-        'id': None,
-        'edges': { 'Document' : {}, 'NGram' : {} }
-    }
-    
-    def __init__(self, attributes=None, **kwargs):
-        self.defaults.update(attributes)
-        UserDict.__init__(self, self.defaults, **kwargs)
         
-    def _addUniqueEdge( self, type, key, value ):
-        """
-        low level method writing ONLY ONCE a weighted edge 
-        """
-        if type not in self['edges']:
-            self['edges'][type]={}
-        if key in self['edges'][type]:
-            return
-        else:
-            self['edges'][type][key] = value
-            return
 
-    def _overwriteEdge(self, type, key, value):
-        """
-        low level method overwriting a weighted edge 
-        """
-        if type not in self['edges']:
-            self['edges'][type]={}
-        self['edges'][type][key] = value
-
-    def _addEdge(self, type, key, value):
-        """
-        low level method incrementing a weighted edge
-        """
-        if type not in self['edges']:
-            self['edges'][type]={}
-        if key in self['edges'][type]:
-            self['edges'][type][key] += value
-        else:
-            self['edges'][type][key] = value
-        return
-
-
-class Cable(NetworkNode):
-    
-    def __init__(self, dict=None, **kwargs): 
-        NetworkNode.__init__(self, dict, **kwargs)
-        
-    def _parseLabel(self):
-        """
-        TODO
-        """
-        #res = re.search(r"SUBJECT:(.+)\&\#x000A\;\&\#x000A;", self['content'], re.I|re.M)
-        #if res is None: return
-        #findlabel = res.group(0)
-        #if findlabel is None: return
-        #self['label'] = findlabel
-        return
-    
-    def addEdge(self, type, key, value):
-      if type in ["NGram"]:
-          return self._addUniqueEdge( type, key, value )
-      elif type in ["Document"]:
-          return self._overwriteEdge( type, key, value )
-      else:
-          return self._addEdge( type, key, value )
-
-
-class NGram(NetworkNode):
+def addUniqueEdge( node, type, key, value ):
     """
-    accepts only once to write an edge to a Document
-    all other edges accept multiples writes
+    low level method writing ONLY ONCE a weighted edge 
     """
-    def __init__(self, dict=None, **kwargs): 
-        NetworkNode.__init__(self, dict, **kwargs)
-        self['edges'].update({'postag': {}, 'label': {}})
-      
-    def addEdge(self, type, key, value):
-        if type in ["Document"]:
-            return self._addUniqueEdge( type, key, value )
-        elif type in ["NGram", "postag"]:
-            return self._overwriteEdge( type, key, value )
-        else:
-            return self._addEdge( type, key, value )
+    if 'edges' not in node:
+        node['edges']={}
+    if type not in node['edges']:
+        node['edges'][type]={}
+    if key in node['edges'][type]:
+        return node
+    else:
+        node['edges'][type][key] = value
+        return node
+
+
+def overwriteEdge( node, type, key, value ):
+    """
+    low level method overwriting a weighted edge 
+    """
+    if 'edges' not in node:
+        node['edges']={}
+    if type not in node['edges']:
+        node['edges'][type]={}
+    node['edges'][type][key] = value
+    return node
+
+def addEdge( node, type, key, value ):
+    """
+    low level method incrementing a weighted edge
+    """
+    if 'edges' not in node:
+        node['edges']={}
+    if type not in node['edges']:
+        node['edges'][type]={}
+    if key in node['edges'][type]:
+        node['edges'][type][key] += value
+    else:
+        node['edges'][type][key] = value
+    return node
+
+
+#class Cable(NetworkNode):
+#    
+#    def __init__(self, dict=None, **kwargs): 
+#        NetworkNode.__init__(self, dict, **kwargs)
+#        
+#    def _parseLabel(self):
+#        """
+#        TODO
+#        """
+#        #res = re.search(r"SUBJECT:(.+)\&\#x000A\;\&\#x000A;", self['content'], re.I|re.M)
+#        #if res is None: return
+#        #findlabel = res.group(0)
+#        #if findlabel is None: return
+#        #self['label'] = findlabel
+#        return
+#    
+#    def addEdge(self, type, key, value):
+#      if type in ["NGram"]:
+#          return self._addUniqueEdge( type, key, value )
+#      elif type in ["Document"]:
+#          return self._overwriteEdge( type, key, value )
+#      else:
+#          return self._addEdge( type, key, value )
+#
+#
+#class NGram(NetworkNode):
+#    """
+#    accepts only once to write an edge to a Document
+#    all other edges accept multiples writes
+#    """
+#    def __init__(self, dict=None, **kwargs): 
+#        NetworkNode.__init__(self, dict, **kwargs)
+#        self['edges'].update({'postag': {}, 'label': {}})
+#      
+#    def addEdge(self, type, key, value):
+#        if type in ["Document"]:
+#            return self._addUniqueEdge( type, key, value )
+#        elif type in ["NGram", "postag"]:
+#            return self._overwriteEdge( type, key, value )
+#        else:
+#            return self._addEdge( type, key, value )

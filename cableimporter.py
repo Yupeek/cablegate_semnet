@@ -41,7 +41,8 @@ class CableImporter(object):
         self.data_directory = join(data_directory, "cable")
         self.db = db
         self.cable_id = []
-        self.soupstrained = SoupStrainer("table", { "class" : "cable" })
+        self.tablesoup = SoupStrainer("table", attrs={ "class" : "cable" })
+        self.contentsoup = SoupStrainer("pre")
         self.walk_archive(overwrite)
     
     def walk_archive(self, overwrite):
@@ -72,10 +73,10 @@ class CableImporter(object):
     
     def extract_content(self, raw, overwrite):
         """
-        Content extractor
+        Cable Content extractor
         """
-        soup = BeautifulSoup(raw, parseOnlyThese = self.soupstrained)
-        cable_table = soup.find("table")
+        tablesoup = BeautifulSoup(raw, parseOnlyThese = self.tablesoup)
+        cable_table = tablesoup.find("table")
         cable_id = cable_table.findAll('tr')[1].findAll('td')[0].contents[1].contents[0]
 
         if overwrite is False and self.db.cables.find_one( {'_id': cable_id} ) is not None:   
@@ -84,6 +85,11 @@ class CableImporter(object):
             self.print_counts()
             return
         try:
+            #import pdb; pdb.set_trace()
+            contentsoup = BeautifulSoup(raw, parseOnlyThese = self.contentsoup)
+            cablecontent = contentsoup.findAll("pre")[1].contents[1].contents[0]
+            del raw
+
             cable = {
                 # auto index
                 '_id' : cable_id,
@@ -92,7 +98,11 @@ class CableImporter(object):
                 'date_time' : cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0],
                 'classification' : cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
                 'origin' : cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
-                'content' : unicode( nltk.clean_html( soup.findAll(['pre'])[1] ), encoding="utf_8", errors="replace" )
+                'content' : unicode( nltk.clean_html( str(cablecontent) ), encoding="utf_8", errors="replace" ),
+                'edges': {
+                    'NGram': {},
+                    'Document': {}
+                }
             }
             # insert or auto overwrites existing cable (indexed by '_id')
             self.db.cables.save(cable)

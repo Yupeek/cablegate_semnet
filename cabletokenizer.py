@@ -23,7 +23,7 @@ import string
 from tinasoft.pytextminer import tagger
 from tinasoft.pytextminer import filtering
 
-from datamodel import NGram, getNodeId, getNodeLabel, updateNodeEdges   
+from datamodel import getNodeId, getNodeLabel, updateNodeEdges, overwriteEdge, addEdge, addUniqueEdge
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
@@ -167,14 +167,14 @@ class NGramizer(object):
                     ngram = self.storage.ngrams.find_one({'_id': ngid})
                     if ngram is not None:
                         # general edges updates
-                        ngram.edges.label[label] += 1;
-                        ngram.edges.Document[document['_id']] += 1;
-                        ngram.edges.postag[label] = tags[i:n+i];
+                        ngram = overwriteEdge( ngram, 'postag', label, tags[i:n+i])
+                        ngram = addEdge( ngram, 'Document', document['_id'], 1)
+                        ngram = addEdge( ngram, 'label', label, 1)
                         self.storage.ngrams.save(
                             { '_id': ngid },
                             ngram
                         )
-                        document.edges.NGram[ngid] += 1
+                        document = addEdge( document, 'NGram', ngid, 1 )
                         self.storage.cables.save(
                             { '_id': document['_id'] },
                             document
@@ -200,7 +200,7 @@ class NGramizer(object):
                             if filtering.apply_filters(ngram, filters) is True:
                                 doc_ngrams += [ngid]
                                 self.storage.ngrams.save(ngram)
-                                document.edges.NGram[ngid] += 1
+                                document = addEdge( document, 'NGram', ngid, 1 )
                                 self.storage.cables.save(
                                     { '_id': document['_id'] },
                                     document
