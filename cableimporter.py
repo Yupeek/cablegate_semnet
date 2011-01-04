@@ -77,15 +77,15 @@ class CableImporter(object):
         """
         Cable Content extractor
         """
-        if overwrite is False and self.db.cables.find_one( {'_id': cable_id} ) is not None:   
-            logging.info('CABLE ALREADY EXISTS : SKIPPING')
-            self.cable_id += [cable_id]
-            self.print_counts()
-            return
         try:
             tablesoup = BeautifulSoup(raw, parseOnlyThese = self.tablesoup)
             cable_table = tablesoup.find("table")
             cable_id = cable_table.findAll('tr')[1].findAll('td')[0].contents[1].contents[0]
+            if overwrite is False and self.db.cables.find_one( {'_id': cable_id} ) is not None:   
+                logging.info('CABLE ALREADY EXISTS : SKIPPING')
+                self.cable_id += [cable_id]
+                self.print_counts()
+                return
             #import pdb; pdb.set_trace()
             contentsoup = BeautifulSoup(raw, parseOnlyThese = self.contentsoup)
             cablecontent = unicode( nltk.clean_html( str( contentsoup.findAll("pre")[1] ) ), encoding="utf_8", errors="replace" )
