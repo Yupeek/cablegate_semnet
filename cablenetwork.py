@@ -39,32 +39,7 @@ class CableNetwork(object):
         return result
 
     def get_cooc_mapper(self):   
-        return code.Code(
-            "function() {"
-            "    for (var ngramid in this.edges['NGram']) {"
-            "        var coocslice = {};"
-            "        for (var neighbourid in this.edges['NGram'][ngramid]) {"
-            "            if (neighbourid != ngramid) {"
-            "                coocslice[neighbourid] = 1;"
-            "            }"
-            "        }"
-            "        emit(ngramid, coocslice);"
-            "    }"
-            "}"
-        )
+        return code.Code(open("coocmapper.js",'rU').read())
         
     def get_cooc_reducer(self):
-        return code.Code(
-            "function(ngramid, coocslices) {"
-            "    totalcooc = {};"
-            "    for ( var slice in coocslices ) {"
-            "        for ( var neighbourid in slice ) {"
-            "            if ( neighbourid in totalcooc )"
-            "                totalcooc[neighbourid] += slice[neighbourid];"
-            "            else"
-            "                totalcooc[neighbourid] = slice[neighbourid];"
-            "        }"   
-            "    }"
-            "    return totalcooc;"
-            "}"
-        )
+        return code.Code(open("coocreducer.js",'rU').read())
