@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 from mongodbhandler import CablegateDatabase
 from cableimporter import CableImporter
 from cableindexer import CableIndexer
-from cablenetwork import CoocNetwork
+from cablenetwork import CableNetwork
 
 import yaml
 
@@ -48,8 +48,8 @@ if __name__ == "__main__":
         importer = CableImporter( mongoconnection["cablegate"], options.archive, bool(options.overwrite) )
     if options.execute == 'index':
         extractor = CableIndexer(mongoconnection["cablegate"], config, bool(options.overwrite))
-    if options.execute == 'graph':
-        cooccurrences = CoocNetwork(mongoconnection["cablegate"], config, options.minoccs, options.mincoocs)
+    if options.execute == 'network':
+        cooccurrences = CableNetwork(mongoconnection["cablegate"], config, options.minoccs, options.mincoocs)
     if options.execute == 'print':
         for ngram in mongoconnection["cablegate"].ngrams.find().limit(10):
             logging.debug( ngram )

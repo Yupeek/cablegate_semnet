@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 from pymongo import code
 
-class CoocNetwork(object):
+class CableNetwork(object):
     """
     Reads all database entries to produce a network
     """
@@ -27,6 +27,7 @@ class CoocNetwork(object):
         self.config = config
         # TODO : remove ngram occurring less than minoccs
         self.cooc_map_reduce(mincoocs)
+        # TODO logJaccard mapreduce
       
     def cooc_map_reduce(self, mincoocs):
         """
@@ -40,9 +41,9 @@ class CoocNetwork(object):
     def get_cooc_mapper(self):   
         return code.Code(
             "function() {"
-            "    for (var ngramid in this.edges.NGram) {"
+            "    for (var ngramid in this.edges['NGram']) {"
             "        var coocslice = {};"
-            "        for (var neighbourid in this.edges.NGram[ngramid]) {"
+            "        for (var neighbourid in this.edges['NGram'][ngramid]) {"
             "            if (neighbourid != ngramid) {"
             "                coocslice[neighbourid] = 1;"
             "            }"
