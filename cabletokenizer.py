@@ -58,7 +58,7 @@ class NGramizer(object):
     def __init__(self, storage, config):
         self.storage = storage
         self.config = config
-    
+
     def extract(self, documentObj, filters, tagger, stemmer):
         """
         sanitizes content and label texts
@@ -91,8 +91,8 @@ class NGramizer(object):
                 )
         except StopIteration, stopit:
             logging.info("finished extraction of %d ngrams on cable %s"%(len(aggregated_ngrams),documentObj['_id']))
-            return
-        
+            return aggregated_ngrams
+
     def selectcontent(self, doc):
         """
         Adds content fields from application's configuration
@@ -106,7 +106,7 @@ class NGramizer(object):
         if len(customContent)==0:
             logging.error("document %s content is empty"%doc['_id'])
         return customContent
-    
+
     def sanitize(self, input):
         """
         @input content text to sanitize
@@ -127,7 +127,7 @@ class NGramizer(object):
                         input
                     )
                 )
-            )  
+            )
         )
         return output.strip()
 
@@ -172,8 +172,8 @@ class NGramizer(object):
                         ngram = addEdge( ngram, 'label', label, 1)
                         self.storage.ngrams.save(ngram)
                         document = addEdge( document, 'NGram', ngid, 1 )
-                        self.storage.cables.save(document) 
-                        
+                        self.storage.cables.save(document)
+
                     else:
                         # id made from the stemmedcontent and label made from the real tokens
                         try:
@@ -195,8 +195,8 @@ class NGramizer(object):
                                 doc_ngrams += [ngid]
                                 self.storage.ngrams.save(ngram)
                                 document = addEdge( document, 'NGram', ngid, 1 )
-                                self.storage.cables.save(document)  
+                                self.storage.cables.save(document)
                         except Exception, exc:
                             logging.error("error inserting new ngram %s : %s"%(label, exc))
-                            
+
         return doc_ngrams

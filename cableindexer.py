@@ -18,9 +18,10 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 from os.path import join
 import re
+import itertools
 
 from cabletokenizer import NGramizer
-from datamodel import initEdges
+from datamodel import initEdges, addEdge
 from tinasoft.pytextminer import stopwords, filtering, tagger, stemmer
 
 class CableIndexer(object):
@@ -38,11 +39,11 @@ class CableIndexer(object):
             training_corpus_size = 10000,
             trained_pickle = self.config['extraction']['tagger']
         )
-        self.index_cables(NGramizer(self.storage, self.config['extraction']), filters, postagger, overwrite)
-      
-    def index_cables(self, ngramizer, filters, postagger, overwrite):
+        self.cable_semnet(NGramizer(self.storage, self.config['extraction']), filters, postagger, overwrite)
+
+    def cable_semnet(self, ngramizer, filters, postagger, overwrite):
         """
-        gets the all cables from storage then extract n-grams
+        gets the all cables from storage then extract n-grams and produce networks edges and weights
         """
         if overwrite is True and "ngrams" in self.storage.collection_names():
             self.storage.ngrams.remove()
@@ -59,9 +60,54 @@ class CableIndexer(object):
                 postagger,
                 stemmer.Nltk()
             )
+            self.update_cooccurrences(docngrams)
+        neighbours_id = []
+        for cable in self.storage.cables.find():
+            neighbours_id += [cable["_id"]]
+            self.update_logJaccard(cable, overwrite)
 
-        logging.info("CableExtractor.extract_cables is done")
-    
+    def update_cooccurrences(self, docngrams):
+        """ updates a document's ngrams cooccurrences """
+        for (ngi, ngj) in itertools.combinations(docngrams, 2):
+
+            ngram = self.storage.ngrams.find_one({"_id":ngi})
+            if ngram is not None:
+                ngram = addEdge( ngram, 'NGram', ngj, 1)
+            self.storage.ngrams.save(ngram)
+
+            ngram = self.storage.ngrams.find_one({"_id":ngj})
+            if ngram is not None:
+                ngram = addEdge( ngram, 'NGram', ngi, 1)
+            self.storage.ngrams.save(ngram)
+
+        logging.info("CableExtractor.update_cooccurrences done")
+
+    def update_logJaccard( self, document, neighbours_id, overwrite=True ):
+        """
+        a Jaccard-like similarity distance
+        Invalid if summing values avor many periods
+        """
+        doc1ngrams = document['edges']['NGrams'].keys()
+        for docid in neighbours_id:
+            document2 = self.storage.cables.find_one({"_id":docid})
+            if docid != document['_id']:
+                document2 = self.storage.cables.find_one({"_id":doc_id_2})
+                doc2ngrams = self.documentngrams[docid]
+                ngramsintersection = doc1ngrams & doc2ngrams
+                ngramsunion = (doc1ngrams | doc2ngrams)
+                weight = 0
+                numerator = 0
+                for ngi in ngramsintersection:
+                    numerator += 1/(math.log( 1 + self.corpus['edges']['NGram'][ngi] ))
+                denominator = 0
+                for ngi in ngramsunion:
+                    denominator += 1/(math.log( 1 + self.corpus['edges']['NGram'][ngi] ))
+                if denominator > 0:
+                    weight = numerator / denominator
+                submatrix.set(document['id'], docid, value=weight, overwrite=True)
+                submatrix.set(docid, document['id'], value=weight, overwrite=True)
+        return submatrix
+
     def _get_extraction_filters(self):
         """
         returns extraction filters

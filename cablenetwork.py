@@ -18,6 +18,8 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 from pymongo import code
 
+import itertools
+
 class CableNetwork(object):
     """
     Reads all database entries to produce a network
@@ -28,7 +30,7 @@ class CableNetwork(object):
         # TODO : remove ngram occurring less than minoccs
         self.cooc_map_reduce(mincoocs)
         # TODO logJaccard mapreduce
-      
+
     def cooc_map_reduce(self, mincoocs):
         """
         execute a map-reduce operation on mongodb documents to produce the coocurrence network
@@ -38,8 +40,8 @@ class CableNetwork(object):
         logging.info("CableExtractor.map_reduce is done : %d result produced"%result.count())
         return result
 
-    def get_cooc_mapper(self):   
+    def get_cooc_mapper(self):
         return code.Code(open("coocmapper.js",'rU').read())
-        
+
     def get_cooc_reducer(self):
         return code.Code(open("coocreducer.js",'rU').read())
