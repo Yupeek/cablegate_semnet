@@ -47,7 +47,7 @@ class CableIndexer(object):
         """
         if overwrite is True and "ngrams" in self.storage.collection_names():
             self.storage.ngrams.remove()
-        for cable in self.storage.cables.find():
+        for cable in self.storage.cables.find(timeout=False):
             if cable is None:
                 logging.warning("cable %d not found in the database, skipping"%cable_id)
                 continue
@@ -62,9 +62,9 @@ class CableIndexer(object):
             )
             self.update_cooccurrences(docngrams)
         neighbours_id = []
-        for cable in self.storage.cables.find():
-            neighbours_id += [cable["_id"]]
-            self.update_logJaccard(cable, overwrite)
+        #for cable in self.storage.cables.find():
+        #    neighbours_id += [cable["_id"]]
+        #    self.update_logJaccard(cable, overwrite)
 
     def update_cooccurrences(self, docngrams):
         """ updates a document's ngrams cooccurrences """
