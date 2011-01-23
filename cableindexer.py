@@ -67,7 +67,7 @@ class CableIndexer(object):
                 cable['edges']['Document']={}
         neighbours_id = []
         counter=0
-        for cable in self.storage.cables.find():
+        for cable in self.storage.cables.find(timeout=False):
             neighbours_id += [cable["_id"]]
             self.update_logJaccard(cable, neighbours_id)
             counter += 1
