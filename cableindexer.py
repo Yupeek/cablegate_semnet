@@ -16,6 +16,7 @@
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
+import math
 from os.path import join
 import re
 import itertools
@@ -45,26 +46,32 @@ class CableIndexer(object):
         """
         gets the all cables from storage then extract n-grams and produce networks edges and weights
         """
-        if overwrite is True and "ngrams" in self.storage.collection_names():
-            self.storage.ngrams.remove()
-        for cable in self.storage.cables.find(timeout=False):
-            if cable is None:
-                logging.warning("cable %d not found in the database, skipping"%cable_id)
-                continue
-            if overwrite is True:
-                cable = initEdges(cable)
-            # extract and filter ngrams
-            docngrams = ngramizer.extract(
-                cable,
-                filters,
-                postagger,
-                stemmer.Nltk()
-            )
-            self.update_cooccurrences(docngrams)
+        #if overwrite is True and "ngrams" in self.storage.collection_names():
+        #    self.storage.ngrams.remove()
+        #for cable in self.storage.cables.find(timeout=False):
+        #    if cable is None:
+        #        logging.warning("cable %d not found in the database, skipping"%cable_id)
+        #        continue
+        #    if overwrite is True:
+        #        cable = initEdges(cable)
+        #    # extract and filter ngrams
+        #    docngrams = ngramizer.extract(
+        #        cable,
+        #        filters,
+        #        postagger,
+        #        stemmer.Nltk()
+        #    )
+        #    self.update_cooccurrences(docngrams)
+        if overwrite is True:
+            for cable in self.storage.cables.find():
+                cable['edges']['Document']={}
         neighbours_id = []
-        #for cable in self.storage.cables.find():
-        #    neighbours_id += [cable["_id"]]
-        #    self.update_logJaccard(cable, overwrite)
+        counter=0
+        for cable in self.storage.cables.find():
+            neighbours_id += [cable["_id"]]
+            self.update_logJaccard(cable, neighbours_id)
+            counter += 1
+            logging.debug("updated logJaccard edges from cable %s, done = %d"%(cable["_id"],counter))
 
     def update_cooccurrences(self, docngrams):
         """ updates a document's ngrams cooccurrences """
@@ -82,31 +89,42 @@ class CableIndexer(object):
 
         logging.info("CableExtractor.update_cooccurrences done")
 
-    def update_logJaccard( self, document, neighbours_id, overwrite=True ):
+    def update_logJaccard( self, document, neighbours_id ):
         """
         a Jaccard-like similarity distance
-        Invalid if summing values avor many periods
+        TODO : describe it !
         """
-        doc1ngrams = document['edges']['NGrams'].keys()
+        doc1ngrams = document['edges']['NGram'].keys()
         for docid in neighbours_id:
             document2 = self.storage.cables.find_one({"_id":docid})
             if docid != document['_id']:
-                document2 = self.storage.cables.find_one({"_id":doc_id_2})
-                doc2ngrams = self.documentngrams[docid]
-                ngramsintersection = doc1ngrams & doc2ngrams
-                ngramsunion = (doc1ngrams | doc2ngrams)
+                document2 = self.storage.cables.find_one({"_id":docid})
+                doc2ngrams = document2['edges']['NGram'].keys()
+                #ngramsintersection = doc1ngrams & doc2ngrams
+                #ngramsunion = (doc1ngrams | doc2ngrams)
+                ngramsunion = []
                 weight = 0
                 numerator = 0
-                for ngi in ngramsintersection:
-                    numerator += 1/(math.log( 1 + self.corpus['edges']['NGram'][ngi] ))
                 denominator = 0
-                for ngi in ngramsunion:
-                    denominator += 1/(math.log( 1 + self.corpus['edges']['NGram'][ngi] ))
+                for ng1 in doc1ngrams:
+                    ngram = self.storage.ngrams.find_one({"_id":ng1})
+                    if ngram is not None:
+                        ngramOccs = len(ngram['edges']['Document'].keys())
+                        if ng1 in doc2ngrams:
+                            numerator += 1/(math.log( 1 + ngramOccs ))
+                        denominator += 1/(math.log( 1 + ngramOccs ))
+                        ngramsunion.append(ng1)
+                for ng2 in doc2ngrams:
+                    if ng2 not in ngramsunion:
+                        ngram = self.storage.ngrams.find_one({"_id":ng2})
+                        if ngram is not None:
+                            ngramOccs = len(ngram['edges']['Document'].keys())
+                            denominator += 1/(math.log( 1 + ngramOccs ))
                 if denominator > 0:
-                    weight = numerator / denominator
-                submatrix.set(document['id'], docid, value=weight, overwrite=True)
-                submatrix.set(docid, document['id'], value=weight, overwrite=True)
-        return submatrix
+                    weight = numerator/denominator
+                if weight > 0:
+                    self.storage.cables.save( addEdge( document, 'Document', docid, weight) )
+                    self.storage.cables.save( addEdge( document2, 'Document', document['_id'], weight) )
 
     def _get_extraction_filters(self):
         """

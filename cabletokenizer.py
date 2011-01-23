@@ -173,7 +173,6 @@ class NGramizer(object):
                         self.storage.ngrams.save(ngram)
                         document = addEdge( document, 'NGram', ngid, 1 )
                         self.storage.cables.save(document)
-
                     else:
                         # id made from the stemmedcontent and label made from the real tokens
                         try:
