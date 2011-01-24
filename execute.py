@@ -23,6 +23,7 @@ from mongodbhandler import CablegateDatabase
 from cableimporter import CableImporter
 from cableindexer import CableIndexer
 from cablenetwork import CableNetwork
+from exportgexf import GexfExporter
 
 import yaml
 
@@ -34,20 +35,23 @@ def get_parser():
     parser.add_option("-n", "--mincooccurrences", dest="mincoocs", help="minimum keyphrases' cooccurrences", type="int")
     parser.add_option("-c", "--config", dest="config", help="config yaml file path", metavar="FILE")
     parser.add_option("-o", "--overwrite", dest="overwrite", help="overwrite database contents", type="int")
+    parser.add_option("-p", "--path", dest="path", help="output path file path", metavar="FILE")
     return parser
 
 if __name__ == "__main__":
     parser = get_parser()
     (options, args) = parser.parse_args()
     print options, args
-    
+
     config = yaml.safe_load( file( options.config, 'rU' ) )
-   
+
     mongoconnection = CablegateDatabase("localhost")
     if options.execute == 'import':
         importer = CableImporter( mongoconnection["cablegate"], options.archive, bool(options.overwrite) )
     if options.execute == 'index':
         extractor = CableIndexer(mongoconnection["cablegate"], config, bool(options.overwrite))
+    if options.execute == 'export':
+        exporter = GexfExporter(mongoconnection["cablegate"], config, options.path, options.minoccs, options.mincoocs)
     if options.execute == 'network':
         cooccurrences = CableNetwork(mongoconnection["cablegate"], config, options.minoccs, options.mincoocs)
     if options.execute == 'print':

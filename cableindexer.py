@@ -73,7 +73,7 @@ class CableIndexer(object):
             counter += 1
             logging.debug("updated logJaccard edges from cable %s, done = %d"%(cable["_id"],counter))
 
-    def update_cooccurrences(self, docngrams):
+    def update_cooccurrences(self, docngrams, minoccs=2):
         """ updates a document's ngrams cooccurrences """
         for (ngi, ngj) in itertools.combinations(docngrams, 2):
 
@@ -89,7 +89,7 @@ class CableIndexer(object):
 
         logging.info("CableExtractor.update_cooccurrences done")
 
-    def update_logJaccard( self, document, neighbours_id ):
+    def update_logJaccard(self, document, neighbours_id, minoccs=2):
         """
         a Jaccard-like similarity distance
         TODO : describe it !
