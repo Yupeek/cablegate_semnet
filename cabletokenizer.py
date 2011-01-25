@@ -20,8 +20,7 @@ import nltk
 import re
 import string
 
-from tinasoft.pytextminer import tagger
-from tinasoft.pytextminer import filtering
+import filtering
 
 from datamodel import getNodeId, getNodeLabel, updateNodeEdges, overwriteEdge, addEdge, addUniqueEdge
 
@@ -144,6 +143,14 @@ class NGramizer(object):
                     sent
                 )
             )
+    
+    def getContent( self, sentence ):
+        """return words from a tagged list like [["the","DET"],["python","NN"]]"""
+        return [tagged[0] for tagged in sentence]
+
+    def getTag( self, sentence ):
+        """return TAGS from a tagged list like [["the","DET"],["python","NN"]]"""
+        return [tagged[1] for tagged in sentence]
 
     def ngramize(self, document, doc_ngrams, minSize, maxSize, tagTokens, filters, stemmer):
         """
@@ -152,12 +159,12 @@ class NGramizer(object):
         @tagTokens == [[word1 tokens], [word2 tokens], etc]
         """
         # content is the list of words from tagTokens
-        content = tagger.TreeBankPosTagger.getContent(tagTokens)
+        content = self.getContent(tagTokens)
         stemmedcontent = []
         for word in content:
              stemmedcontent += [stemmer.stem(word)]
         # tags is the list of tags from tagTokens
-        tags = tagger.TreeBankPosTagger.getTag(tagTokens)
+        tags = self.getTag(tagTokens)
         for i in range(len(content)):
             for n in range(minSize, maxSize + 1):
                 if len(content) >= i+n:

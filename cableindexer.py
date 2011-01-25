@@ -20,10 +20,14 @@ import math
 from os.path import join
 import re
 import itertools
+import nltk
+import cPickle
+from nltk import PorterStemmer
 
 from cabletokenizer import NGramizer
 from datamodel import initEdges, addEdge
-from tinasoft.pytextminer import stopwords, filtering, tagger, stemmer
+import filtering
+import stopwords
 
 class CableIndexer(object):
     """
@@ -36,42 +40,39 @@ class CableIndexer(object):
         self.config = config
         filters = self._get_extraction_filters()
         # instanciate the tagger, takes times if learning
-        postagger = tagger.TreeBankPosTagger(
-            training_corpus_size = 10000,
-            trained_pickle = self.config['extraction']['tagger']
-        )
+	postagger = cPickle.load(open(self.config['extraction']['tagger'],"r"))
         self.cable_semnet(NGramizer(self.storage, self.config['extraction']), filters, postagger, overwrite)
 
     def cable_semnet(self, ngramizer, filters, postagger, overwrite):
         """
         gets the all cables from storage then extract n-grams and produce networks edges and weights
         """
-        #if overwrite is True and "ngrams" in self.storage.collection_names():
-        #    self.storage.ngrams.remove()
-        #for cable in self.storage.cables.find(timeout=False):
-        #    if cable is None:
-        #        logging.warning("cable %d not found in the database, skipping"%cable_id)
-        #        continue
-        #    if overwrite is True:
-        #        cable = initEdges(cable)
-        #    # extract and filter ngrams
-        #    docngrams = ngramizer.extract(
-        #        cable,
-        #        filters,
-        #        postagger,
-        #        stemmer.Nltk()
-        #    )
-        #    self.update_cooccurrences(docngrams)
-        if overwrite is True:
-            for cable in self.storage.cables.find():
-                cable['edges']['Document']={}
-        neighbours_id = []
-        counter=0
+       	if overwrite is True and "ngrams" in self.storage.collection_names():
+            self.storage.ngrams.remove()
         for cable in self.storage.cables.find(timeout=False):
-            neighbours_id += [cable["_id"]]
-            self.update_logJaccard(cable, neighbours_id)
-            counter += 1
-            logging.debug("updated logJaccard edges from cable %s, done = %d"%(cable["_id"],counter))
+            if cable is None:
+                logging.warning("cable %d not found in the database, skipping"%cable_id)
+                continue
+            if overwrite is True:
+                cable = initEdges(cable)
+            # extract and filter ngrams
+            docngrams = ngramizer.extract(
+                cable,
+                filters,
+                postagger,
+                PorterStemmer()
+            )
+            self.update_cooccurrences(docngrams)
+        #if overwrite is True:
+        #    for cable in self.storage.cables.find():
+        #        cable['edges']['Document']={}
+        #neighbours_id = []
+        #counter=0
+        #for cable in self.storage.cables.find(timeout=False):
+        #    neighbours_id += [cable["_id"]]
+        #    self.update_logJaccard(cable, neighbours_id)
+        #    counter += 1
+        #    logging.debug("updated logJaccard edges from cable %s, done = %d"%(cable["_id"],counter))
 
     def update_cooccurrences(self, docngrams, minoccs=2):
         """ updates a document's ngrams cooccurrences """
