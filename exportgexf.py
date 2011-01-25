@@ -20,26 +20,6 @@ __author__="elishowk@nonutc.fr"
 import tenjin
 from tenjin.helpers import *
 
-# Patch for Tenjin (MS Windows File overwriting Error)
-def _write_binary_file(filename, content):
-    f = None
-    try:
-        import random
-        tmpfile = filename + str(random.random())[1:]
-        f = open(tmpfile, 'w+b')
-        f.write(content)
-    finally:
-         if f:
-            f.close()
-            import os
-            try:
-                os.rename(tmpfile, filename)
-            except:
-                os.remove(filename)
-                os.rename(tmpfile, filename)
-
-tenjin._write_binary_file = _write_binary_file
-
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 

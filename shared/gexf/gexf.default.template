@@ -37,6 +37,8 @@
 <?py for ngramid in ngramcache: ?>
     <?py ngram = storage.ngrams.find_one({'_id':ngramid}) ?>
     <?py for targetcategory in ngram['edges'].keys(): ?>
+        <?py if targetcategory not in ["NGram","Document"]: continue ?>
+        <?py #endif ?>
         <?py for target, weight in ngram['edges'][targetcategory].iteritems(): ?>
             <?py if targetcategory=="NGram": ?>
                 <?py if target not in ngramcache: continue ?>
