@@ -30,7 +30,7 @@ setup (
     name = 'cablegate_semnet',
     packages = find_packages(),
     install_requires = ['bson','beautifulsoup','nltk','TinasoftPytextminer'],
-    scripts = ['cablegate_semnet.py'],
+    scripts = ['execute.py'],
     version = __version__,
     url = __url__,
     long_description = __longdescr__,

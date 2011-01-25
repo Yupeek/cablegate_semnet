@@ -52,8 +52,8 @@ if __name__ == "__main__":
         extractor = CableIndexer(mongoconnection["cablegate"], config, bool(options.overwrite))
     if options.execute == 'export':
         exporter = GexfExporter(mongoconnection["cablegate"], config, options.path, options.minoccs, options.mincoocs)
-    if options.execute == 'network':
-        cooccurrences = CableNetwork(mongoconnection["cablegate"], config, options.minoccs, options.mincoocs)
+    #if options.execute == 'network':
+    #    cooccurrences = CableNetwork(mongoconnection["cablegate"], config, options.minoccs, options.mincoocs)
     if options.execute == 'print':
         for ngram in mongoconnection["cablegate"].ngrams.find().limit(10):
             logging.debug( ngram )
