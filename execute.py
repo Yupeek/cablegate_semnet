@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 from mongodbhandler import CablegateDatabase
 from cableimporter import CableImporter
 from cableindexer import CableIndexer
-from cablenetwork import CableNetwork
+#from cablenetwork import CableNetwork
 from exportgexf import GexfExporter
 
 import yaml
