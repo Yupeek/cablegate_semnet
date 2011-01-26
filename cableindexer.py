@@ -31,9 +31,7 @@ import stopwords
 
 class CableIndexer(object):
     """
-    Reads all database entries to produce a network
-    usage :
-      extractor = Exporter(minoccs=2)
+    Reads all database entries to write the network
     """
     def __init__(self, storage, config, overwrite=True):
         self.storage = storage
@@ -83,10 +81,10 @@ class CableIndexer(object):
                 ngram = addEdge( ngram, 'NGram', ngj, 1)
             self.storage.ngrams.save(ngram)
 
-            ngram = self.storage.ngrams.find_one({"_id":ngj})
-            if ngram is not None:
-                ngram = addEdge( ngram, 'NGram', ngi, 1)
-            self.storage.ngrams.save(ngram)
+            #ngram = self.storage.ngrams.find_one({"_id":ngj})
+            #if ngram is not None:
+            #    ngram = addEdge( ngram, 'NGram', ngi, 1)
+            #self.storage.ngrams.save(ngram)
 
         logging.info("CableExtractor.update_cooccurrences done")
 

@@ -30,7 +30,7 @@ extraction:
     # change this Reg Expression to change NGram extraction filtering
     postag_valid: '^((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,)(CD.,)?)+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,))+?)*?$'
 graph:
-    template: 'shared/gexf/gexf.default.template'
+    template: 'shared/gexf/gexf.cables_only.template'
     # default values if no params are passed to gexf exporter
     DocumentGraph:
         edgethreshold:

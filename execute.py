@@ -36,6 +36,7 @@ def get_parser():
     parser.add_option("-c", "--config", dest="config", help="config yaml file path", metavar="FILE")
     parser.add_option("-o", "--overwrite", dest="overwrite", help="overwrite database contents", type="int")
     parser.add_option("-p", "--path", dest="path", help="output path file path", metavar="FILE")
+    parser.usage = "bad parameters"
     return parser
 
 if __name__ == "__main__":
@@ -48,14 +49,16 @@ if __name__ == "__main__":
     mongoconnection = CablegateDatabase("localhost")
     if options.execute == 'import':
         importer = CableImporter( mongoconnection["cablegate"], options.archive, bool(options.overwrite) )
-    if options.execute == 'index':
+    elif options.execute == 'index':
         extractor = CableIndexer(mongoconnection["cablegate"], config, bool(options.overwrite))
-    if options.execute == 'export':
+    elif options.execute == 'export':
         exporter = GexfExporter(mongoconnection["cablegate"], config, options.path, options.minoccs, options.mincoocs)
     #if options.execute == 'network':
     #    cooccurrences = CableNetwork(mongoconnection["cablegate"], config, options.minoccs, options.mincoocs)
-    if options.execute == 'print':
+    elif options.execute == 'print':
         for ngram in mongoconnection["cablegate"].ngrams.find().limit(10):
             logging.debug( ngram )
         for doc in mongoconnection["cablegate"].cables.find({"$ne": { edges.NGram.length: 0 }}).limit(2):
             logging.debug( doc )
+    else:
+        print parser.usage

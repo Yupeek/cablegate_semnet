@@ -2,14 +2,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gexf xmlns="http://www.gexf.net/1.1draft" xmlns:viz="http://www.gephi.org/gexf/viz" version="1.1">
 <meta></meta>
-<graph type="static">
+<graph mode="dynamic" timeformat="date">
 <attributes class="node" type="static">
     <attribute id="0" title="weight" type="integer"></attribute>
     <attribute id="1" title="category" type="string"></attribute>
-    <attribute id="2" title="keywords" type="string"></attribute>
+    <attribute id="2" title="embassy" type="string"></attribute>
+    <attribute id="3" title="classification" type="string"></attribute>
 </attributes>
 <nodes>
 <?py ngramcache=[] ?>
+<?py from datetime import datetime ?>
 <?py for ngram in storage.ngrams.find(timeout=False): ?>
     <?py weight = len(ngram['edges']['Document'].keys()) ?>
     <?py if weight < minoccs: continue ?>
@@ -22,12 +24,15 @@
         </attvalues>
     </node>
 <?py #endfor ?>
+<?py from datetime import datetime ?>
 <?py for cable in storage.cables.find(timeout=False): ?>
     <?py weight = len(cable['edges']['NGram'].keys()) ?>
-    <node id="${cable['_id']}" label="${ cable['label'] }">
+    <node id="${cable['_id']}" label="${ cable['label'] }" start="${ cable['date_time'].strftime('%Y-%m-%d')}">
         <attvalues>
             <attvalue for="0" value="${ weight }" />
             <attvalue for="1" value="Document" />
+            <attvalue for="2" value="${ cable['origin'] }" />
+            <attvalue for="3" value="${ cable['classification'] }" />
         </attvalues>
     </node>
 <?py #endfor ?>
@@ -46,7 +51,7 @@
             <?py #endif ?>
             <?py if weight < mincoocs: continue ?>
             <?py #endif ?>
-    <edge id="#{i}" source="#{ngram['_id']}" target="#{target}" type="directed" weight="${weight}"></edge>
+    <edge id="#{i}" source="#{ngram['_id']}" target="#{target}" type="mutual" weight="${weight}"></edge>
             <?py i += 1 ?>
         <?py #endfor ?>
     <?py #endfor ?>

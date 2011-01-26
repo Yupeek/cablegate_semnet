@@ -33,6 +33,7 @@ class CableImporter(object):
     """
 
     file_regex = re.compile("\.html$")
+    title_regex = re.compile("Viewing cable [0-9]+[A-Z]+[0-9]+,",re.U)
 
     counts = {
       'files_not_processed':0
@@ -42,7 +43,8 @@ class CableImporter(object):
         self.data_directory = join(data_directory, "cable")
         self.db = db
         self.cable_id = []
-        self.tablesoup = SoupStrainer("table", attrs={ "class" : "cable" })
+        # soupstrainers avoiding too much html parsing AND memory usage issues !
+        self.cablemetasoup = SoupStrainer("div", attrs={ "class" : 'pane big' })
         self.contentsoup = SoupStrainer("pre")
         if overwrite is True and "cables" in self.db.collection_names():
             self.db.cables.remove()
@@ -79,29 +81,37 @@ class CableImporter(object):
         Cable Content extractor
         """
         try:
-            tablesoup = BeautifulSoup(raw, parseOnlyThese = self.tablesoup)
-            cable_table = tablesoup.find("table")
+            cablemetasoup = BeautifulSoup(raw, parseOnlyThese = self.cablemetasoup)
+            # extract_title
+            title = self.title_regex.sub( "", cablemetasoup.find("h3").contents[0])
+            title = title.strip()
+            title = title.title()
+
+            cable_table = cablemetasoup.find("table")
             cable_id = cable_table.findAll('tr')[1].findAll('td')[0].contents[1].contents[0]
-            if overwrite is False and self.db.cables.find_one( {'_id': cable_id} ) is not None:
+            cable = self.db.cables.find_one({'_id': cable_id})
+            if overwrite is False and cable is not None:
                 logging.info('CABLE ALREADY EXISTS : SKIPPING')
                 self.cable_id += [cable_id]
                 self.print_counts()
                 return
-            #import pdb; pdb.set_trace()
-            cable = self.db.cables.find_one( {'_id': cable_id} )
+
+            ## updates metas without erasing edges
             if cable is None:
+                cable = {}
                 cable = initEdges(cable)
 
             contentsoup = BeautifulSoup(raw, parseOnlyThese = self.contentsoup)
             cablecontent = unicode( nltk.clean_html( str( contentsoup.findAll("pre")[1] ) ), encoding="utf_8", errors="replace" )
             del raw
             date_time = datetime.strptime(cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0], "%Y-%m-%d %H:%M")
-            # overwrite cable data
+
+            ## overwrite metas informations without erasing edges
             cable.update({
                 # auto index
                 '_id' : cable_id,
                 'id' : cable_id,
-                'label' : cable_id,
+                'label' : title,
                 'date_time' : date_time,
                 'classification' : cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
                 'origin' : cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
