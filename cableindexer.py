@@ -41,13 +41,14 @@ class CableIndexer(object):
         postagger = cPickle.load(open(self.config['extraction']['tagger'],"r"))
         self.cable_semnet(NGramizer(self.storage, self.config['extraction']), filters, postagger, overwrite)
 
-    def cable_semnet(self, ngramizer, filters, postagger, overwrite):
+    def cable_semnet(self, ngramizer, filters, postagger, overwrite, limit=None):
         """
         gets the all cables from storage then extract n-grams and produce networks edges and weights
         """
         if overwrite is True and "ngrams" in self.storage.collection_names():
             self.storage.ngrams.remove()
-        for cable in self.storage.cables.find(timeout=False):
+
+        for cable in self.storage.cables.find(timeout=False,limit=10):
             if cable is None:
                 logging.warning("cable %d not found in the database, skipping"%cable_id)
                 continue
@@ -60,7 +61,7 @@ class CableIndexer(object):
                 postagger,
                 PorterStemmer()
             )
-            self.update_cooccurrences(docngrams)
+            #self.update_cooccurrences(docngrams)
         #if overwrite is True:
         #    for cable in self.storage.cables.find():
         #        cable['edges']['Document']={}

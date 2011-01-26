@@ -115,7 +115,8 @@ class CableImporter(object):
                 'date_time' : date_time,
                 'classification' : cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
                 'origin' : cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
-                'content' : cablecontent
+                'content' : cablecontent,
+                'category': "Document"
             })
             # insert or auto overwrites existing cable (indexed by '_id')
             self.db.cables.save(cable)

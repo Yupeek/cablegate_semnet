@@ -26,7 +26,7 @@ extraction:
     # tagger learning on 2 x training_tagger_size sentences of tagged nltk corpus
     training_tagger_size: 10000
     # under "basedirectory" directory, delete this file to regenerate a new one
-    tagger: "/iscpif/users/showk/nltk_data/taggers/conll2000_brill_aubt.pickle"
+    tagger: "conll2000_brill_aubt.pickle"
     # change this Reg Expression to change NGram extraction filtering
     postag_valid: '^((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,)(CD.,)?)+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,))+?)*?$'
 graph:

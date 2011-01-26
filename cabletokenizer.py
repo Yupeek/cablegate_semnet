@@ -143,7 +143,7 @@ class NGramizer(object):
                     sent
                 )
             )
-    
+
     def getContent( self, sentence ):
         """return words from a tagged list like [["the","DET"],["python","NN"]]"""
         return [tagged[0] for tagged in sentence]
@@ -194,7 +194,8 @@ class NGramizer(object):
                                     'Document': { document['_id'] : 1 },
                                     'NGram': {}
                                 },
-                                'postag' : tags[i:n+i]
+                                'postag' : tags[i:n+i],
+                                'category': "NGram"
                             }
                             # application defined filtering
                             if filtering.apply_filters(ngram, filters) is True:
