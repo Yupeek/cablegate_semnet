@@ -29,13 +29,21 @@ class CableNetwork(object):
         self.storage = storage
         self.config = config
         self.graphdb = GraphDatabase("http://localhost:7474/db/data/")
+        self.update_cooccurrences()
 
     def update_cooccurrences(self):
         for cable in self.storage.cables.find(timeout=False,limit=10):
-            cablenode = self.graphdb.node(**cable)
-            for (ngi, ngj) in itertools.combinations(cable['edges']['NGram'], 2):
-                ngrami = self.storage.ngrams.find_one({"_id":ngi})
-                ngramj = self.storage.ngrams.find_one({"_id":ngj})
-                n1 = self.graphdb.node(**ngrami)
-                n2 = self.graphdb.node(**ngramj)
-                n1.relationships.create("cooccurrences", n2, weight=1)
+            del cable['date_time']
+            del cable['edges']
+            cablenode = self.graphdb.nodes.create()
+            for key, value in cable.items():
+                cablenode.set(key, value.encode("utf_8","ignore"))
+            print cablenode
+            #for (ngi, ngj) in itertools.combinations(cable['edges']['NGram'], 2):
+            #    ngrami = self.storage.ngrams.find_one({"_id":ngi})
+            #    ngramj = self.storage.ngrams.find_one({"_id":ngj})
+            #    n1 = self.graphdb.node(**ngrami)
+            #    n2 = self.graphdb.node(**ngramj)
+            #
+            #    n1.relationships.create("cooccurrences", n2, weight=1)
+            #    print n1
