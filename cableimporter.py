@@ -19,24 +19,25 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 import os
 from os.path import join
-
+from datetime import datetime
 import re
 import nltk
 from BeautifulSoup import BeautifulSoup, SoupStrainer
+from datamodel import initEdges
 
 class CableImporter(object):
-  
+
     """
     Reads and parses all available cables and updates the mongodb
     usage : mirror = CableGateMirror(wikileaksdb, 'data/cablegate.wikileaks.org')
     """
-    
+
     file_regex = re.compile("\.html$")
-    
+
     counts = {
       'files_not_processed':0
     }
-  
+
     def __init__(self, db, data_directory, overwrite=False):
         self.data_directory = join(data_directory, "cable")
         self.db = db
@@ -46,7 +47,7 @@ class CableImporter(object):
         if overwrite is True and "cables" in self.db.collection_names():
             self.db.cables.remove()
         self.walk_archive(overwrite)
-    
+
     def walk_archive(self, overwrite):
         """
         Walks the archive directory
@@ -59,7 +60,7 @@ class CableImporter(object):
                     self.read_file(path,overwrite)
         except OSError, oserr:
             logging.error("%s"%oserr)
-  
+
     def read_file(self, path, overwrite):
         """
         Reads the cable file
@@ -72,7 +73,7 @@ class CableImporter(object):
             self.counts['files_not_processed'] += 1
             return
         self.extract_content(file.read(), overwrite)
-    
+
     def extract_content(self, raw, overwrite):
         """
         Cable Content extractor
@@ -81,30 +82,31 @@ class CableImporter(object):
             tablesoup = BeautifulSoup(raw, parseOnlyThese = self.tablesoup)
             cable_table = tablesoup.find("table")
             cable_id = cable_table.findAll('tr')[1].findAll('td')[0].contents[1].contents[0]
-            if overwrite is False and self.db.cables.find_one( {'_id': cable_id} ) is not None:   
+            if overwrite is False and self.db.cables.find_one( {'_id': cable_id} ) is not None:
                 logging.info('CABLE ALREADY EXISTS : SKIPPING')
                 self.cable_id += [cable_id]
                 self.print_counts()
                 return
             #import pdb; pdb.set_trace()
+            cable = self.db.cables.find_one( {'_id': cable_id} )
+            if cable is None:
+                cable = initEdges(cable)
+
             contentsoup = BeautifulSoup(raw, parseOnlyThese = self.contentsoup)
             cablecontent = unicode( nltk.clean_html( str( contentsoup.findAll("pre")[1] ) ), encoding="utf_8", errors="replace" )
             del raw
-
-            cable = {
+            date_time = datetime.strptime(cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0], "%Y-%m-%d %H:%M")
+            # overwrite cable data
+            cable.update({
                 # auto index
                 '_id' : cable_id,
                 'id' : cable_id,
                 'label' : cable_id,
-                'date_time' : cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0],
+                'date_time' : date_time,
                 'classification' : cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
                 'origin' : cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
-                'content' : cablecontent,
-                'edges': {
-                    'NGram': {},
-                    'Document': {}
-                }
-            }
+                'content' : cablecontent
+            })
             # insert or auto overwrites existing cable (indexed by '_id')
             self.db.cables.save(cable)
             self.cable_id += [cable_id]
@@ -113,7 +115,7 @@ class CableImporter(object):
             logging.warning("error importing cable : %s"%exc)
             self.counts['files_not_processed'] += 1
             self.print_counts()
-            
-    
+
+
     def print_counts(self):
         logging.info("cables processed = %d, cables impossible to process = %d"%(len(self.cable_id), self.counts['files_not_processed']))
