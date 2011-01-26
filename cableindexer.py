@@ -40,14 +40,14 @@ class CableIndexer(object):
         self.config = config
         filters = self._get_extraction_filters()
         # instanciate the tagger, takes times if learning
-	postagger = cPickle.load(open(self.config['extraction']['tagger'],"r"))
+        postagger = cPickle.load(open(self.config['extraction']['tagger'],"r"))
         self.cable_semnet(NGramizer(self.storage, self.config['extraction']), filters, postagger, overwrite)
 
     def cable_semnet(self, ngramizer, filters, postagger, overwrite):
         """
         gets the all cables from storage then extract n-grams and produce networks edges and weights
         """
-       	if overwrite is True and "ngrams" in self.storage.collection_names():
+        if overwrite is True and "ngrams" in self.storage.collection_names():
             self.storage.ngrams.remove()
         for cable in self.storage.cables.find(timeout=False):
             if cable is None:
