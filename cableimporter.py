@@ -24,6 +24,9 @@ import re
 import nltk
 from BeautifulSoup import BeautifulSoup, SoupStrainer
 from datamodel import initEdges
+from neo4j import GraphDatabase
+from mongodbhandler import CablegateDatabase
+
 
 class CableImporter(object):
 
@@ -41,14 +44,16 @@ class CableImporter(object):
 
     def __init__(self, db, data_directory, overwrite=False):
         self.data_directory = join(data_directory, "cable")
-        self.db = db
+        self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
+        self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.cable_id = []
         # soupstrainers avoiding too much html parsing AND memory usage issues !
         self.cablemetasoup = SoupStrainer("div", attrs={ "class" : 'pane big' })
         self.contentsoup = SoupStrainer("pre")
-        if overwrite is True and "cables" in self.db.collection_names():
-            self.db.cables.remove()
+        if overwrite is True and "cables" in self.mongodb.collection_names():
+            self.mongodb.cables.remove()
         self.walk_archive(overwrite)
+
 
     def walk_archive(self, overwrite):
         """
@@ -89,7 +94,7 @@ class CableImporter(object):
 
             cable_table = cablemetasoup.find("table")
             cable_id = cable_table.findAll('tr')[1].findAll('td')[0].contents[1].contents[0]
-            cable = self.db.cables.find_one({'_id': cable_id})
+            cable = self.mongodb.cables.find_one({'_id': cable_id})
             if overwrite is False and cable is not None:
                 logging.info('CABLE ALREADY EXISTS : SKIPPING')
                 self.cable_id += [cable_id]
@@ -110,7 +115,7 @@ class CableImporter(object):
             cable.update({
                 # auto index
                 '_id' : cable_id,
-                'id' : cable_id,
+                #'id' : cable_id,
                 'label' : title,
                 'date_time' : date_time,
                 'classification' : cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
@@ -119,7 +124,7 @@ class CableImporter(object):
                 'category': "Document"
             })
             # insert or auto overwrites existing cable (indexed by '_id')
-            self.db.cables.save(cable)
+            self.mongodb.cables.save(cable)
             self.cable_id += [cable_id]
             self.print_counts()
         except Exception, exc:

@@ -22,4 +22,4 @@ MONGODB_PORT = 27017
 
 class CablegateDatabase(Connection):
     def __init__(self, hostname='localhost'):
-        Connection.__init__(self, hostname, MONGODB_PORT)        
+        Connection.__init__(self, hostname, MONGODB_PORT)

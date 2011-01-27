@@ -19,11 +19,9 @@ from optparse import OptionParser
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
-from mongodbhandler import CablegateDatabase
 from cableimporter import CableImporter
-from cableindexer import CableIndexer
+from cableextractor import CableExtract
 from cablenetwork import CableNetwork
-from exportgexf import GexfExporter
 
 import yaml
 
@@ -46,19 +44,11 @@ if __name__ == "__main__":
 
     config = yaml.safe_load( file( options.config, 'rU' ) )
 
-    mongoconnection = CablegateDatabase("localhost")
     if options.execute == 'import':
-        importer = CableImporter( mongoconnection["cablegate"], options.archive, bool(options.overwrite) )
-    elif options.execute == 'index':
-        extractor = CableIndexer(mongoconnection["cablegate"], config, bool(options.overwrite))
-    elif options.execute == 'export':
-        exporter = GexfExporter(mongoconnection["cablegate"], config, options.path, options.minoccs, options.mincoocs)
-    if options.execute == 'network':
-        network = CableNetwork(mongoconnection["cablegate"], config)
-    elif options.execute == 'print':
-        for ngram in mongoconnection["cablegate"].ngrams.find().limit(10):
-            logging.debug( ngram )
-        for doc in mongoconnection["cablegate"].cables.find({"$ne": { edges.NGram.length: 0 }}).limit(2):
-            logging.debug( doc )
+        importer = CableImporter( config, options.archive, bool(options.overwrite) )
+    elif options.execute == 'extract':
+        extractor = CableExtract( config, bool(options.overwrite) )
+    elif options.execute == 'network':
+        network = CableNetwork( config )
     else:
         print parser.usage

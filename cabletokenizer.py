@@ -23,6 +23,7 @@ import string
 import filtering
 
 from datamodel import getNodeId, getNodeLabel, updateNodeEdges, overwriteEdge, addEdge, addUniqueEdge
+from mongodbhandler import CablegateDatabase
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
@@ -54,8 +55,8 @@ class NGramizer(object):
     then cleans the punctuation
     before tokenizing using nltk.TreebankWordTokenizer()
     """
-    def __init__(self, storage, config):
-        self.storage = storage
+    def __init__(self, config):
+        self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
         self.config = config
 
     def extract(self, documentObj, filters, tagger, stemmer):
@@ -65,8 +66,8 @@ class NGramizer(object):
         POS tags the tokens
         constructs the resulting NGram objects
         """
-        ngramMin = self.config['ngramMin']
-        ngramMax = self.config['ngramMax']
+        ngramMin = self.config['extraction']['ngramMin']
+        ngramMax = self.config['extraction']['ngramMax']
 
         sentenceTaggedTokens = self.tokenize(
             self.sanitize(
@@ -97,7 +98,7 @@ class NGramizer(object):
         Adds content fields from application's configuration
         """
         customContent = ""
-        for field in self.config['doc_extraction']:
+        for field in self.config['extraction']['doc_extraction']:
             try:
                 customContent += " . " + doc[ field ]
             except Exception, exc:
@@ -171,21 +172,21 @@ class NGramizer(object):
                     # updates document's ngrams cache
                     ngid = getNodeId(stemmedcontent[i:n+i])
                     label = getNodeLabel(content[i:n+i])
-                    ngram = self.storage.ngrams.find_one({'_id': ngid})
+                    ngram = self.mongodb.ngrams.find_one({'_id': ngid})
                     if ngram is not None:
                         # general edges updates
                         ngram = overwriteEdge( ngram, 'postag', label, tags[i:n+i])
                         ngram = addEdge( ngram, 'Document', document['_id'], 1)
                         ngram = addEdge( ngram, 'label', label, 1)
-                        self.storage.ngrams.save(ngram)
+                        self.mongodb.ngrams.save(ngram)
                         document = addEdge( document, 'NGram', ngid, 1 )
-                        self.storage.cables.save(document)
+                        self.mongodb.cables.save(document)
                     else:
                         # id made from the stemmedcontent and label made from the real tokens
                         try:
                             ngram = {
                                 '_id': ngid,
-                                'id': ngid,
+                                #'id': ngid,
                                 'label': label,
                                 'content': content[i:n+i],
                                 'edges': {
@@ -200,9 +201,9 @@ class NGramizer(object):
                             # application defined filtering
                             if filtering.apply_filters(ngram, filters) is True:
                                 doc_ngrams += [ngid]
-                                self.storage.ngrams.save(ngram)
+                                self.mongodb.ngrams.save(ngram)
                                 document = addEdge( document, 'NGram', ngid, 1 )
-                                self.storage.cables.save(document)
+                                self.mongodb.cables.save(document)
                         except Exception, exc:
                             logging.error("error inserting new ngram %s : %s"%(label, exc))
 

@@ -24,6 +24,9 @@ import nltk
 import cPickle
 from nltk import PorterStemmer
 
+from neo4j import GraphDatabase
+from mongodbhandler import CablegateDatabase
+
 from cabletokenizer import NGramizer
 from datamodel import initEdges, addEdge
 import filtering
@@ -31,24 +34,26 @@ import stopwords
 
 class CableExtract(object):
     """
-    Reads all database entries to write the network
+    Reads all database entries to :
+    - extract and filter NGrams from content
+    - write the Document-NGram network
     """
-    def __init__(self, storage, config, overwrite=True):
-        self.storage = storage
+    def __init__(self, config, overwrite=True):
+        self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
+        self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.config = config
         filters = self._get_extraction_filters()
-        # instanciate the tagger, takes times if learning
         postagger = cPickle.load(open(self.config['extraction']['tagger'],"r"))
-        self.extract(NGramizer(self.storage, self.config['extraction']), filters, postagger, overwrite, limit)
+        self.extract(NGramizer(self.config), filters, postagger, overwrite)
 
-    def extract(self, ngramizer, filters, postagger, overwrite, limit=None):
+    def extract(self, ngramizer, filters, postagger, overwrite):
         """
         gets the all cables from storage then extract n-grams and produce networks edges and weights
         """
-        if overwrite is True and "ngrams" in self.storage.collection_names():
-            self.storage.ngrams.remove()
+        if overwrite is True and "ngrams" in self.mongodb.collection_names():
+            self.mongodb.ngrams.remove()
 
-        for cable in self.storage.cables.find(timeout=False,limit=10):
+        for cable in self.mongodb.cables.find(timeout=False):
             if cable is None:
                 logging.warning("cable %d not found in the database, skipping"%cable_id)
                 continue

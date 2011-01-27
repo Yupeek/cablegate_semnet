@@ -22,14 +22,14 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 def getNodeLabel(tokens):
     """
-     method forming clean unicode labels from token list
+    method forming clean unicode labels from token list
     """
     label = " ".join(tokens)
     if not isinstance(label, unicode):
         return unicode(label , "utf_8", errors='ignore')
     else:
         return label
-  
+
 def updateNodeEdges(updateedges, toupdate):
     """
     increments an object's edges with the candidate object's edges
@@ -38,19 +38,17 @@ def updateNodeEdges(updateedges, toupdate):
         for targetid, weight in updateedges[targettype].iteritems():
             toupdate.addEdge( targettype, targetid, weight )
     return toupdate
-  
+
 def getNodeId(tokens):
     """
     Common method constructing an ID str for all GraphNode objects
     """
-    convert = getNodeLabel(tokens).lower() 
+    convert = getNodeLabel(tokens).lower()
     return sha256( convert.encode( 'ascii', 'replace' ) ).hexdigest()
-  
-        
 
 def addUniqueEdge( node, type, key, value ):
     """
-    low level method writing ONLY ONCE a weighted edge 
+    low level method writing ONLY ONCE a weighted edge
     """
     if 'edges' not in node:
         node['edges']={}
@@ -61,11 +59,10 @@ def addUniqueEdge( node, type, key, value ):
     else:
         node['edges'][type][key] = value
         return node
-
-
+    
 def overwriteEdge( node, type, key, value ):
     """
-    low level method overwriting a weighted edge 
+    low level method overwriting a weighted edge
     """
     if 'edges' not in node:
         node['edges']={}
@@ -96,10 +93,10 @@ def initEdges(node):
     return node
 
 #class Cable(NetworkNode):
-#    
-#    def __init__(self, dict=None, **kwargs): 
+#
+#    def __init__(self, dict=None, **kwargs):
 #        NetworkNode.__init__(self, dict, **kwargs)
-#        
+#
 #    def _parseLabel(self):
 #        """
 #        TODO
@@ -110,7 +107,7 @@ def initEdges(node):
 #        #if findlabel is None: return
 #        #self['label'] = findlabel
 #        return
-#    
+#
 #    def addEdge(self, type, key, value):
 #      if type in ["NGram"]:
 #          return self._addUniqueEdge( type, key, value )
@@ -125,10 +122,10 @@ def initEdges(node):
 #    accepts only once to write an edge to a Document
 #    all other edges accept multiples writes
 #    """
-#    def __init__(self, dict=None, **kwargs): 
+#    def __init__(self, dict=None, **kwargs):
 #        NetworkNode.__init__(self, dict, **kwargs)
 #        self['edges'].update({'postag': {}, 'label': {}})
-#      
+#
 #    def addEdge(self, type, key, value):
 #        if type in ["Document"]:
 #            return self._addUniqueEdge( type, key, value )
