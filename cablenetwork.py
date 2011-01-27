@@ -17,12 +17,10 @@
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
+import neo4j
 from neo4j import GraphDatabase
+neo4j.DEBUG = 1
 from mongodbhandler import CablegateDatabase
-
-import httplib2
-DEBUG = 1
-
 
 class CableNetwork(object):
     """
@@ -32,28 +30,47 @@ class CableNetwork(object):
         self.config = config
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
         self.graphdb = GraphDatabase(config['general']['neo4j'])
+        self.rootnode = self.graphdb.nodes.get(0)
+        self.empty_network()
         self.update_network()
+
+    def empty_network(self):
+        for rel in self.rootnode.relationships.outgoing(types=["cablegate"]):
+            targetnode = rel.end
+            self.graphdb.delete(rel)
+            self.graphdb.delete(targetnode)
 
     def _set_node_attr(self, record, node):
         """
         Type conversion from python/mongodb to neo4j
         """
         for key, value in record.items():
-            if type(value)=='unicode':
-                node.set(key, value.encode("utf_8","ignore"))
-            elif type(value) in ['int','float','str']:
+            if type(value)==unicode:
+                node.set(key, value.encode("utf_8","replace"))
+            elif type(value) in [int,float,str]:
                 node.set(key, value)
-            elif type(value)=='datetime':
+            elif type(value)==datetime:
                 node.set(key, value.strftime('%Y-%m-%d'))
 
     def update_network(self):
-        for cable in self.mongodb.cables.find(timeout=False, limit=100):
+        """
+        TODO :
+        - add a node index to point node to mongodb's ids
+        - check allattributes
+        - implement cooccurrences
+        """
+        for cable in self.mongodb.cables.find(timeout=False):
+            del cable['content']
             cablenode = self.graphdb.nodes.create()
+            self.rootnode.relationships.create("cablegate", cablenode)
             self._set_node_attr(cable, cablenode)
-            for ng, occs in cable['edges']['NGram'].items():
+            docngrams = cable['edges']['NGram'].keys()
+            for ng in cable['edges']['NGram'].keys():
+                occs = cable['edges']['NGram'][ng]
                 ngram = self.mongodb.ngrams.find_one({"_id":ng})
                 ngramnode = self.graphdb.nodes.create()
+                self.rootnode.relationships.create("cablegate", ngramnode)
                 self._set_node_attr(ngram, ngramnode)
-                cablenode.relationships.create("occurence", ngramnode, weight=occs)
+                cablenode.relationships.create("occurrence", ngramnode, weight=occs)
 
             logging.debug( "done Cable %s"%cablenode.id )
