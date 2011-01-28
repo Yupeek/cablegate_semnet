@@ -17,8 +17,8 @@
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
-import neo4j
-from neo4j import GraphDatabase
+import neo4jrestclient
+from neo4jrestclient.client import GraphDatabase
 neo4j.DEBUG = 1
 from mongodbhandler import CablegateDatabase
 
@@ -43,6 +43,7 @@ class CableNetwork(object):
     def _set_node_attr(self, record, node):
         """
         Type conversion from python/mongodb to neo4j
+        restricts a node's attributes to string or numeric
         """
         for key, value in record.items():
             if type(value)==unicode:
@@ -52,25 +53,38 @@ class CableNetwork(object):
             elif type(value)==datetime:
                 node.set(key, value.strftime('%Y-%m-%d'))
 
+    def _add_node_to_index(self, record, node):
+        node.index(key='_id', value=record['_id'], create=True)
+
+    def _get_node_from_index(self, record_id):
+        node_list = self.graphdb.index(key='_id', value=record_id)
+        if len(node_list) == 0:
+            return self.graphdb.nodes.create()
+        else:
+            return node_list[0]
+
     def update_network(self):
         """
         TODO :
-        - add a node index to point node to mongodb's ids
-        - check allattributes
         - implement cooccurrences
         """
         for cable in self.mongodb.cables.find(timeout=False):
+            # hack cleaning
             del cable['content']
-            cablenode = self.graphdb.nodes.create()
+            start = cable['date_time']
+            cable['start'] = start
+            cablenode = self._get_node_from_index(cable['_id'])
             self.rootnode.relationships.create("cablegate", cablenode)
             self._set_node_attr(cable, cablenode)
+            self._add_node_to_index(cable, cablenode)
             docngrams = cable['edges']['NGram'].keys()
             for ng in cable['edges']['NGram'].keys():
                 occs = cable['edges']['NGram'][ng]
                 ngram = self.mongodb.ngrams.find_one({"_id":ng})
-                ngramnode = self.graphdb.nodes.create()
+                ngramnode = self._get_node_from_index(ngram['_id'])
                 self.rootnode.relationships.create("cablegate", ngramnode)
                 self._set_node_attr(ngram, ngramnode)
+                self._add_node_to_index( ngram, ngramnode )
                 cablenode.relationships.create("occurrence", ngramnode, weight=occs)
 
             logging.debug( "done Cable %s"%cablenode.id )
