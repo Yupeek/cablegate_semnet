@@ -25,7 +25,7 @@ import filtering
 from datamodel import getNodeId, getNodeLabel, updateNodeEdges, overwriteEdge, addEdge, addUniqueEdge
 from mongodbhandler import CablegateDatabase
 from neo4jrestclient.client import GraphDatabase
-from cablenetwork import add_node, set_node_attr, get_node, updateEdge
+from cablenetwork import add_node, set_node_attr, get_node, update_edge
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")

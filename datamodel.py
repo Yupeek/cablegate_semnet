@@ -14,8 +14,6 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from hashlib import sha256
-import re
-from UserDict import UserDict
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
@@ -91,45 +89,3 @@ def initEdges(node):
     node["edges"]['NGram'] = {}
     node["edges"]['Document'] = {}
     return node
-
-#class Cable(NetworkNode):
-#
-#    def __init__(self, dict=None, **kwargs):
-#        NetworkNode.__init__(self, dict, **kwargs)
-#
-#    def _parseLabel(self):
-#        """
-#        TODO
-#        """
-#        #res = re.search(r"SUBJECT:(.+)\&\#x000A\;\&\#x000A;", self['content'], re.I|re.M)
-#        #if res is None: return
-#        #findlabel = res.group(0)
-#        #if findlabel is None: return
-#        #self['label'] = findlabel
-#        return
-#
-#    def addEdge(self, type, key, value):
-#      if type in ["NGram"]:
-#          return self._addUniqueEdge( type, key, value )
-#      elif type in ["Document"]:
-#          return self._overwriteEdge( type, key, value )
-#      else:
-#          return self._addEdge( type, key, value )
-#
-#
-#class NGram(NetworkNode):
-#    """
-#    accepts only once to write an edge to a Document
-#    all other edges accept multiples writes
-#    """
-#    def __init__(self, dict=None, **kwargs):
-#        NetworkNode.__init__(self, dict, **kwargs)
-#        self['edges'].update({'postag': {}, 'label': {}})
-#
-#    def addEdge(self, type, key, value):
-#        if type in ["Document"]:
-#            return self._addUniqueEdge( type, key, value )
-#        elif type in ["NGram", "postag"]:
-#            return self._overwriteEdge( type, key, value )
-#        else:
-#            return self._addEdge( type, key, value )

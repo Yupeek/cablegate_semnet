@@ -62,10 +62,10 @@ class CableNetwork(object):
         self.config = config
 
         for cable in self.mongodb.cables.find(timeout=False):
-            logging.debug("occurrences of cable %s"%cable['_id'])
             cablenode = self.graphdb.nodes.get(cable['_id'])
             for ngid, occs in cable['edges']['NGram'].iteritems():
                 if occs < minoccs: continue
+                logging.debug("occurrences of cable %s with %S"%(cable['_id'],ngid))
                 ngram = self.mongodb.ngrams.find_one({'_id':ngid})
                 ngramnode = self.graphdb.nodes.get(ngram['nodeid'])
                 cablenode.relationships.create("occurrence", ngramnode, weight=occs)

@@ -27,7 +27,7 @@ from nltk import PorterStemmer
 from neo4jrestclient.client import GraphDatabase
 from mongodbhandler import CablegateDatabase
 
-from cablenetwork import add_node, set_node_attr, get_node, updateEdge
+from cablenetwork import add_node, set_node_attr, get_node, update_edge
 from cabletokenizer import NGramizer
 from datamodel import initEdges, addEdge
 import filtering
@@ -49,7 +49,7 @@ class CableExtract(object):
         try:
             while 1:
                 cable = extract_gen.next()
-                self.mongodb.save(cable)
+                self.mongodb.cables.save(cable)
                 self.update_cooc(cable)
         except StopIteration, si:
             return
