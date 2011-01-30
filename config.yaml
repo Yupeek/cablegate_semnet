@@ -2,7 +2,6 @@
 # application main params
 general:
     # where all path and following file are located
-    loglevel: 'debug'
     basedirectory: '.'
     # following directories or files a under "basedirectory"
     shared: 'shared'
@@ -14,32 +13,13 @@ extraction:
     stopwords: 'stopwords/en.txt'
     doc_extraction:
         # the following values can be document object fields:
-        # - defined by one of the field's value
-        # - constants required fields : 'content'/'label'/'id'
         - 'content'
         - 'label'
     # extraction size
     ngramMin: 1
-    ngramMax: 4
+    ngramMax: 3
     minWordSize: 3
     # under "basedirectory" directory, delete this file to regenerate a new one
     tagger: "conll2000_brill_aubt.pickle"
     # Reg Expression for NGram extraction
     postag_valid: '^((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,)(CD.,)?)+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,))+?)*?$'
-graph:
-    #template: 'shared/gexf/gexf.default.template'
-    # default values if no params are passed to gexf exporter
-    DocumentGraph:
-        edgethreshold:
-            - 1.00
-            - 'inf'
-        nodethreshold:
-            - 1.00
-            - 'inf'
-    NGramGraph:
-        edgethreshold:
-            - 1.00
-            - 'inf'
-        nodethreshold:
-            - 1.00
-            - 'inf'

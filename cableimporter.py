@@ -24,7 +24,8 @@ import re
 import nltk
 from BeautifulSoup import BeautifulSoup, SoupStrainer
 from datamodel import initEdges
-from neo4j import GraphDatabase
+from neo4jrestclient.client import GraphDatabase
+from cablenetwork import add_node, set_node_attr
 from mongodbhandler import CablegateDatabase
 
 
@@ -42,11 +43,10 @@ class CableImporter(object):
       'files_not_processed':0
     }
 
-    def __init__(self, db, data_directory, overwrite=False):
+    def __init__(self, config, data_directory, overwrite=False):
         self.data_directory = join(data_directory, "cable")
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
         self.graphdb = GraphDatabase(config['general']['neo4j'])
-        self.cable_id = []
         # soupstrainers avoiding too much html parsing AND memory usage issues !
         self.cablemetasoup = SoupStrainer("div", attrs={ "class" : 'pane big' })
         self.contentsoup = SoupStrainer("pre")
@@ -59,12 +59,18 @@ class CableImporter(object):
         """
         Walks the archive directory
         """
+        debugcount=0
+        self.cable_list=[]
         try:
             for root, dirs, files in os.walk(self.data_directory):
                 for name in files:
                     if self.file_regex.search(name) is None: continue
                     path = join( root, name )
                     self.read_file(path,overwrite)
+                    ##### DEBUG TO REMOVE
+                    debugcount+=1
+                    if debugcount >= 50:
+                        return
         except OSError, oserr:
             logging.error("%s"%oserr)
 
@@ -95,10 +101,11 @@ class CableImporter(object):
             cable_table = cablemetasoup.find("table")
             cable_id = cable_table.findAll('tr')[1].findAll('td')[0].contents[1].contents[0]
             cable = self.mongodb.cables.find_one({'_id': cable_id})
+
             if overwrite is False and cable is not None:
                 logging.info('CABLE ALREADY EXISTS : SKIPPING')
-                self.cable_id += [cable_id]
-                self.print_counts()
+                self.cable_list += [cable_id]
+                logging.info("cables processed = %d"%len(self.cable_id))
                 return
 
             ## updates metas without erasing edges
@@ -110,28 +117,25 @@ class CableImporter(object):
             cablecontent = unicode( nltk.clean_html( str( contentsoup.findAll("pre")[1] ) ), encoding="utf_8", errors="replace" )
             del raw
             date_time = datetime.strptime(cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0], "%Y-%m-%d %H:%M")
-
+            cablenode = add_node(self.graphdb, cable)
             ## overwrite metas informations without erasing edges
             cable.update({
                 # auto index
-                '_id' : cable_id,
-                #'id' : cable_id,
+                '_id' : cablenode.id,
+                'id' : cable_id,
                 'label' : title,
-                'date_time' : date_time,
+                'start' : date_time,
                 'classification' : cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
                 'origin' : cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
                 'content' : cablecontent,
                 'category': "Document"
             })
+            set_node_attr(cable, cablenode)
             # insert or auto overwrites existing cable (indexed by '_id')
             self.mongodb.cables.save(cable)
-            self.cable_id += [cable_id]
-            self.print_counts()
+            self.cable_list += [cable_id]
+            logging.info("cables processed = %d"%len(self.cable_list))
         except Exception, exc:
             logging.warning("error importing cable : %s"%exc)
             self.counts['files_not_processed'] += 1
-            self.print_counts()
-
-
-    def print_counts(self):
-        logging.info("cables processed = %d, cables impossible to process = %d"%(len(self.cable_id), self.counts['files_not_processed']))
+            logging.info("error importing a cable, total NOT processed = %d"%self.counts['files_not_processed'])

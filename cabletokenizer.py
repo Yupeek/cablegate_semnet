@@ -24,6 +24,8 @@ import filtering
 
 from datamodel import getNodeId, getNodeLabel, updateNodeEdges, overwriteEdge, addEdge, addUniqueEdge
 from mongodbhandler import CablegateDatabase
+from neo4jrestclient.client import GraphDatabase
+from cablenetwork import add_node, set_node_attr, get_node, updateEdge
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
@@ -57,6 +59,7 @@ class NGramizer(object):
     """
     def __init__(self, config):
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
+        self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.config = config
 
     def extract(self, documentObj, filters, tagger, stemmer):
@@ -155,10 +158,13 @@ class NGramizer(object):
 
     def ngramize(self, document, doc_ngrams, minSize, maxSize, tagTokens, filters, stemmer):
         """
-        common ngramizing method
+        common tagTokens decomposition method
         returns a dict of filtered NGram instances
         @tagTokens == [[word1 tokens], [word2 tokens], etc]
         """
+        documentnode = get_node(self.graphdb, document['_id'])
+        if documentnode is None:
+            documentnode = add_node(self.graphdb, document)
         # content is the list of words from tagTokens
         content = self.getContent(tagTokens)
         stemmedcontent = []
@@ -169,41 +175,45 @@ class NGramizer(object):
         for i in range(len(content)):
             for n in range(minSize, maxSize + 1):
                 if len(content) >= i+n:
-                    # updates document's ngrams cache
-                    ngid = getNodeId(stemmedcontent[i:n+i])
+                    sha256ngid = getNodeId(stemmedcontent[i:n+i])
                     label = getNodeLabel(content[i:n+i])
-                    ngram = self.mongodb.ngrams.find_one({'_id': ngid})
+                    ngram = self.mongodb.ngrams.find_one({'sha256': sha256ngid})
                     if ngram is not None:
-                        # general edges updates
-                        ngram = overwriteEdge( ngram, 'postag', label, tags[i:n+i])
-                        ngram = addEdge( ngram, 'Document', document['_id'], 1)
-                        ngram = addEdge( ngram, 'label', label, 1)
-                        self.mongodb.ngrams.save(ngram)
-                        document = addEdge( document, 'NGram', ngid, 1 )
-                        self.mongodb.cables.save(document)
+                        #ngramnode = get_node(self.graphdb, ngram['_id'])
+                        if ngram['_id'] not in doc_ngrams:
+                            doc_ngrams += [ngram['_id']]
+                            ngram = addEdge( ngram, 'Document', document['_id'], 1)
+                            self.mongodb.ngrams.save(ngram)
+                        # TODO replace major label in ngramnode
+                        #ngram = overwriteEdge( ngram, 'postag', label, tags[i:n+i])
+                        #ngram = addEdge( ngram, 'label', label, 1)
+
+                        #self.mongodb.ngrams.save(ngram)
+                        #document = addEdge( document, 'NGram', ngid, 1 )
+                        #self.mongodb.cables.save(document)
                     else:
                         # id made from the stemmedcontent and label made from the real tokens
                         try:
                             ngram = {
-                                '_id': ngid,
-                                #'id': ngid,
+                                #'_id': from graphdb,
+                                'sha256': sha256ngid,
                                 'label': label,
                                 'content': content[i:n+i],
                                 'edges': {
                                     'postag' : { label : tags[i:n+i] },
-                                    'label': { label : 1 },
-                                    'Document': { document['_id'] : 1 },
-                                    'NGram': {}
+                                    'label': { label : 1 }
                                 },
                                 'postag' : tags[i:n+i],
                                 'category': "NGram"
                             }
                             # application defined filtering
                             if filtering.apply_filters(ngram, filters) is True:
-                                doc_ngrams += [ngid]
+                                ngram = addEdge(ngram, "Document", str(document['_id']), 1)
+                                ngramnode = add_node(self.graphdb, ngram)
+                                if ngramnode.id not in doc_ngrams:
+                                    doc_ngrams += [ngramnode.id]
+                                ngram['_id'] = ngramnode.id
                                 self.mongodb.ngrams.save(ngram)
-                                document = addEdge( document, 'NGram', ngid, 1 )
-                                self.mongodb.cables.save(document)
                         except Exception, exc:
                             logging.error("error inserting new ngram %s : %s"%(label, exc))
 

@@ -24,9 +24,10 @@ import nltk
 import cPickle
 from nltk import PorterStemmer
 
-from neo4j import GraphDatabase
+from neo4jrestclient.client import GraphDatabase
 from mongodbhandler import CablegateDatabase
 
+from cablenetwork import add_node, set_node_attr, get_node, updateEdge
 from cabletokenizer import NGramizer
 from datamodel import initEdges, addEdge
 import filtering
@@ -44,7 +45,21 @@ class CableExtract(object):
         self.config = config
         filters = self._get_extraction_filters()
         postagger = cPickle.load(open(self.config['extraction']['tagger'],"r"))
-        self.extract(NGramizer(self.config), filters, postagger, overwrite)
+        extract_gen = self.extract(NGramizer(self.config), filters, postagger, overwrite)
+        try:
+            while 1:
+                docid, docngrams = extract_gen.next()
+                self.update_cooc( docid, docngrams)
+        except StopIteration, si:
+            return
+
+    def update_cooc(self, docid, docngrams):
+        documentnode = self.graphdb.nodes.get(docid)
+        while len(docngrams)>0:
+            ngramid = docngrams.pop()
+            ngramrecord = self.mongodb.ngrams.find_one({'_id':ngramid})
+            updateEdge(self.graphdb, docid, [ngramid], "occurrence", value=ngramrecord['edges']['Document'][str(docid)])
+            updateEdge(self.graphdb, ngramid, docngrams, "cooccurrence", value=1)
 
     def extract(self, ngramizer, filters, postagger, overwrite):
         """
@@ -52,7 +67,7 @@ class CableExtract(object):
         """
         if overwrite is True and "ngrams" in self.mongodb.collection_names():
             self.mongodb.ngrams.remove()
-
+        self.mongodb.ngrams.ensure_index("sha256")
         for cable in self.mongodb.cables.find(timeout=False):
             if cable is None:
                 logging.warning("cable %d not found in the database, skipping"%cable_id)
@@ -66,6 +81,7 @@ class CableExtract(object):
                 postagger,
                 PorterStemmer()
             )
+            yield cable['_id'], docngrams
 
     def _get_extraction_filters(self):
         """

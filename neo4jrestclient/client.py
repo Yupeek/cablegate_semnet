@@ -7,19 +7,18 @@ import re
 import simplejson
 import time
 from urlparse import urlsplit
+import urllib
 
 __all__ = ("GraphDatabase", "Incoming", "Outgoing", "Undirected",
            "StopAtDepth", "NotFoundError", "StatusException")
 __author__ = "Javier de la Rosa, and Diego Muñoz Escalante"
 __credits__ = ["Javier de la Rosa", "Diego Muñoz Escalante"]
 __license__ = "GPLv3"
-__version__ = "0.1.0"
+__version__ = "0.0.1"
 __email__ = "versae [at] gmail [dot] com"
 __status__ = "Development"
 
-# Global options
-CACHE = False
-DEBUG = False
+
 # Order
 BREADTH_FIRST = "breadth first"
 DEPTH_FIRST = "depth first"
@@ -41,7 +40,8 @@ NODE = "node"
 RELATIONSHIP = "relationship"
 PATH = "path"
 POSITION = "position"
-
+CACHE=False
+DEBUG=False
 
 class StopAtDepth(object):
     """
@@ -59,7 +59,6 @@ class MetaTraversal(type):
     """
     Metaclass for adding default attributes to Traversal class.
     """
-
     def __new__(cls, name, bases, dic):
         for attr in ["types", "order", "stop", "returnable", "uniqueness",
                      "returns"]:
@@ -75,26 +74,41 @@ class GraphDatabase(object):
     """
     Main class for connection to Ne4j standalone REST server.
     """
-
     def __init__(self, url):
         self.url = None
+        self.nodes = {}
+        self.index_url = None
+        self._reference_node = None
+
+        self.node_path = "node"
+
         if url.endswith("/"):
             self.url = url
         else:
             self.url = "%s/" % url
+
+        self._get_nodes(url)
+
+    def _get_nodes(self, url):
         response, content = Request().get(url)
         if response.status == 200:
             response_json = simplejson.loads(content)
             self._relationship_index = response_json['relationship_index']
             self._node = response_json['node']
             self._extensions_info = response_json['extensions_info']
-            self._node_index = response_json['node_index']
             self._reference_node = response_json['reference_node']
             self._extensions = response_json['extensions']
-            self.extensions = ExtenionsProxy(self._extensions)
-            self.nodes = NodesProxy(self._node, self._reference_node)
-            # Backward compatibility. The current style is more pythonic
-            self.node = self.nodes
+            self.extensions = ExtensionsProxy(self._extensions)
+
+            self.index_url = response_json['node_index']
+
+            self.Index = Index(db_url=self.url, node_path=self.node_path,
+                               reference_node=self.reference_node,
+                               index_url=self.index_url)
+            self.nodes = NodeProxy(self.url, self.node_path,
+                                  self.reference_node,
+                                  index_url=self.index_url)
+
             self.Traversal = self._get_traversal_class()
         else:
             raise NotFoundError(response.status, "Unable get root")
@@ -103,8 +117,11 @@ class GraphDatabase(object):
         return Node(self._reference_node)
     reference_node = property(_get_reference_node)
 
-    def index(self, create=False):
-        pass
+    def index(self, key, value=None, create=False, delete=False):
+        self.Index.index_url = self.index_url
+        self.Index.nodes = self.nodes
+        self.nodes = self.Index.mediate(key, value=value, create=create, delete=delete)
+        return self.nodes
 
     def traverse(self, *args, **kwargs):
         return self.reference_node.traverse(*args, **kwargs)
@@ -112,6 +129,12 @@ class GraphDatabase(object):
     def _get_traversal_class(self):
         cls = self
 
+
+    def traverse(self, *args, **kwargs):
+        return self.reference_node.traverse(*args, **kwargs)
+
+    def _get_traversal_class(self):
+        cls = self
         class Traversal(object):
             __metaclass__ = MetaTraversal
 
@@ -144,17 +167,89 @@ class GraphDatabase(object):
 
         return Traversal
 
+class Index(object):
+    """
+    This class allows for node indexing
+    """
+    def __init__(self, nodes={}, db_url=None, node_path=None, reference_node=None, index_url=None):
+        self.node_path = node_path
+        self.reference_node = reference_node
+        self.index_url = index_url
+        self.db_url = db_url
+        if len(nodes) > 0:
+            self.nodes = nodes
+        else:
+            self.nodes = NodeProxy(
+                self.db_url,
+                self.node_path,
+                self.reference_node,
+                index_url=self.index_url
+            )
+
+    def mediate(self, key, value=None, create=False, delete=False):
+        if create:
+            return self.create(key)
+        elif delete:
+            return self.delete(key=key, value=value)
+        else:
+            return self.get(key, value)
+
+    def create(self, key):
+        """
+        Adds index key/value to self.nodes
+        """
+        for ind in self.nodes:
+            node = self.nodes[ind]
+            create = '%s/my_nodes/%s/%s' % (self.index_url, urllib.quote(key), urllib.quote(node.get(key)))
+            response, content = Request().post(create, data=node.url, headers=False)
+            if response.status != 201:
+                raise NotFoundError(response.status, "Problem?")
+        return self.nodes
+
+    def get(self, key, value):
+        """
+        Returns a list of nodes indexed with index key/value
+        """
+        get = '%s/my_nodes/%s/%s' % (self.index_url, key, urllib.quote(value))
+        response, content = Request().get(get)
+        if response.status == 200:
+            defs = simplejson.loads(content)
+            for dic in defs:
+                n = Node(dic['self'], index_url=self.index_url)
+                self.nodes[n.id] = n
+        else:
+            raise StatusException(response.status)
+        return self.nodes
+
+    def delete(self, key, value):
+        """
+        Removes all node from an index key/value
+        """
+        if len(self.nodes) < 1:
+            self.get(key, value)
+        nodes = self.nodes.copy()
+        for ind in self.nodes:
+            node = self.nodes[ind]
+            url = '%s/my_nodes/%s/%s/%s' % (self.index_url, urllib.quote(key), urllib.quote(value), node.id)
+            response, content = Request().delete(url)
+            if response.status != 204:
+                raise StatusException(response.status)
+            else:
+                del nodes[ind]
+        return nodes
 
 class Base(object):
     """
     Base class.
     """
-
-    def __init__(self, url, create=False, data={}):
+    def __init__(self, url, index_url=None, create=False, data={}):
         self._dic = {}
         self.url = None
+
         if url.endswith("/"):
             url = url[:-1]
+
+        self.Index = Index(index_url=index_url, nodes = {self.url: self})
         if create:
             response, content = Request().post(url, data=data)
             if response.status == 201:
@@ -190,7 +285,7 @@ class Base(object):
         if response.status == 200:
             self._dic["data"][key] = simplejson.loads(content)
         else:
-            raise NotFoundError(response.status, "Node or propery not found")
+            raise NotFoundError(response.status, "Node or property not found")
         return self._dic["data"][key]
 
     def get(self, key, *args):
@@ -282,28 +377,36 @@ class Base(object):
     properties = property(_get_properties, _set_properties, _del_properties)
 
 
-class NodesProxy(dict):
+    def index(self, key, value=None, create=False, delete=False):
+        return self.Index.mediate(key, value=value, create=create, delete=delete)
+
+
+class NodeProxy(dict):
     """
     Class proxy for node in order to allow get a node by id and
     create new nodes through calling.
     """
-
-    def __init__(self, node, reference_node=None):
-        self._node = node
-        self._reference_node = reference_node
+    def __init__(self, url, node_path, reference_node=None, index_url=None):
+        self.url = url
+        self.node_path = node_path
+        self.node_url = "%s%s" % (self.url, self.node_path)
+        self.reference_node = reference_node
+        self.index_url = index_url
 
     def __call__(self, **kwargs):
         reference = kwargs.pop("reference", False)
-        if reference and self._reference_node:
-            return Node(self._reference_node)
+        if reference and self.reference_node:
+            return Node(self.reference_node, index_url=self.index_url)
         else:
             return self.create(**kwargs)
 
     def __getitem__(self, key):
-        if isinstance(key, (str, unicode)) and key.startswith(self._node):
-            return Node(key)
+
+        if isinstance(key, (str, unicode)) and key.startswith(self.node_url):
+            return Node(key, index_url=self.index_url)
         else:
-            return Node("%s/%s/" % (self._node, key))
+            return Node("%s/%s" % (self.node_url, key), index_url=self.index_url)
+
 
     def get(self, key, *args, **kwargs):
         try:
@@ -317,7 +420,9 @@ class NodesProxy(dict):
                 raise NotFoundError()
 
     def create(self, **kwargs):
-        return Node(self._node, create=True, data=kwargs)
+        node = Node(self.node_url, index_url=self.index_url, create=True, data=kwargs)
+        self[node.id] = node
+        return node
 
     def delete(self, key):
         node = self.__getitem__(key)
@@ -328,7 +433,6 @@ class Node(Base):
     """
     Node class.
     """
-
     def __getattr__(self, relationship_name, *args, **kwargs):
         """
         HACK: Allow to set node relationship
@@ -351,7 +455,7 @@ class Node(Base):
                                                      "URI not of \"to\" node" \
                                                      "not found")
             else:
-                raise StatusException(response.status, "Invalid data sent")
+                raise StatusException(response.status, "Invalid data sent : %s"%data)
         return relationship
 
     def _get_relationships(self):
@@ -387,16 +491,18 @@ class Node(Base):
                 types = [types]
             relationships = []
             for relationship in types:
-                if relationship.direction == "both":
-                    relationships.append({"type": relationship.type})
-                else:
-                    relationships.append({"type": relationship.type,
-                                          "direction": relationship.direction})
+                relationships.append({"type": relationship})
+                #if relationship.direction == "both":
+                #    relationships.append({"type": relationship.type})
+                #else:
+                #    relationships.append({"type": relationship.type,
+                #                          "direction": relationship.direction})
             if relationships:
                 data.update({"relationships": relationships})
         if returns not in (NODE, RELATIONSHIP, PATH, POSITION):
             returns = NODE
         traverse_url = self._dic["traverse"].replace("{returnType}", returns)
+
         response, content = Request().post(traverse_url, data=data)
         if response.status == 200:
             results_list = simplejson.loads(content)
@@ -419,7 +525,6 @@ class Relationships(object):
     """
     Relationships class for a node.
     """
-
     def __init__(self, node):
         self._node = node
         self._pattern = "{-list|&|types}"
@@ -458,7 +563,6 @@ class Relationship(Base):
     """
     Relationship class.
     """
-
     def _get_start(self):
         return Node(self._dic['start'])
     start = property(_get_start)
@@ -476,7 +580,6 @@ class Path(object):
     """
     Path class for return type PATH in traversals.
     """
-
     def __init__(self, dic):
         self.start = property(Node(dic["start"]))
         self.end = property(Node(dic["end"]))
@@ -510,9 +613,8 @@ class Position(object):
     """
     Position class for return type POSITION in traversals.
     """
-
     def __init__(self, dic):
-        self.node = property(Node(dic["node"]))
+        self.nodes = property(Node(dic["node"]))
         self.depth = int(dic["depth"])
         relationship = Relationship(dic["last relationship"])
         self.last_relationship = property(relationship)
@@ -523,7 +625,6 @@ class BaseInAndOut(object):
     """
     Base class for Incoming, Outgoing and Undirected relationships types.
     """
-
     def __init__(self, direction):
         self.direction = direction
 
@@ -542,8 +643,7 @@ Outgoing = BaseInAndOut(direction="out")
 Incoming = BaseInAndOut(direction="in")
 Undirected = BaseInAndOut(direction="both")
 
-
-class ExtenionsProxy(dict):
+class ExtensionsProxy(dict):
     """
     Class proxy for extensions in order to allow get an extension by module
     and class name and executing with the right params through calling.
@@ -577,7 +677,6 @@ class Extension(object):
     """
     Extension class.
     """
-
     def __init__(self, url):
         self._dic = {}
         if url.endswith("/"):
@@ -624,11 +723,11 @@ class Extension(object):
         return u"<Neo4j %s: %s>" % (self.__class__.__name__, self.url)
 
 
+
 class StatusException(Exception):
     """
     Create an Error Response.
     """
-
     def __init__(self, value, result=None):
         self.value = value
         self.responses = {
@@ -707,7 +806,6 @@ class StatusException(Exception):
 
 
 class NotFoundError(StatusException):
-
     def __init__(self, value=None, result=None):
         if not value:
             value = 404
@@ -721,7 +819,6 @@ class Request(object):
     Create an HTTP request object for HTTP
     verbs GET, POST, PUT and DELETE.
     """
-
     def __init__(self, username=None, password=None, key_file=None,
                  cert_file=None):
         self.username = username
@@ -879,14 +976,12 @@ class Request(object):
             authorization = "Basic %s" % base64_credentials[:-1]
             headers['Authorization'] = authorization
             headers['Remote-User'] = username
+
         if method in ("POST", "PUT"):
             headers['Content-Type'] = 'application/json'
-        # Thanks to Yashh: http://bit.ly/cWsnZG
-        # Don't JSON encode body when it starts with "http://" to set inde
-        if isinstance(data, (str, unicode)) and data.startswith('http://'):
-            body = data
-        else:
-            body = self._json_encode(data, ensure_ascii=True)
+
+        body = self._json_encode(data, ensure_ascii=True)
+
         try:
             response, content = http.request(url, method, headers=headers,
                                              body=body)

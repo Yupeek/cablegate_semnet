@@ -59,7 +59,7 @@ def addUniqueEdge( node, type, key, value ):
     else:
         node['edges'][type][key] = value
         return node
-    
+
 def overwriteEdge( node, type, key, value ):
     """
     low level method overwriting a weighted edge
