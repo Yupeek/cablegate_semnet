@@ -178,8 +178,9 @@ class NGramizer(object):
                     if sha256ngid in document['edges']['NGram']:
                         document = addEdge(document, 'NGram', sha256ngid, 1)
                     else:
-                        # if ngram is not already in the corpus
-                        if self.mongodb.ngrams.find_one({'_id': sha256ngid}) is None:
+                        # else if ngram is not already in the corpus
+                        savedngram = self.mongodb.ngrams.find_one({'_id': sha256ngid})
+                        if savedngram is None:
                             # create NGram object to pass it throug the filters
                             label = getNodeLabel(content[i:n+i])
                             ngram = {
@@ -203,4 +204,9 @@ class NGramizer(object):
                                 # caches the document's ngram nodes
                                 #doc_ngrams[sha256ngid] = ngramnode
                                 # save a flag
-                                self.mongodb.ngrams.save({'_id': sha256ngid, 'nodeid': ngramnode.id})
+                                self.mongodb.ngrams.save({'_id': sha256ngid, 'nodeid': ngramnode.id, 'occs': 1})
+                        else:
+                            #was already in the corpus and not in this document
+                            savedngram['occs'] += 1
+                            self.mongodb.ngrams.save(savedngram)
+                            document = addEdge(document, 'NGram', sha256ngid, 1)

@@ -49,6 +49,7 @@ class CableExtract(object):
         try:
             while 1:
                 cable = extract_gen.next()
+                self.mongodb.save(cable)
                 self.update_cooc(cable)
         except StopIteration, si:
             return

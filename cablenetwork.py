@@ -70,12 +70,15 @@ class CableNetwork(object):
                 ngramnode = self.graphdb.nodes.get(ngram['nodeid'])
                 cablenode.relationships.create("occurrence", ngramnode, weight=occs)
 
+
         for ngram in self.mongodb.ngrams.find(timeout=False):
+            if ngram['occs'] < minoccs: continue
             ngramnode = self.graphdb.nodes.get(ngram['nodeid'])
             if 'edges' not in ngram: continue
             for ngid, cooc in ngram['edges']['NGram'].iteritems():
                 if cooc < mincoocs: continue
                 logging.debug("cooccurrences of ngram %s with %s"%(ngram['_id'], ngid))
                 ngram2 = self.mongodb.ngrams.find_one({'_id':ngid})
+                if ngram2['occs'] < minoccs: continue
                 ngram2node = self.graphdb.nodes.get(ngram2['nodeid'])
                 ngramnode.relationships.create("cooccurrence", ngram2node, weight=cooc)
