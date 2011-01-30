@@ -22,7 +22,6 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 from cableimporter import CableImporter
 from cableextractor import CableExtract
 from cablenetwork import CableNetwork
-
 import yaml
 
 def get_parser():
@@ -49,6 +48,6 @@ if __name__ == "__main__":
     elif options.execute == 'extract':
         extractor = CableExtract( config, bool(options.overwrite) )
     elif options.execute == 'network':
-        network = CableNetwork( config )
+        extractor = CableNetwork( config, bool(options.overwrite), options.minoccs, options.mincoocs )
     else:
         print parser.usage

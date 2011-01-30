@@ -79,13 +79,11 @@ class NGramizer(object):
             tagger
         )
         try:
-            aggregated_ngrams = []
             while 1:
                 nextsent = sentenceTaggedTokens.next()
                 # updates the doc's ngrams
-                aggregated_ngrams = self.ngramize(
+                self.ngramize(
                     documentObj,
-                    aggregated_ngrams,
                     minSize = ngramMin,
                     maxSize = ngramMax,
                     tagTokens = nextsent,
@@ -93,8 +91,7 @@ class NGramizer(object):
                     stemmer = stemmer
                 )
         except StopIteration, stopit:
-            logging.info("finished extraction of %d ngrams on cable %s"%(len(aggregated_ngrams),documentObj['_id']))
-            return aggregated_ngrams
+            logging.info("finished extraction of on cable %s"%documentObj['_id'])
 
     def selectcontent(self, doc):
         """
@@ -156,7 +153,7 @@ class NGramizer(object):
         """return TAGS from a tagged list like [["the","DET"],["python","NN"]]"""
         return [tagged[1] for tagged in sentence]
 
-    def ngramize(self, document, doc_ngrams, minSize, maxSize, tagTokens, filters, stemmer):
+    def ngramize(self, document, minSize, maxSize, tagTokens, filters, stemmer):
         """
         common tagTokens decomposition method
         returns a dict of filtered NGram instances
@@ -175,25 +172,16 @@ class NGramizer(object):
         for i in range(len(content)):
             for n in range(minSize, maxSize + 1):
                 if len(content) >= i+n:
+                    # id made from the stemmedcontent and label made from the real tokens
                     sha256ngid = getNodeId(stemmedcontent[i:n+i])
-                    label = getNodeLabel(content[i:n+i])
-                    ngram = self.mongodb.ngrams.find_one({'sha256': sha256ngid})
-                    if ngram is not None:
-                        #ngramnode = get_node(self.graphdb, ngram['_id'])
-                        if ngram['_id'] not in doc_ngrams:
-                            doc_ngrams += [ngram['_id']]
-                            ngram = addEdge( ngram, 'Document', document['_id'], 1)
-                            self.mongodb.ngrams.save(ngram)
-                        # TODO replace major label in ngramnode
-                        #ngram = overwriteEdge( ngram, 'postag', label, tags[i:n+i])
-                        #ngram = addEdge( ngram, 'label', label, 1)
-
-                        #self.mongodb.ngrams.save(ngram)
-                        #document = addEdge( document, 'NGram', ngid, 1 )
-                        #self.mongodb.cables.save(document)
+                    # ngram is already attached to this cable
+                    if sha256ngid in document['edges']['NGram']:
+                        document = addEdge(document, 'NGram', sha256ngid, 1)
                     else:
-                        # id made from the stemmedcontent and label made from the real tokens
-                        try:
+                        # if ngram is not already in the corpus
+                        if self.mongodb.ngrams.find_one({'_id': sha256ngid}) is None:
+                            # create NGram object to pass it throug the filters
+                            label = getNodeLabel(content[i:n+i])
                             ngram = {
                                 #'_id': from graphdb,
                                 'sha256': sha256ngid,
@@ -208,13 +196,11 @@ class NGramizer(object):
                             }
                             # application defined filtering
                             if filtering.apply_filters(ngram, filters) is True:
-                                ngram = addEdge(ngram, "Document", str(document['_id']), 1)
+                                # create the node
                                 ngramnode = add_node(self.graphdb, ngram)
-                                if ngramnode.id not in doc_ngrams:
-                                    doc_ngrams += [ngramnode.id]
-                                ngram['_id'] = ngramnode.id
-                                self.mongodb.ngrams.save(ngram)
-                        except Exception, exc:
-                            logging.error("error inserting new ngram %s : %s"%(label, exc))
-
-        return doc_ngrams
+                                # increment occurrences
+                                document = addEdge(document, 'NGram', sha256ngid, 1)
+                                # caches the document's ngram nodes
+                                #doc_ngrams[sha256ngid] = ngramnode
+                                # save a flag
+                                self.mongodb.ngrams.save({'_id': sha256ngid, 'nodeid': ngramnode.id})

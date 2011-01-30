@@ -22,4 +22,4 @@ extraction:
     # under "basedirectory" directory, delete this file to regenerate a new one
     tagger: "conll2000_brill_aubt.pickle"
     # Reg Expression for NGram extraction
-    postag_valid: '^((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,)(CD.,)?)+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,))+?)*?$'
+    postag_valid: '^((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,)+?(CD.,)?)+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,)+?)+?)*?$'

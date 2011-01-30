@@ -48,18 +48,22 @@ class CableExtract(object):
         extract_gen = self.extract(NGramizer(self.config), filters, postagger, overwrite)
         try:
             while 1:
-                docid, docngrams = extract_gen.next()
-                self.update_cooc( docid, docngrams)
+                cable = extract_gen.next()
+                self.update_cooc(cable)
         except StopIteration, si:
             return
 
-    def update_cooc(self, docid, docngrams):
-        documentnode = self.graphdb.nodes.get(docid)
-        while len(docngrams)>0:
-            ngramid = docngrams.pop()
-            ngramrecord = self.mongodb.ngrams.find_one({'_id':ngramid})
-            updateEdge(self.graphdb, docid, [ngramid], "occurrence", value=ngramrecord['edges']['Document'][str(docid)])
-            updateEdge(self.graphdb, ngramid, docngrams, "cooccurrence", value=1)
+    def update_cooc(self, cable):
+        ngramcache={}
+        for ng1, ng2 in itertools.combinations(cable['edges']['NGram'].keys(), 2):
+            if ng1 not in ngramcache:
+                ngramcache[ng1] = self.mongodb.ngrams.find_one({'_id': ng1})
+            if ng2 not in ngramcache:
+                ngramcache[ng2] = self.mongodb.ngrams.find_one({'_id': ng2})
+            ngramcache[ng1] = addEdge(ngramcache[ng1], "NGram", ng2, 1)
+            ngramcache[ng2] = addEdge(ngramcache[ng2], "NGram", ng1, 1)
+        for ngram in ngramcache.values():
+            self.mongodb.ngrams.save(ngram)
 
     def extract(self, ngramizer, filters, postagger, overwrite):
         """
@@ -67,7 +71,7 @@ class CableExtract(object):
         """
         if overwrite is True and "ngrams" in self.mongodb.collection_names():
             self.mongodb.ngrams.remove()
-        self.mongodb.ngrams.ensure_index("sha256")
+
         for cable in self.mongodb.cables.find(timeout=False):
             if cable is None:
                 logging.warning("cable %d not found in the database, skipping"%cable_id)
@@ -75,13 +79,13 @@ class CableExtract(object):
             if overwrite is True:
                 cable = initEdges(cable)
             # extract and filter ngrams
-            docngrams = ngramizer.extract(
+            ngramizer.extract(
                 cable,
                 filters,
                 postagger,
                 PorterStemmer()
             )
-            yield cable['_id'], docngrams
+            yield cable
 
     def _get_extraction_filters(self):
         """
