@@ -8,8 +8,6 @@
     <link href="html5rocks.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript" src="jquery-1.4.4.min.js" language="javascript"></script>
     <script type="text/javascript" src="html5rocks.js" language="javascript+protovis"></script>
-    <script type="text/javascript" src="protovis-r3.2.js" language="javascript+protovis"></script>
-    <script type="text/javascript" src="dataset.js" language="javascript"></script>
   </head>
   <body>
     <div class="presentation">
@@ -17,188 +15,104 @@
       <div class="slides">
         <div class="slide">
           <section class="middle">
-            <header><h2>Tinasoft</h2></header>
-            <p>A quick tour</p>
+            <header><h2>Mapping Wikileaks' Cablegate thematics using Python, MongoDB, Neo4j and Gephi</h2></header>
+            <p>FOSDEM's data devroom, Brussels, Feb 5 2011</p>
           </section>
         </div>
 
         <div class="slide">
           <section>
             <header>
-              <h2>Get it</h2>
+              <h2>What ?</h2>
             </header>
             <ul class="bulleted">
-                <li>Download the latest package (no installation needed) from <a href="http://tinasoft.eu/download">our website</a></p></li>
-                <li>Prerequisites</p>
-                <ul class="bulleted">
-                <li>MS Windows XP/Vista, GNU/Linux 2.6+, and soon Mac OS X 10.6+</p></li>
-                <li><a href="http://getfirefox.com">a modern web browser</a></p></li>
-                <li><a href="http://java.com">Oracle Java 6+</a></p></li>
-                </ul>
-                </li>
+                <li>textual data analysis on Wikileaks' released cables</p></li>
+                <li>produce a cooccurrence network of cables and keyphrases</p></li>
+                <li>extract the network with Python, a set of productive librairies</p></li>
+                <li>use MongoDB for document storage and Neo4j for network storage</p></li>
+                <li>explore the network with Gephi reading it from Neo4j</p></li>
             </ul>
           </section>
         </div>
-
         <div class="slide">
           <section>
             <header>
-              <h2>Steps</h2>
+              <h2>Import cables to MongoDB</h2>
             </header>
             <ul class="bulleted">
-                <li>Prepare corpora</p></li>
-                <li>Index keyphrases</p></li>
-                <li>Produce graphs</p></li>
-                <li>Explore graphs</p></li>
-            </ul>
-          </section>
-        </div>
-
-        <div class="slide">
-          <section>
-            <header>
-              <h2>Prepare corpora</h2>
-            </header>
-            <ul class="bulleted">
-                <li>Tinasoft CSV</p>
-                    <pre>
-"corp_id","doc_id","doc_titl","doc_abst"
-"FET OPEN","59","TINA","TINA is a support action aiming to develop
-tools for the analysis and visualisation of the relationships between
-scientific research projects and proposals."
-                    </pre>
-                </li>
-                <li>
-                    <a href="http://pubmed.gov">pubmed.gov</a> <b>Medline</b></p>
-                    try this query
-                    <pre>
-("cancer"[Title/Abstract]) AND "2000/01/01"[Publication Date] :
-"2010/01/01"[Publication Date]
-                    </pre></p>
-                </li>
-                <li>and more soon...</p></li>
-            </ul>
-          </section>
-        </div>
-
-        <div class="slide">
-          <section>
-            <header>
-              <h2>Index keyphrases</h2>
-            </header>
-            <ul class="bulleted">
-                <li>the <b>extraction</b> process produces a list of keyphrases called <i>whitelist</i> and using some <a href="http://en.wikipedia.org/wiki/Natural_language_processing">NLP</a></p>
-                <li>constitute a <i>whitelist</i> with your <a href="http://openoffice.org">favorite csv editor</a></p>
-                <pre>
-"status","label","pos tag","total occs","ngram forms","length","total occs ^ length","max occs per period","max occs period id","max occs  ^ length per period","max occs ^ length period id","period list","db ID"
-"","TINA","?",1,"TINA",1,1,1.0000,"FET",1.0000,"FET","FET","d148bfa1bbe1ce4635f6bc654de582708d6efff9815b4ed28bd49b688830d194"
-"w","visualisation","NN",1,"visualisation",1,1,1.0000,"FET",1.0000,"FET","FET","15492c3e012a83b1887159f6020733bced47aa84c21909619faf2ef443b86cfa"
-"","support action","NN NN",1,"support action",2,1,1.0000,"FET",1.0000,"FET","FET","bef7fa5f32ece691ab61770d8ccfa66451d4a2e90e176c476dd2d15143e3f713"
-"","analysis","NN",1,"analysis",1,1,1.0000,"FET",1.0000,"FET","FET","395681e8cf118552aab1ff4e5ca45ae7888d7a4dd05a8209f5e3420b37b6f624"
-"","research","NN",1,"research",1,1,1.0000,"FET",1.0000,"FET","FET","66f62d1807d3821a3865f2573b69c74be033f1341240ac861fefc6d430bff5e0"
-"","support","NN",1,"support",1,1,1.0000,"FET",1.0000,"FET","FET","a18603086e5bdf9df88ccc9f5a083fed093e819976e87456b74dafcbd7011114"
-"w","analysis and visualisation","NN CC NN",1,"analysis and visualisation",3,1,1.0000,"FET",1.0000,"FET","FET","efff3da5e8641d71495fd48ee24350903b1aeb0b7ec1725e0faec64e3abc6eae"
-"w","scientific research","JJ NN",1,"scientific research",2,1,1.0000,"FET",1.0000,"FET","FET","2e13ee9d5697cd8a2448226df67b4bd4754e6ca123da5ba7d2a85d0530d9c653"
-"","action","NN",1,"action",1,1,1.0000,"FET",1.0000,"FET","FET","bd938c688f49b77c7fc537c6b9222e2c97ebddd63076b87f2feaec66fb9c05d0"
-                </pre>
-                </li>
-                <li>the <b>indexation</b> process creates or updates a graph database, the <i>data set</i></p></li>
-                <li>index the <i>whitelist</i> against a corpus into a <i>data set</i></p></li>
-                <li>aggregate multiple <i>whitelists</i> and corpora into the same <i>data set</i></p></li>
-            </ul>
-          </section>
-        </div>
-
-        <div class="slide">
-          <section>
-            <header>
-              <h2>Data set : a directed and weighted graph database</h2>
-            </header>
-            <script type="text/javascript+protovis">
-                var w = 800,
-                    h = 400,
-                    colors = pv.Colors.category19();
-
-                var vis = new pv.Panel()
-                    .width(w)
-                    .height(h)
-                    .fillStyle("rgba(255,255,255,0.001)")
-                    .event("mousedown", pv.Behavior.pan())
-                    .event("mousewheel", pv.Behavior.zoom());
-
-                var force = vis.add(pv.Layout.Force)
-                    .nodes(dataset.nodes)
-                    .links(dataset.links);
-
-                force.link.add(pv.Line);
-
-                force.node.add(pv.Dot)
-                    .size(function(d) (d.linkDegree + 4) * Math.pow(this.scale, -1.5))
-                    .fillStyle(function(d) d.fix ? "brown" : colors(d.group))
-                    .strokeStyle(function() this.fillStyle().darker())
-                    .lineWidth(1)
-                    .title(function(d) d.nodeName)
-                    .event("mousedown", pv.Behavior.drag())
-                    .event("drag", force)
-                    .add(pv.Label).text(function(d) d.nodeName).event("drag", force);
-
-                vis.render();
-            </script>
-          </section>
-        </div>
-
-        <div class="slide">
-          <section>
-            <header>
-              <h2>Produce graphs</h2>
-            </header>
-            <ul class="bulleted">
-                <li>choose period(s) within a dataset and a <i>whitelist</i></p></li>
-                <li>select relationships between documents and keyphrases</p></li>
-                <li>update the data set with new edges</p></li>
-                <li>optionnally export the entire graph to <a href="http://gexf.net/">gexf file</a> and <a href="http://github.com/moma/tinaweb">publish it online with Tinaweb</a> or <a href="http://gephi.org">explore it with Gephi</a></p></li>
-            </ul>
-          </section>
-        </div>
-
-        <div class="slide">
-          <section>
-            <header>
-              <h2>Explore graphs</h2>
-            </header>
-            <ul class="bulleted">
-                <li>Navigating in the network
-                <ul class="bulleted">
-                    <li>Translation: Click anywhere and drag the mouse</li>
-                    <li>Zoom: Use the mouse scroll, or double-click </li>
-                </ul>
+                <li>BeautifulSoup : html made easy</p>
+                    <ul class="bulleted">
+                        <li>automatically decodes to Python's unicode</li>
+                        <li>quietly handles html's tree errors</li>
+                        <li>traversing methods as Python methods and lists, becoming comparable to Javascript</li>
+                        <li>higher performances with the SoupStrainer class : tells the parser to target a specific part of the document</li>
+                    </ul>
                 </p></li>
-                <li>Node selection and related informations (right panel)
-                <ul class="bulleted">
-                    <li>Click on a a node to append it to the current selection</li>
-                    <li>Click on a selected node to remove it from the current selection</li>
-                    <li>Double-click on a node to switch to it's local neighbourhood</li>
-                    <li>Click on the <i>close</i> button, in the right panel, to empty the selection</li>
-                    <li>Change the cursor size, in the top toolbar, to select multiple nodes at the same time</li>
-                </ul>
+                <li>NLTK : cleaning html</p>
+                    <ul class="bulleted">
+                        <li>one effort though : handle decoding manually</li>
+                        <li>Python provides safe built-in functions to manage that</li>
+                    </ul>
                 </p></li>
-                <li>Graph filtering
-                <ul class="bulleted">
-                    <li>The top toolbar contains node's and edge's weight filters</li>
-                    <li>Spatialization automatically adapts to the filtered graph</li>
-                </ul>
+                <li>MongoDB : document storage</p>
+                    <ul class="bulleted">
+                        <li>inserting and reading records as Python dictionaries transparenly</li>
+                        <li>types support : unicode, nested lists and dictionaries, datetime</li>
+                    </ul>
                 </p></li>
+                <li>Hopefully, Wikileak's archive respects simple structure, making data hackers' job easy !</p></li>
             </ul>
           </section>
         </div>
 
-        <!--
         <div class="slide">
           <section>
-              <iframe src="http://localhost:8888" width="800" height="800"></iframe>
+            <header>
+              <h2>Extract keyphrases</h2>
+            </header>
+            <ul class="bulleted">
+                <li>decompose text into words : nltk.sent_tokenize and nltk.TreebankWordTokenizer</p></li>
+                <li>Part of Speech tagging with nltk.tag</p>
+                    <ul class="bulleted">
+                        <li>Compose and save a tagger object with <i>nltk-trainer</i></li>
+                        <li>high quality POS tagging, composed of multiple algorithms and trained against NLTK's integrated pre-tagged corpora</li>
+                    </ul>
+                </li>
+                <li>group keyphrases using stemming: nltk.PorterStemmer</p></li>
+                <li>automatic selection of keyphrases of 1, 2 or 3 consecutive words: a set of homemade and built-in filters</p>
+                    <ul class="bulleted">
+                        <li>NLTK's built-in stopwords</li>
+                        <li>Homemade POS tag regexp filtering useless series of words</p>
+                        <pre>
+^(
+    (VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?
+    (N.?,|\?,)+?(CD.,)?
+)+?
+(
+    (PREP.?|DET.?,|IN.?,|CC.?,|\?,)
+    (
+        (VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?
+        (N.?,|\?,)+?
+    )+?
+)*?$
+                        </pre>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
           </section>
         </div>
-        -->
+
+        <div class="slide">
+          <section>
+            <header>
+              <h2>Explore the network</h2>
+            </header>
+            <ul class="bulleted">
+                <li>Navigating in the network</li>
+            </ul>
+          </section>
+        </div>
 
         <div class="slide">
           <section>
@@ -207,16 +121,20 @@ scientific research projects and proposals."
             </header>
             <ul class="bulleted">
                 <li>any questions ?</li>
-                <li><a href="http://tinasoft.eu">visit our homepage</a></li>
-                <li><a href="http://moma.github.com/tinasoft.desktop">this presentation</a> (thanks to <a href="http://slides.html5rocks.com">html5rocks!</a>)</li>
+                <li><a href="https://github.com/elishowk/cablegate_semnet">fork me on github</a></li>
+                <li><a href="http://gephi.org">get Gephi</a></li>
             </ul>
           </section>
         <section>
-        Scientific references :
+        References and thanks:
             <ul class="bulleted">
-                <li>Cointet J-P. &amp; Chavalarias D. (2008) <a href="http://aimsciences.org/journals/doIpChk.jsp?paperID=3278&mode=full">Multi-level Science mapping with asymmetric co-occurrence analysis: Methodology and case study</a> Networks and Heterogeneous Media, Vol 3 Number 2, june 2008, p267-276</p></li>
-                <li>Chavalarias D. &amp; Cointet J-P. (2008) <a href="http://dx.doi.org/10.1007/s11192-007-1825-6">Bottom-up scientific field detection for dynamical and hierarchical science mapping - methodology and case study</a> Scientometrics Vol. 75 No. 1</p></li>
-                <li>Chavalarias D. &amp; Cointet J-P. <a href="http://arxiv.org/abs/0904.3154v1">The Reconstruction of Science Phylogeny</a>, Arxiv (april 2009)</p></li>
+                <li><a href="http://www.crummy.com/software/BeautifulSoup/">BeautifulSoup</li>
+                <li><a href="http://www.nltk.org">NTLK</li>
+                <li><a href="http://www.mongodb.org">MongoDB</li>
+                <li><a href="http://neo4j.org/">Neo4j</li>
+                <li><a href="https://github.com/versae/neo4j-rest-client">neo4j-rest-plugin maintainer, Versae on github</a></li>
+                <li><a href="http://gephi.org/2010/gsoc-2010-mid-term-adding-support-for-neo4j-in-gephi/">Martin Škurl developer of the Neo4j Gephi plugin</a></li>
+                <li><a href="http://slides.html5rocks.com">html5rocks !</a></li>
             </ul>
         </section>
         </div>
