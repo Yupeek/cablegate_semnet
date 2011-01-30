@@ -59,7 +59,6 @@ class CableImporter(object):
         """
         Walks the archive directory
         """
-        debugcount=0
         self.cable_list=[]
         try:
             for root, dirs, files in os.walk(self.data_directory):
@@ -67,10 +66,6 @@ class CableImporter(object):
                     if self.file_regex.search(name) is None: continue
                     path = join( root, name )
                     self.read_file(path,overwrite)
-                    ##### DEBUG TO REMOVE
-                    debugcount+=1
-                    if debugcount >= 50:
-                        return
         except OSError, oserr:
             logging.error("%s"%oserr)
 
