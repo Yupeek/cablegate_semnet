@@ -58,30 +58,19 @@ class CableExtract(object):
         cooccache={}
         for ng1, ng2 in itertools.combinations(cable['edges']['NGram'].keys(), 2):
             coocid12 = ng1+"_"+ng2
-            coocid21 = ng2+"_"+ng1
-            if coocid12 not in cooccache:
-                if coocid21 not in cooccache:
-                    cooccache[coocid12] = self.mongodb.cooc.find_one({'_id': coocid12})
-                    if cooccache[coocid12] is None:
-                        del cooccache[coocid12]
-                        cooccache[coocid21] = self.mongodb.cooc.find_one({'_id': coocid21})
-                        if cooccache[coocid21] is None:
-                            del cooccache[coocid21]
-                            ### nothing in cache nor in mongo
-                            cooccache[coocid12] = { '_id': coocid12 }
-                            cooccache[coocid12] = addEdge(cooccache[coocid12], "NGram", ng2, 1)
-                        else:
-                            ### new in cache but was in mongo
-                            cooccache[coocid21] = addEdge(cooccache[coocid21], "NGram", ng1, 1)
-                    else:
-                        cooccache[coocid12] = addEdge(cooccache[coocid12], "NGram", ng2, 1)
+            cooc12 = self.mongodb.cooc.find_one({'_id': coocid12})
+            if cooc12 is None:
+                coocid21 = ng2+"_"+ng1
+                cooc21 = self.mongodb.cooc.find_one({'_id': coocid21})
+                if cooc21 is None:
+                    cooc12 = { '_id': coocid12 }
+                    cooc12 = addEdge(coocid12, "NGram", ng2, 1)
+                    self.mongodb.cooc.save(cooc12)
+                    continue
                 else:
-                    cooccache[coocid21] = addEdge(cooccache[coocid21], "NGram", ng1, 1)
-            else:
-                cooccache[coocid12] = addEdge(cooccache[coocid12], "NGram", ng2, 1)
-
-        for cooc in cooccache.itervalues():
-            self.mongodb.cooc.save(cooc)
+                    coocid21 = addEdge(coocid21, "NGram", ng1, 1)
+                    self.mongodb.cooc.save(cooc21)
+                    continue
 
     def extract(self, ngramizer, filters, postagger, overwrite):
         """
@@ -89,7 +78,8 @@ class CableExtract(object):
         """
         if overwrite is True and "ngrams" in self.mongodb.collection_names():
             self.mongodb.ngrams.remove()
-
+        if overwrite is True and "cooc" in self.mongodb.collection_names():
+            self.mongodb.cooc.remove()
         for cable in self.mongodb.cables.find(timeout=False):
             if cable is None:
                 logging.warning("cable %d not found in the database, skipping"%cable_id)

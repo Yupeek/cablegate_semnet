@@ -161,6 +161,7 @@ class NGramizer(object):
         """
         documentnode = get_node(self.graphdb, document['_id'])
         if documentnode is None:
+            del document['content']
             documentnode = add_node(self.graphdb, document)
         # content is the list of words from tagTokens
         content = self.getContent(tagTokens)
