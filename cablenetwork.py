@@ -21,7 +21,7 @@ import neo4jrestclient.client
 #neo4jrestclient.client.DEBUG=1
 from neo4jrestclient.client import GraphDatabase, NotFoundError
 from mongodbhandler import CablegateDatabase
-
+import re
 from datetime import datetime
 
 def update_edge(graphdb, nodesource, nodetargets, type, value=1):
@@ -60,25 +60,32 @@ class CableNetwork(object):
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
         self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.config = config
-
+        nodecache = {}
         for cable in self.mongodb.cables.find(timeout=False):
             cablenode = self.graphdb.nodes.get(cable['_id'])
             for ngid, occs in cable['edges']['NGram'].iteritems():
                 if occs < minoccs: continue
-                logging.debug("occurrences of cable %s with %S"%(cable['_id'],ngid))
                 ngram = self.mongodb.ngrams.find_one({'_id':ngid})
-                ngramnode = self.graphdb.nodes.get(ngram['nodeid'])
-                cablenode.relationships.create("occurrence", ngramnode, weight=occs)
+                if str(ngram['nodeid']) not in nodecache:
+                    nodecache[str(ngram['nodeid'])] = self.graphdb.nodes.get(ngram['nodeid'])
+                cablenode.relationships.create("occurrence", nodecache[str(ngram['nodeid'])], weight=occs)
 
 
         for ngram in self.mongodb.ngrams.find(timeout=False):
-            if ngram['occs'] < minoccs: continue
-            ngramnode = self.graphdb.nodes.get(ngram['nodeid'])
-            if 'edges' not in ngram: continue
-            for ngid, cooc in ngram['edges']['NGram'].iteritems():
-                if cooc < mincoocs: continue
-                logging.debug("cooccurrences of ngram %s with %s"%(ngram['_id'], ngid))
+            if ngram['occs'] < minoccs:
+                self.graphdb.nodes.delete(ngram['nodeid'])
+                continue
+            coocidRE = re.compile("^"+ngram['_id']+"_[a-z0-9]+$")
+
+            if str(ngram['nodeid']) not in nodecache:
+                nodecache[str(ngram['nodeid'])] = self.graphdb.nodes.get(ngram['nodeid'])
+
+            for cooc in self.mongodb.cooc.find({"_id":{"$regex":coocidRE}}, timeout=False):
+                if cooc['value'] < mincoocs: continue
+                ng1, ng2 = cooc['_id'].split("_")
                 ngram2 = self.mongodb.ngrams.find_one({'_id':ngid})
                 if ngram2['occs'] < minoccs: continue
-                ngram2node = self.graphdb.nodes.get(ngram2['nodeid'])
-                ngramnode.relationships.create("cooccurrence", ngram2node, weight=cooc)
+                logging.debug("setting cooc from %d to %d = %d"%(ngram['nodeid'],ngram2['nodeid'], cooc['value']))
+                if str(ngram2['nodeid']) not in nodecache:
+                    nodecache[str(ngram2['nodeid'])] = self.graphdb.nodes.get(ngram2['nodeid'])
+                nodecache[str(ngram['nodeid'])].relationships.create("cooccurrence", nodecache[str(ngram2['nodeid'])], weight=cooc['value'])
