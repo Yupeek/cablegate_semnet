@@ -64,11 +64,11 @@ class CableExtract(object):
                 cooc21 = self.mongodb.cooc.find_one({'_id': coocid21})
                 if cooc21 is None:
                     cooc12 = { '_id': coocid12 }
-                    cooc12 = addEdge(coocid12, "NGram", ng2, 1)
+                    cooc12 = addEdge(cooc12, "NGram", ng2, 1)
                     self.mongodb.cooc.save(cooc12)
                     continue
                 else:
-                    coocid21 = addEdge(coocid21, "NGram", ng1, 1)
+                    cooc21 = addEdge(cooc21, "NGram", ng1, 1)
                     self.mongodb.cooc.save(cooc21)
                     continue
 
