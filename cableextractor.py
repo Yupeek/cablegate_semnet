@@ -63,14 +63,16 @@ class CableExtract(object):
                 coocid21 = ng2+"_"+ng1
                 cooc21 = self.mongodb.cooc.find_one({'_id': coocid21})
                 if cooc21 is None:
-                    cooc12 = { '_id': coocid12 }
-                    cooc12 = addEdge(cooc12, "NGram", ng2, 1)
+                    cooc12 = { '_id': coocid12, 'value': 1 }
                     self.mongodb.cooc.save(cooc12)
                     continue
                 else:
-                    cooc21 = addEdge(cooc21, "NGram", ng1, 1)
+                    cooc21['value'] += 1
                     self.mongodb.cooc.save(cooc21)
                     continue
+            else:
+                cooc12['value'] += 1
+                continue
 
     def extract(self, ngramizer, filters, postagger, overwrite):
         """
