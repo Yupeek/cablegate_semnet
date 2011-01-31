@@ -204,7 +204,7 @@ class NGramizer(object):
                                 # caches the document's ngram nodes
                                 #doc_ngrams[sha256ngid] = ngramnode
                                 # save a flag
-                                self.mongodb.ngrams.save({'_id': sha256ngid, 'nodeid': ngramnode.id, 'occs': 1})
+                                self.mongodb.ngrams.save({'_id': sha256ngid, 'category': "NGram", 'nodeid': ngramnode.id, 'occs': 1, 'label': label})
                         else:
                             #was already in the corpus and not in this document
                             savedngram['occs'] += 1

@@ -50,21 +50,38 @@ class CableExtract(object):
             while 1:
                 cable = extract_gen.next()
                 self.mongodb.cables.save(cable)
-                self.update_cooc(cable)
+                self.update_cable_cooc(cable)
         except StopIteration, si:
             return
 
-    def update_cooc(self, cable):
-        ngramcache={}
+    def update_cable_cooc(self, cable):
+        cooccache={}
         for ng1, ng2 in itertools.combinations(cable['edges']['NGram'].keys(), 2):
-            if ng1 not in ngramcache:
-                ngramcache[ng1] = self.mongodb.ngrams.find_one({'_id': ng1})
-            if ng2 not in ngramcache:
-                ngramcache[ng2] = self.mongodb.ngrams.find_one({'_id': ng2})
-            ngramcache[ng1] = addEdge(ngramcache[ng1], "NGram", ng2, 1)
-            ngramcache[ng2] = addEdge(ngramcache[ng2], "NGram", ng1, 1)
-        for ngram in ngramcache.values():
-            self.mongodb.ngrams.save(ngram)
+            coocid12 = ng1+"_"+ng2
+            coocid21 = ng2+"_"+ng1
+            if coocid12 not in cooccache:
+                if coocid21 not in cooccache:
+                    cooccache[coocid12] = self.mongodb.cooc.find_one({'_id': coocid12})
+                    if cooccache[coocid12] is None:
+                        del cooccache[coocid12]
+                        cooccache[coocid21] = self.mongodb.cooc.find_one({'_id': coocid21})
+                        if cooccache[coocid21] is None:
+                            del cooccache[coocid21]
+                            ### nothing in cache nor in mongo
+                            cooccache[coocid12] = { '_id': coocid12 }
+                            cooccache[coocid12] = addEdge(cooccache[coocid12], "NGram", ng2, 1)
+                        else:
+                            ### new in cache but was in mongo
+                            cooccache[coocid21] = addEdge(cooccache[coocid21], "NGram", ng1, 1)
+                    else:
+                        cooccache[coocid12] = addEdge(cooccache[coocid12], "NGram", ng2, 1)
+                else:
+                    cooccache[coocid21] = addEdge(cooccache[coocid21], "NGram", ng1, 1)
+            else:
+                cooccache[coocid12] = addEdge(cooccache[coocid12], "NGram", ng2, 1)
+
+        for cooc in cooccache.itervalues():
+            self.mongodb.cooc.save(cooc)
 
     def extract(self, ngramizer, filters, postagger, overwrite):
         """
