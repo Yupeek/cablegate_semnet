@@ -25,11 +25,11 @@
               <h2>Goals</h2>
             </header>
             <ul class="bulleted">
-                <li>We want to see the how the discussions within the cables are composed and relate to each other</p></li>
-                <li>Extraction from cables' contents to produce the network</p></li>
-                <li>Use meta-data (tags, origin, date) as they are and not as a structure</p></li>
+                <li><p>We want to see the how the discussions within the cables are composed and relate to each other</p></li>
+                <li><p>Extraction from cables' contents to produce the network</p></li>
+                <li><p>Use meta-data (tags, origin, date) as they are and not as a structure</p></li>
             </ul>
-            <footer><h2>produce a mixed occurrence and cooccurrence network of keywords and cables</h2></footer>
+            <footer><cite><h2>produce a mixed occurrence and cooccurrence network of keywords and cables</h2></cite></footer>
           </section>
         </div>
         <div class="slide">
@@ -38,9 +38,9 @@
               <h2>How ?</h2>
             </header>
             <ul class="bulleted">
-                <li>analyse the ~2600 full-texts with Python, and a set of productive librairies</p></li>
-                <li>use MongoDB for document storage and Neo4j for network storage</p></li>
-                <li>explore the network with Gephi</p></li>
+                <li><p>analyse the ~2600 full-texts with Python, and a set of productive librairies</p></li>
+                <li><p>use MongoDB for document storage and Neo4j for network storage</p></li>
+                <li><p>explore the network with Gephi</p></li>
             </ul>
           </section>
         </div>
@@ -50,21 +50,21 @@
               <h2>Import cables to MongoDB</h2>
             </header>
             <ul class="bulleted">
-                <li>BeautifulSoup : html made easy</p>
+                <li><p>BeautifulSoup : html made easy</p>
                     <ul class="bulleted">
                         <li>automatically decodes to Python's unicode</li>
                         <li>quietly handles html's tree errors</li>
                         <li>traversing methods as Python methods and lists, becoming comparable to Javascript</li>
-                        <li>higher performances with the SoupStrainer class : tells the parser to target a specific part of the document</li>
+                        <li>SoupStrainer : tells the parser to target a specific part of the document</li>
                     </ul>
                 </p></li>
-                <li>NLTK : cleaning html</p>
+                <li><p>NLTK : cleaning html</p>
                     <ul class="bulleted">
                         <li>one effort though : handle decoding manually</li>
                         <li>Python provides safe built-in functions to manage that</li>
                     </ul>
                 </p></li>
-                <li>MongoDB : document storage</p>
+                <li><p>MongoDB : document storage</p>
                     <ul class="bulleted">
                         <li>inserting and reading records as Python dictionaries transparenly</li>
                         <li>types support : unicode, nested lists and dictionaries, datetime</li>
@@ -81,14 +81,43 @@
               <h2>Extract keyphrases</h2>
             </header>
             <ul class="bulleted">
-                <li>decompose text into words : nltk.sent_tokenize and nltk.TreebankWordTokenizer</p></li>
-                <li>Part of Speech tagging with nltk.tag</p>
+                <li><p>decompose text into tokens : nltk.sent_tokenize and nltk.TreebankWordTokenizer</p></li>
+                <li><p>Part of Speech tagging with nltk.tag</p>
                     <ul class="bulleted">
-                        <li>Compose and save a tagger object with <i>nltk-trainer</i></li>
-                        <li>high quality POS tagging, composed of multiple algorithms and trained against NLTK's integrated pre-tagged corpora</li>
+                        <li>Compose and save a quality tagger object with <i>nltk-trainer</i></li>
+                        <code>$ python train_tagger.py --sequential aubt  --default "?" conll2000</code>
+                        <li>The <a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.SequentialBackoffTagger-class.html">SequentialBackoffTagger</a>
+                          <ul>
+                            <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.AffixTagger-class.html">nltk.tag.AffixTagger</a> learns from prefix and suffix patterns</li>
+                            <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.UnigramTagger-class.html">nltk.tag.UnigramTagger</a> learns from word letter's patterns</li>
+                            <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.BigramTagger-class.html">nltk.tag.BigramTagger</a> also learns from the preceeding word's tag</li>
+                            <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.TrigramTagger-class.html">nltk.tag.TrigramTagger</a> also learns also from the preceeding two words' tag</li>
+                          </ul>
+                        </li>
                     </ul>
                 </li>
-                <li>group keyphrases using stemming: nltk.PorterStemmer</p></li>
+            </ul>
+            <footer>
+              <p>
+              <a href="https://github.com/japerk/nltk-trainer">https://github.com/japerk/nltk-trainer</a><br/>
+              <a href="http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/">http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/</a>
+              </p>
+            </footer>
+          </section>
+        </div>
+
+        <div class="slide">
+          <section>
+            <header>
+              <h2>Extract keyphrases</h2>
+            </header>
+            <ul class="bulleted">
+                <li><p>find a word's radical using stemming: nltk.PorterStemmer</p></li>
+                <code>
+                >>> print PorterStemmer().stem("language")
+                'languag'
+                </code>
+                <li><p>compute sha256 to group them in the same node</p></li>
             </ul>
           </section>
         </div>
@@ -99,13 +128,14 @@
               <h2>Choose relevant keyphrases</h2>
             </header>
             <ul class="bulleted">
-                <li>automatic selection of keyphrases of 1, 2 or 3 consecutive words: a set of homemade and built-in filters</p>
+                <li><p>automatic selection of words: a set of homemade and built-in filters</p>
                     <ul class="bulleted">
-                        <li>Homemade POS tag regexp filtering useless series of words</p>
-                        <pre>
+                        <li>Homemade POS tag regexp filters "useless" series of words
+                        <code>
 ^(
     (VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?
-    (N.?,|\?,)+?(CD.,)?
+    (N.?,|\?,)+?
+    (CD.,)?
 )+?
 (
     (PREP.?|DET.?,|IN.?,|CC.?,|\?,)
@@ -114,7 +144,7 @@
         (N.?,|\?,)+?
     )+?
 )*?$
-                        </pre>
+                        </code>
                         </li>
                     </ul>
                 </li>
