@@ -93,6 +93,7 @@ class CableExtract(object):
                 continue
             if overwrite is True:
                 cable = initEdges(cable)
+
             # extract and filter ngrams
             ngramizer.extract(
                 cable,

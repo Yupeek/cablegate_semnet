@@ -78,12 +78,17 @@ class NGramizer(object):
             ),
             tagger
         )
+        documentnode = get_node(self.graphdb, documentObj['_id'])
+        if documentnode is None:
+            del documentObj["content"]
+            documentnode = add_node(self.graphdb, documentObj)
         try:
             while 1:
                 nextsent = sentenceTaggedTokens.next()
                 # updates the doc's ngrams
                 self.ngramize(
                     documentObj,
+                    documentnode,
                     minSize = ngramMin,
                     maxSize = ngramMax,
                     tagTokens = nextsent,
@@ -153,16 +158,12 @@ class NGramizer(object):
         """return TAGS from a tagged list like [["the","DET"],["python","NN"]]"""
         return [tagged[1] for tagged in sentence]
 
-    def ngramize(self, document, minSize, maxSize, tagTokens, filters, stemmer):
+    def ngramize(self, document, documentnode, minSize, maxSize, tagTokens, filters, stemmer):
         """
         common tagTokens decomposition method
         returns a dict of filtered NGram instances
         @tagTokens == [[word1 tokens], [word2 tokens], etc]
         """
-        documentnode = get_node(self.graphdb, document['_id'])
-        if documentnode is None:
-            del document['content']
-            documentnode = add_node(self.graphdb, document)
         # content is the list of words from tagTokens
         content = self.getContent(tagTokens)
         stemmedcontent = []
