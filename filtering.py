@@ -17,8 +17,7 @@
 __author__="elishowk"
 
 import re
-import logging
-_logger = logging.getLogger('TinaAppLogger')
+
 
 def apply_filters(ngram, filters=None):
     """
@@ -56,28 +55,14 @@ class Content():
                 self.lang = config['lang']
 
     def get_content(self, ng):
-        if 'content' in ng:
-            return ng['content']
+        return ng['content']
 
     def _any(self, ng):
         contents = self.get_content(ng)
-        test = True
-        if contents is not None:
-            for content in contents:
-                if content in self.rules['any']:
-                    test = False
-        return test
-
-    def any(self, nggenerator):
-        """NGram generator, applies the _any() filter"""
-        try:
-            record = nggenerator.next()
-            while record:
-                if self._any(record) is True:
-                    yield record
-                record = nggenerator.next()
-        except StopIteration, si:
-            return
+        for content in contents:
+            if content in self.rules['any']:
+                return False
+        return True
 
     def _both(self, ng):
         contents = self.get_content(ng)
@@ -87,17 +72,6 @@ class Content():
                 test = False
         return test
 
-    def both(self, nggenerator):
-        """NGram generator, applies the _both() filter"""
-        try:
-            record = nggenerator.next()
-            while record:
-                if self._both(record) is True:
-                    yield record
-                record = nggenerator.next()
-        except StopIteration, si:
-            return
-
     def _begin(self, ng):
         contents = self.get_content(ng)
         test = True
@@ -105,17 +79,6 @@ class Content():
             if contents[0] in self.rules['begin']:
                 test = False
         return test
-
-    def begin(self, nggenerator):
-        """NGram generator, applies the _begin() filter"""
-        try:
-            record = nggenerator.next()
-            while record:
-                if self._begin(record) is True:
-                    yield record
-                record = nggenerator.next()
-        except StopIteration, si:
-            return
 
     def _end(self, ng):
         contents = self.get_content(ng)
@@ -125,16 +88,6 @@ class Content():
                 test = False
         return test
 
-    def end(self, nggenerator):
-        """NGram generator, applies the _end() filter"""
-        try:
-            record = nggenerator.next()
-            while record:
-                if self._end(record) is True:
-                    yield record
-                record = nggenerator.next()
-        except StopIteration, si:
-            return
 
     def test(self, ng):
         """returns True if ALL the tests passed"""
@@ -144,8 +97,6 @@ class WordSizeFilter(Content):
     """
     Word length filtering
     """
-    rules = {}
-
     def test(self, ng):
         """returns True if ALL the tests passed"""
         content = self.get_content(ng)
@@ -157,33 +108,20 @@ class WordSizeFilter(Content):
 
     def get_content(self, ng):
         """selects NGram's postag"""
-        return [word for word in ng['content']]
+        return ng['content']
 
-class PosTagFilter(Content):
-    """
-    Rule-based POS tag filtering
-    """
-    # TODO move rules into app config, and add language support
-    rules = {
-        'any':['PUN','SENT'],
-        'begin':['POS'],
-        'end':[],
-        'both':['VB','VDB','VBP','VBZ','DT','CC','TO','IN','WDT','WP',\
-            'WRB','PRP','EX','MD','UH'],
-    }
 
-    def get_content(self, ng):
-        """selects NGram's postag"""
-        return [tag for tag in ng['postag']]
-
-class PosTagValid(PosTagFilter):
+class PosTagValid(Content):
     """
     Regexp-based POS tag filtering validation
     """
-    # default rules
-    rules = re.compile(r"^.*$")
 
-    def _validate(self, ng):
+    def get_content(self, ng):
+        """selects NGram's postag"""
+        return ng['postag']
+
+    def test(self, ng):
+        """returns True if ALL the tests passed"""
         content = self.get_content(ng)
         pattern = ",".join(content)
         pattern += ","
@@ -191,7 +129,3 @@ class PosTagValid(PosTagFilter):
             return False
         else:
             return True
-
-    def test(self, ng):
-        """returns True if ALL the tests passed"""
-        return self._validate(ng)

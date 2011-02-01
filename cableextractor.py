@@ -39,40 +39,54 @@ class CableExtract(object):
     - extract and filter NGrams from content
     - write the Document-NGram network
     """
-    def __init__(self, config, overwrite=True):
+    def __init__(self, config, overwrite=True, maxcables=None):
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
         self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.config = config
         filters = self._get_extraction_filters()
         postagger = cPickle.load(open(self.config['extraction']['tagger'],"r"))
-        extract_gen = self.extract(NGramizer(self.config), filters, postagger, overwrite)
+        extract_gen = self.extract(NGramizer(self.config), filters, postagger, overwrite, maxcables)
         try:
             while 1:
                 cable = extract_gen.next()
                 self.mongodb.cables.save(cable)
-                self.update_cooc(cable)
+                self.update_cable_cooc(cable)
         except StopIteration, si:
             return
 
-    def update_cooc(self, cable):
-        ngramcache={}
+    def update_cable_cooc(self, cable):
+        cooccache={}
         for ng1, ng2 in itertools.combinations(cable['edges']['NGram'].keys(), 2):
-            if ng1 not in ngramcache:
-                ngramcache[ng1] = self.mongodb.ngrams.find_one({'_id': ng1})
-            if ng2 not in ngramcache:
-                ngramcache[ng2] = self.mongodb.ngrams.find_one({'_id': ng2})
-            ngramcache[ng1] = addEdge(ngramcache[ng1], "NGram", ng2, 1)
-            ngramcache[ng2] = addEdge(ngramcache[ng2], "NGram", ng1, 1)
-        for ngram in ngramcache.values():
-            self.mongodb.ngrams.save(ngram)
+            coocid12 = ng1+"_"+ng2
+            cooc12 = self.mongodb.cooc.find_one({'_id': coocid12})
+            if cooc12 is None:
+                coocid21 = ng2+"_"+ng1
+                cooc21 = self.mongodb.cooc.find_one({'_id': coocid21})
+                if cooc21 is None:
+                    cooc12 = { '_id': coocid12, 'value': 1 }
+                    self.mongodb.cooc.save(cooc12)
+                    continue
+                else:
+                    cooc21['value'] += 1
+                    self.mongodb.cooc.save(cooc21)
+                    continue
+            else:
+                cooc12['value'] += 1
+                continue
 
-    def extract(self, ngramizer, filters, postagger, overwrite):
+    def extract(self, ngramizer, filters, postagger, overwrite, maxcables=None):
         """
         gets the all cables from storage then extract n-grams and produce networks edges and weights
         """
         if overwrite is True and "ngrams" in self.mongodb.collection_names():
-            self.mongodb.ngrams.remove()
+            self.mongodb.drop_collection("ngrams")
 
+        if overwrite is True and "cooc" in self.mongodb.collection_names():
+            self.mongodb.drop_collection("cooc")
+
+        count=0
+        if maxcables is None:
+            maxcables = self.mongodb.cables.count()
         for cable in self.mongodb.cables.find(timeout=False):
             if cable is None:
                 logging.warning("cable %d not found in the database, skipping"%cable_id)
@@ -87,6 +101,8 @@ class CableExtract(object):
                 PorterStemmer()
             )
             yield cable
+            count+=1
+            if count>=maxcables: return
 
     def _get_extraction_filters(self):
         """

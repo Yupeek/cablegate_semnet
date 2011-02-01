@@ -91,7 +91,7 @@ class NGramizer(object):
                     stemmer = stemmer
                 )
         except StopIteration, stopit:
-            logging.info("finished extraction of on cable %s"%documentObj['_id'])
+            logging.info("finished extraction on cable %s"%documentObj['_id'])
 
     def selectcontent(self, doc):
         """
@@ -141,7 +141,7 @@ class NGramizer(object):
         for sent in sentences:
             yield tagger.tag(
                 nltk_treebank_tokenizer.tokenize(
-                    sent
+                    sent.lower()
                 )
             )
 
@@ -161,6 +161,7 @@ class NGramizer(object):
         """
         documentnode = get_node(self.graphdb, document['_id'])
         if documentnode is None:
+            del document['content']
             documentnode = add_node(self.graphdb, document)
         # content is the list of words from tagTokens
         content = self.getContent(tagTokens)
@@ -169,6 +170,7 @@ class NGramizer(object):
              stemmedcontent += [stemmer.stem(word)]
         # tags is the list of tags from tagTokens
         tags = self.getTag(tagTokens)
+        #logging.debug(tags)
         for i in range(len(content)):
             for n in range(minSize, maxSize + 1):
                 if len(content) >= i+n:
@@ -184,8 +186,7 @@ class NGramizer(object):
                             # create NGram object to pass it throug the filters
                             label = getNodeLabel(content[i:n+i])
                             ngram = {
-                                #'_id': from graphdb,
-                                'sha256': sha256ngid,
+                                #'_id': from sha256ngid,
                                 'label': label,
                                 'content': content[i:n+i],
                                 'edges': {
@@ -198,15 +199,23 @@ class NGramizer(object):
                             # application defined filtering
                             if filtering.apply_filters(ngram, filters) is True:
                                 # create the node
+                                ngram['postag'] = ",".join(ngram['postag'])
                                 ngramnode = add_node(self.graphdb, ngram)
                                 # increment occurrences
                                 document = addEdge(document, 'NGram', sha256ngid, 1)
-                                # caches the document's ngram nodes
-                                #doc_ngrams[sha256ngid] = ngramnode
-                                # save a flag
-                                self.mongodb.ngrams.save({'_id': sha256ngid, 'nodeid': ngramnode.id, 'occs': 1})
+                                # save the new NGram
+                                self.mongodb.ngrams.save({
+                                    '_id': sha256ngid,
+                                    'category': "NGram",
+                                    'nodeid': ngramnode.id,
+                                    'occs': 1,
+                                    #'edges': {
+                                    #    'postag' : { label : tags[i:n+i] },
+                                    #    'label': { label : 1 }
+                                    #},
+                                })
                         else:
-                            #was already in the corpus and not in this document
+                            # was already in the corpus and not in this document
                             savedngram['occs'] += 1
                             self.mongodb.ngrams.save(savedngram)
                             document = addEdge(document, 'NGram', sha256ngid, 1)

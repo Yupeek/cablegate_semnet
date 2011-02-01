@@ -30,6 +30,7 @@ def get_parser():
     parser.add_option("-a", "--archive", dest="archive", help="cablegate archive path")
     parser.add_option("-m", "--minoccurrences", dest="minoccs", help="minimum keyphrases' occurrences", type="int")
     parser.add_option("-n", "--mincooccurrences", dest="mincoocs", help="minimum keyphrases' cooccurrences", type="int")
+    parser.add_option("-x", "--maxcables", dest="maxcables", help="max cables", type="int")
     parser.add_option("-c", "--config", dest="config", help="config yaml file path", metavar="FILE")
     parser.add_option("-o", "--overwrite", dest="overwrite", help="overwrite database contents", type="int")
     parser.add_option("-p", "--path", dest="path", help="output path file path", metavar="FILE")
@@ -44,10 +45,10 @@ if __name__ == "__main__":
     config = yaml.safe_load( file( options.config, 'rU' ) )
 
     if options.execute == 'import':
-        importer = CableImporter( config, options.archive, bool(options.overwrite) )
+        importer = CableImporter( config, options.archive, bool(options.overwrite), options.maxcables )
     elif options.execute == 'extract':
-        extractor = CableExtract( config, bool(options.overwrite) )
+        extractor = CableExtract( config, bool(options.overwrite), options.maxcables )
     elif options.execute == 'network':
-        extractor = CableNetwork( config, bool(options.overwrite), options.minoccs, options.mincoocs )
+        extractor = CableNetwork( config, bool(options.overwrite), options.minoccs, options.mincoocs, options.maxcables )
     else:
         print parser.usage

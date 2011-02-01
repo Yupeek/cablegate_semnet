@@ -43,7 +43,7 @@ class CableImporter(object):
       'files_not_processed':0
     }
 
-    def __init__(self, config, data_directory, overwrite=False):
+    def __init__(self, config, data_directory, overwrite=False, maxcables=None):
         self.data_directory = join(data_directory, "cable")
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
         self.graphdb = GraphDatabase(config['general']['neo4j'])
@@ -52,10 +52,10 @@ class CableImporter(object):
         self.contentsoup = SoupStrainer("pre")
         if overwrite is True and "cables" in self.mongodb.collection_names():
             self.mongodb.cables.remove()
-        self.walk_archive(overwrite)
+        self.walk_archive(overwrite, maxcables)
 
 
-    def walk_archive(self, overwrite):
+    def walk_archive(self, overwrite, maxcables):
         """
         Walks the archive directory
         """
@@ -66,6 +66,8 @@ class CableImporter(object):
                     if self.file_regex.search(name) is None: continue
                     path = join( root, name )
                     self.read_file(path,overwrite)
+                    if maxcables is not None:
+                        if len(self.cable_list) >= maxcables: return
         except OSError, oserr:
             logging.error("%s"%oserr)
 
@@ -105,14 +107,13 @@ class CableImporter(object):
 
             ## updates metas without erasing edges
             if cable is None:
-                cable = {}
-                cable = initEdges(cable)
+                cable = initEdges({})
 
             contentsoup = BeautifulSoup(raw, parseOnlyThese = self.contentsoup)
             cablecontent = unicode( nltk.clean_html( str( contentsoup.findAll("pre")[1] ) ), encoding="utf_8", errors="replace" )
             del raw
             date_time = datetime.strptime(cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0], "%Y-%m-%d %H:%M")
-            cablenode = add_node(self.graphdb, cable)
+            cablenode = add_node(self.graphdb, {})
             ## overwrite metas informations without erasing edges
             cable.update({
                 # auto index
@@ -125,9 +126,9 @@ class CableImporter(object):
                 'content' : cablecontent,
                 'category': "Document"
             })
-            set_node_attr(cable, cablenode)
-            # insert or auto overwrites existing cable (indexed by '_id')
             self.mongodb.cables.save(cable)
+            del cable['content']
+            set_node_attr(cable, cablenode)
             self.cable_list += [cable_id]
             logging.info("cables processed = %d"%len(self.cable_list))
         except Exception, exc:
