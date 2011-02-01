@@ -91,7 +91,7 @@ class NGramizer(object):
                     stemmer = stemmer
                 )
         except StopIteration, stopit:
-            logging.info("finished extraction of on cable %s"%documentObj['_id'])
+            logging.info("finished extraction on cable %s"%documentObj['_id'])
 
     def selectcontent(self, doc):
         """
@@ -170,6 +170,7 @@ class NGramizer(object):
              stemmedcontent += [stemmer.stem(word)]
         # tags is the list of tags from tagTokens
         tags = self.getTag(tagTokens)
+        #logging.debug(tags)
         for i in range(len(content)):
             for n in range(minSize, maxSize + 1):
                 if len(content) >= i+n:
@@ -186,7 +187,7 @@ class NGramizer(object):
                             label = getNodeLabel(content[i:n+i])
                             ngram = {
                                 #'_id': from graphdb,
-                                'sha256': sha256ngid,
+                                #'sha256': sha256ngid,
                                 'label': label,
                                 'content': content[i:n+i],
                                 'edges': {
@@ -202,9 +203,7 @@ class NGramizer(object):
                                 ngramnode = add_node(self.graphdb, ngram)
                                 # increment occurrences
                                 document = addEdge(document, 'NGram', sha256ngid, 1)
-                                # caches the document's ngram nodes
-                                #doc_ngrams[sha256ngid] = ngramnode
-                                # save a flag
+                                # save the new NGram
                                 self.mongodb.ngrams.save({'_id': sha256ngid, 'category': "NGram", 'nodeid': ngramnode.id, 'occs': 1, 'label': label})
                         else:
                             #was already in the corpus and not in this document

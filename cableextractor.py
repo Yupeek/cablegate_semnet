@@ -39,13 +39,13 @@ class CableExtract(object):
     - extract and filter NGrams from content
     - write the Document-NGram network
     """
-    def __init__(self, config, overwrite=True):
+    def __init__(self, config, overwrite=True, maxcables=None):
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
         self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.config = config
         filters = self._get_extraction_filters()
         postagger = cPickle.load(open(self.config['extraction']['tagger'],"r"))
-        extract_gen = self.extract(NGramizer(self.config), filters, postagger, overwrite)
+        extract_gen = self.extract(NGramizer(self.config), filters, postagger, overwrite, maxcables)
         try:
             while 1:
                 cable = extract_gen.next()
@@ -74,14 +74,19 @@ class CableExtract(object):
                 cooc12['value'] += 1
                 continue
 
-    def extract(self, ngramizer, filters, postagger, overwrite):
+    def extract(self, ngramizer, filters, postagger, overwrite, maxcables=None):
         """
         gets the all cables from storage then extract n-grams and produce networks edges and weights
         """
         if overwrite is True and "ngrams" in self.mongodb.collection_names():
             self.mongodb.ngrams.remove()
+
         if overwrite is True and "cooc" in self.mongodb.collection_names():
             self.mongodb.cooc.remove()
+            
+        count=0
+        if maxcables is None:
+            maxcables = self.mongodb.cables.count()
         for cable in self.mongodb.cables.find(timeout=False):
             if cable is None:
                 logging.warning("cable %d not found in the database, skipping"%cable_id)
@@ -96,6 +101,8 @@ class CableExtract(object):
                 PorterStemmer()
             )
             yield cable
+            count+=1
+            if count>=maxcables: return
 
     def _get_extraction_filters(self):
         """
