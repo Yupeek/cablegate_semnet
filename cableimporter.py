@@ -51,9 +51,8 @@ class CableImporter(object):
         self.cablemetasoup = SoupStrainer("div", attrs={ "class" : 'pane big' })
         self.contentsoup = SoupStrainer("pre")
         if overwrite is True and "cables" in self.mongodb.collection_names():
-            self.mongodb.cables.remove()
+            self.mongodb.drop_collection("cables")
         self.walk_archive(overwrite, maxcables)
-
 
     def walk_archive(self, overwrite, maxcables):
         """
@@ -113,22 +112,22 @@ class CableImporter(object):
             cablecontent = unicode( nltk.clean_html( str( contentsoup.findAll("pre")[1] ) ), encoding="utf_8", errors="replace" )
             del raw
             date_time = datetime.strptime(cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0], "%Y-%m-%d %H:%M")
-            cablenode = add_node(self.graphdb, {})
             ## overwrite metas informations without erasing edges
             cable.update({
                 # auto index
-                '_id' : cablenode.id,
-                'id' : cable_id,
+                #'_id' : cablenode.id,
+                'id' : "%s"%cable_id,
                 'label' : title,
                 'start' : date_time,
-                'classification' : cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
-                'origin' : cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
-                'content' : cablecontent,
+                'classification' : "%s"%cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
+                'embassy' : "%s"%cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
+                #'content' : cablecontent,
                 'category': "Document"
             })
+            cablenode = add_node(self.graphdb, cable)
+            cable['_id'] = cablenode.id
+            cable['content'] = cablecontent
             self.mongodb.cables.save(cable)
-            del cable['content']
-            set_node_attr(cable, cablenode)
             self.cable_list += [cable_id]
             logging.info("cables processed = %d"%len(self.cable_list))
         except Exception, exc:
