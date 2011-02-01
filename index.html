@@ -19,18 +19,28 @@
             <p>FOSDEM's data devroom, Brussels, Feb 5 2011</p>
           </section>
         </div>
-
         <div class="slide">
           <section>
             <header>
-              <h2>What ?</h2>
+              <h2>Goals</h2>
             </header>
             <ul class="bulleted">
-                <li>textual data analysis on Wikileaks' released cables</p></li>
-                <li>produce a cooccurrence network of cables and keyphrases</p></li>
-                <li>extract the network with Python, a set of productive librairies</p></li>
+                <li>We want to see the how the discussions within the cables are composed and relate to each other</p></li>
+                <li>Extraction from cables' contents to produce the network</p></li>
+                <li>Use meta-data (tags, origin, date) as they are and not as a structure</p></li>
+            </ul>
+            <footer><h2>produce a mixed occurrence and cooccurrence network of keywords and cables</h2></footer>
+          </section>
+        </div>
+        <div class="slide">
+          <section>
+            <header>
+              <h2>How ?</h2>
+            </header>
+            <ul class="bulleted">
+                <li>analyse the ~2600 full-texts with Python, and a set of productive librairies</p></li>
                 <li>use MongoDB for document storage and Neo4j for network storage</p></li>
-                <li>explore the network with Gephi reading it from Neo4j</p></li>
+                <li>explore the network with Gephi</p></li>
             </ul>
           </section>
         </div>
@@ -79,9 +89,18 @@
                     </ul>
                 </li>
                 <li>group keyphrases using stemming: nltk.PorterStemmer</p></li>
+            </ul>
+          </section>
+        </div>
+
+        <div class="slide">
+          <section>
+            <header>
+              <h2>Choose relevant keyphrases</h2>
+            </header>
+            <ul class="bulleted">
                 <li>automatic selection of keyphrases of 1, 2 or 3 consecutive words: a set of homemade and built-in filters</p>
                     <ul class="bulleted">
-                        <li>NLTK's built-in stopwords</li>
                         <li>Homemade POS tag regexp filtering useless series of words</p>
                         <pre>
 ^(
