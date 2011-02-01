@@ -46,7 +46,6 @@ def set_node_attr(record, node):
 def add_node(graphdb, record):
     node = graphdb.nodes.create()
     set_node_attr(record, node)
-    print node.properties
     return node
 
 def get_node(graphdb, _id):
