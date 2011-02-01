@@ -79,11 +79,11 @@ class CableExtract(object):
         gets the all cables from storage then extract n-grams and produce networks edges and weights
         """
         if overwrite is True and "ngrams" in self.mongodb.collection_names():
-            self.mongodb.ngrams.remove()
+            self.mongodb.drop_collection("ngrams")
 
         if overwrite is True and "cooc" in self.mongodb.collection_names():
-            self.mongodb.cooc.remove()
-            
+            self.mongodb.drop_collection("cooc")
+
         count=0
         if maxcables is None:
             maxcables = self.mongodb.cables.count()

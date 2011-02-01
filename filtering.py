@@ -17,8 +17,7 @@
 __author__="elishowk"
 
 import re
-import logging
-_logger = logging.getLogger('TinaAppLogger')
+
 
 def apply_filters(ngram, filters=None):
     """

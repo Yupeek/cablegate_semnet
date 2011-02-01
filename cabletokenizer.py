@@ -141,7 +141,7 @@ class NGramizer(object):
         for sent in sentences:
             yield tagger.tag(
                 nltk_treebank_tokenizer.tokenize(
-                    sent
+                    sent.lower()
                 )
             )
 
@@ -186,8 +186,7 @@ class NGramizer(object):
                             # create NGram object to pass it throug the filters
                             label = getNodeLabel(content[i:n+i])
                             ngram = {
-                                #'_id': from graphdb,
-                                #'sha256': sha256ngid,
+                                #'_id': from sha256ngid,
                                 'label': label,
                                 'content': content[i:n+i],
                                 'edges': {
@@ -200,13 +199,23 @@ class NGramizer(object):
                             # application defined filtering
                             if filtering.apply_filters(ngram, filters) is True:
                                 # create the node
+                                ngram['postag'] = ",".join(ngram['postag'])
                                 ngramnode = add_node(self.graphdb, ngram)
                                 # increment occurrences
                                 document = addEdge(document, 'NGram', sha256ngid, 1)
                                 # save the new NGram
-                                self.mongodb.ngrams.save({'_id': sha256ngid, 'category': "NGram", 'nodeid': ngramnode.id, 'occs': 1, 'label': label})
+                                self.mongodb.ngrams.save({
+                                    '_id': sha256ngid,
+                                    'category': "NGram",
+                                    'nodeid': ngramnode.id,
+                                    'occs': 1,
+                                    #'edges': {
+                                    #    'postag' : { label : tags[i:n+i] },
+                                    #    'label': { label : 1 }
+                                    #},
+                                })
                         else:
-                            #was already in the corpus and not in this document
+                            # was already in the corpus and not in this document
                             savedngram['occs'] += 1
                             self.mongodb.ngrams.save(savedngram)
                             document = addEdge(document, 'NGram', sha256ngid, 1)

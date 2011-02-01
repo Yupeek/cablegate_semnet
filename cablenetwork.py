@@ -94,6 +94,8 @@ class CableNetwork(object):
                     self.mongodb.cooc.delete({"_id":cooc['_id']})
                     continue
                 ngram2 = self.mongodb.ngrams.find_one({'_id':ngid})
+                if ngram2['nodeid'] == ngram['nodeid']:
+                    continue
                 if ngram2['occs'] < minoccs: continue
                 #logging.debug("setting cooc from %s to %s = %d"%(ng1,ng1, cooc['value']))
                 if str(ngram2['nodeid']) not in nodecache:
