@@ -35,10 +35,10 @@ def set_node_attr(record, node):
     Type conversion from python/mongodb to neo4j
     restricts a node's attributes to string or numeric
     """
-    for key, value in record.items():
+    for key, value in record.iteritems():
         if type(value)==unicode:
             node.set(str(key), value.encode("utf_8","replace"))
-        elif type(value) in [int,float,str]:
+        elif type(value) == int or type(value) == float or type(value) == str:
             node.set(str(key), value)
         elif type(value)==datetime:
             node.set(str(key), value.strftime('%Y-%m-%d'))
@@ -46,6 +46,7 @@ def set_node_attr(record, node):
 def add_node(graphdb, record):
     node = graphdb.nodes.create()
     set_node_attr(record, node)
+    print node.properties
     return node
 
 def get_node(graphdb, _id):
@@ -65,7 +66,11 @@ class CableNetwork(object):
         if maxcables is None:
             self.mongodb.cables.count()
         for cable in self.mongodb.cables.find(timeout=False):
-            cablenode = self.graphdb.nodes.get(cable['_id'])
+            try:
+                cablenode = self.graphdb.nodes.get(cable['_id'])
+            except NotFoundError:
+                logging.warn("cable node %d not found, skipping"%cable['_id'])
+                continue
             for ngid, occs in cable['edges']['NGram'].iteritems():
                 if occs < minoccs: continue
                 ngram = self.mongodb.ngrams.find_one({'_id':ngid})
@@ -73,7 +78,11 @@ class CableNetwork(object):
                     logging.warn('ngram %s linked to document %s but not found in mongodb'%(ngid, cable['_id']))
                     continue
                 if str(ngram['nodeid']) not in nodecache:
-                    nodecache[str(ngram['nodeid'])] = self.graphdb.nodes.get(ngram['nodeid'])
+                    try:
+                        nodecache[str(ngram['nodeid'])] = self.graphdb.nodes.get(ngram['nodeid'])
+                    except NotFoundError:
+                        logging.warn("ngram node %d not found, skipping"%ngram['nodeid'])
+                        continue
                 cablenode.relationships.create("occurrence", nodecache[str(ngram['nodeid'])], weight=occs)
             count += 1
             if count > maxcables: break
@@ -85,7 +94,10 @@ class CableNetwork(object):
             coocidRE = re.compile("^"+ngram['_id']+"_[a-z0-9]+$")
 
             if str(ngram['nodeid']) not in nodecache:
-                nodecache[str(ngram['nodeid'])] = self.graphdb.nodes.get(ngram['nodeid'])
+                try:
+                    nodecache[str(ngram['nodeid'])] = self.graphdb.nodes.get(ngram['nodeid'])
+                except NotFoundError:
+                    logging.warn("ngram node %d not found, skipping"%ngram['nodeid'])
 
             for cooc in self.mongodb.cooc.find({"_id":{"$regex":coocidRE}}, timeout=False):
                 if cooc['value'] < mincoocs: continue
@@ -99,5 +111,9 @@ class CableNetwork(object):
                 if ngram2['occs'] < minoccs: continue
                 #logging.debug("setting cooc from %s to %s = %d"%(ng1,ng1, cooc['value']))
                 if str(ngram2['nodeid']) not in nodecache:
-                    nodecache[str(ngram2['nodeid'])] = self.graphdb.nodes.get(ngram2['nodeid'])
+                    try:
+                        nodecache[str(ngram2['nodeid'])] = self.graphdb.nodes.get(ngram2['nodeid'])
+                    except NotFoundError:
+                        logging.warn("ngram node %d not found, skipping"%ngram2['nodeid'])
+                        continue
                 nodecache[str(ngram['nodeid'])].relationships.create("cooccurrence", nodecache[str(ngram2['nodeid'])], weight=cooc['value'])
