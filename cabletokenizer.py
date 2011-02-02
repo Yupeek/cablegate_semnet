@@ -24,8 +24,6 @@ import filtering
 
 from datamodel import getNodeId, getNodeLabel, updateNodeEdges, overwriteEdge, addEdge, addUniqueEdge
 from mongodbhandler import CablegateDatabase
-from neo4jrestclient.client import GraphDatabase
-from cablenetwork import add_node, set_node_attr, get_node, update_edge
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
@@ -59,7 +57,6 @@ class NGramizer(object):
     """
     def __init__(self, config):
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
-        self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.config = config
 
     def extract(self, documentObj, filters, tagger, stemmer):
@@ -187,7 +184,7 @@ class NGramizer(object):
                             # create NGram object to pass it throug the filters
                             label = getNodeLabel(content[i:n+i])
                             ngram = {
-                                #'_id': from sha256ngid,
+                                '_id': sha256ngid,
                                 'label': label,
                                 'content': content[i:n+i],
                                 'edges': {
@@ -195,7 +192,8 @@ class NGramizer(object):
                                     'label': { label : 1 }
                                 },
                                 'postag' : tags[i:n+i],
-                                'category': "NGram"
+                                'category': "NGram",
+                                'occs': 1,
                             }
                             # application defined filtering
                             if filtering.apply_filters(ngram, filters) is True:
@@ -205,16 +203,7 @@ class NGramizer(object):
                                 # increment occurrences
                                 document = addEdge(document, 'NGram', sha256ngid, 1)
                                 # save the new NGram
-                                self.mongodb.ngrams.save({
-                                    '_id': sha256ngid,
-                                    'category': "NGram",
-                                    #'nodeid': ngramnode.id,
-                                    'occs': 1,
-                                    #'edges': {
-                                    #    'postag' : { label : tags[i:n+i] },
-                                    #    'label': { label : 1 }
-                                    #},
-                                })
+                                self.mongodb.ngrams.save(ngram)
                         else:
                             # was already in the corpus and not in this document
                             savedngram['occs'] += 1

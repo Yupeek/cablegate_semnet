@@ -24,10 +24,8 @@ import nltk
 import cPickle
 from nltk import PorterStemmer
 
-from neo4jrestclient.client import GraphDatabase
 from mongodbhandler import CablegateDatabase
 
-from cablenetwork import add_node, set_node_attr, get_node, update_edge
 from cabletokenizer import NGramizer
 from datamodel import initEdges, addEdge
 import filtering
@@ -41,7 +39,6 @@ class CableExtract(object):
     """
     def __init__(self, config, overwrite=True, maxcables=None):
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
-        self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.config = config
         filters = self._get_extraction_filters()
         postagger = cPickle.load(open(self.config['extraction']['tagger'],"r"))
@@ -120,11 +117,11 @@ class CableExtract(object):
                 'rules': re.compile(self.config['extraction']['postag_valid'])
             }
         )]
-        #filters += [stopwords.StopWords(
-        #    "file://%s"%join(
-        #        self.config['general']['basedirectory'],
-        #        self.config['general']['shared'],
-        #        self.config['extraction']['stopwords']
-        #    )
-        #)]
+        filters += [stopwords.StopWords(
+            "file://%s"%join(
+                self.config['general']['basedirectory'],
+                self.config['general']['shared'],
+                self.config['extraction']['stopwords']
+            )
+        )]
         return filters

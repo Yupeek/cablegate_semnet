@@ -23,39 +23,6 @@ from mongodbhandler import CablegateDatabase
 import re
 from datetime import datetime
 
-def update_edge(graphdb, nodesource, nodetargets, type, value=1):
-    for new_target in nodetargets:
-        if new_target.id != nodesource.id:
-            nodesource.relationships.create(type, new_target, weight=value)
-
-def set_node_attr(record, node):
-    """
-    Type conversion from python/mongodb to neo4j
-    restricts a node's attributes to string or numeric
-    """
-    for key, value in record.iteritems():
-        if type(value) == unicode:
-            node[key.encode("ascii","ignore")] = value.encode("ascii","ignore")
-        elif type(value) == int or type(value) == float or type(value) == str:
-            node[key.encode("utf-8","replace")] = value
-        elif type(value) == datetime:
-            node[key.encode("utf-8","replace")] = value.strftime('%Y-%m-%d')
-
-def add_node(graphdb, record, transact=None):
-    if transact is None:
-        with graphdb.transaction:
-            node = graphdb.node()
-            set_node_attr(record, node)
-            return node
-    else:
-        node = graphdb.node()
-        set_node_attr(record, node)
-        return node
-
-def get_node(graphdb, _id):
-    return graphdb.node[_id]
-
-
 class CableNetwork(object):
     def __init__(self, config, overwrite=True, minoccs=1, mincoocs=1, maxcables=None, year=None):
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
@@ -78,8 +45,7 @@ class CableNetwork(object):
         for cable in cable_curs:
             with self.graphdb.transaction as trans:
                 del cable['content']
-                cablenode = add_node(self.graphdb, cable, trans)
-                #cable['_id'] = cablenode.id
+                cablenode = self.add_node(cable, trans)
 
                 for ngid, occs in cable['edges']['NGram'].iteritems():
                     ngram = self.mongodb.ngrams.find_one({'_id':ngid})
@@ -87,15 +53,16 @@ class CableNetwork(object):
                         logging.warning('ngram %s linked to document %s but not found in mongodb'%(ngid, cable['_id']))
                         continue
                     if ngram['occs'] < minoccs: continue
-                    if str(ngram['nodeid']) not in nodecache:
-                        new_ngramnode = add_node(self.graphdb, ngram, trans)
+                    ### first time if export this node
+                    if 'nodeid' not in ngram or str(ngram['nodeid']) not in nodecache:
+                        new_ngramnode = self.add_node(ngram, trans)
                         ngram['nodeid'] = new_ngramnode.id
                         nodecache[str(new_ngramnode.id)] = new_ngramnode
                         self.mongodb.ngrams.save(ngram)
                     with self.graphdb.transaction:
                         cablenode.occurrence(nodecache[str(ngram['nodeid'])], weight=occs)
 
-                logging.debug("finished the network around cable %d"%cablenode.id)
+                logging.debug("done the network around cable %d"%cablenode.id)
                 count += 1
                 if count > maxcables: return nodecache
         return nodecache
@@ -122,3 +89,30 @@ class CableNetwork(object):
                         continue
                     # inserting the cooccurrence
                     nodecache[str(ngram['nodeid'])].cooccurrence(nodecache[str(ngram2['nodeid'])], weight=cooc['value'])
+
+    def set_node_attr(self, record, node):
+        """
+        Type conversion from python/mongodb to neo4j
+        restricts a node's attributes to string or numeric
+        """
+        for key, value in record.iteritems():
+            if type(value) == unicode:
+                node[key.encode("ascii","ignore")] = value.encode("ascii","ignore")
+            elif type(value) == int or type(value) == float or type(value) == str:
+                node[key.encode("utf-8","replace")] = value
+            elif type(value) == datetime:
+                node[key.encode("utf-8","replace")] = value.strftime('%Y-%m-%d')
+
+    def add_node(self, record, transact=None):
+        if transact is None:
+            with self.transaction:
+                node = self.graphdb.node()
+                self.set_node_attr(record, node)
+                return node
+        else:
+            node = self.graphdb.node()
+            self.set_node_attr(record, node)
+            return node
+
+    def get_node(self, _id):
+        return self.graphdb.node[_id]

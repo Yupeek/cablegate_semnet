@@ -24,8 +24,6 @@ import re
 import nltk
 from BeautifulSoup import BeautifulSoup, SoupStrainer
 from datamodel import initEdges
-from neo4jrestclient.client import GraphDatabase
-from cablenetwork import add_node, set_node_attr
 from mongodbhandler import CablegateDatabase
 
 
@@ -46,7 +44,6 @@ class CableImporter(object):
     def __init__(self, config, data_directory, overwrite=False, maxcables=None):
         self.data_directory = join(data_directory, "cable")
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
-        self.graphdb = GraphDatabase(config['general']['neo4j'])
         # soupstrainers avoiding too much html parsing AND memory usage issues !
         self.cablemetasoup = SoupStrainer("div", attrs={ "class" : 'pane big' })
         self.contentsoup = SoupStrainer("pre")
@@ -116,17 +113,14 @@ class CableImporter(object):
             cable.update({
                 # auto index
                 #'_id' : cablenode.id,
-                'id' : "%s"%cable_id,
+                '_id' : "%s"%cable_id,
                 'label' : title,
                 'start' : date_time,
                 'classification' : "%s"%cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
                 'embassy' : "%s"%cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
-                #'content' : cablecontent,
+                'content' : cablecontent,
                 'category': "Document"
             })
-            cablenode = add_node(self.graphdb, cable)
-            cable['_id'] = cablenode.id
-            cable['content'] = cablecontent
             self.mongodb.cables.save(cable)
             self.cable_list += [cable_id]
             logging.info("cables processed = %d"%len(self.cable_list))
