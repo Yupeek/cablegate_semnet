@@ -66,9 +66,11 @@ class CableNetwork(object):
     def update_occurrences_network(self, overwrite=False, minoccs=1, mincoocs=1, maxcables=None):
         nodecache = {}
         count=0
+        start = datetime(2010,01,01,00,00,00)
+        end = datetime(2011,01,01,00,00,00)
         if maxcables is None:
             maxcables = self.mongodb.cables.count()
-        for cable in self.mongodb.cables.find(timeout=False):
+        for cable in self.mongodb.cables.find({"start":{"$gte":start,"$lte":end}}, timeout=False):
             if overwrite == False:
                 try:
                     cablenode = self.graphdb.nodes.get(cable['_id'])
@@ -98,14 +100,16 @@ class CableNetwork(object):
                         nodecache[str(new_ngramnode.id)] = new_ngramnode
                         self.mongodb.ngrams.save(ngram)
                 cablenode.relationships.create("occurrence", nodecache[str(ngram['nodeid'])], weight=occs)
-            count += 1
-            if count > maxcables: return nodecache
             self.mongodb.cables.save(cable)
             logging.debug("finished the network around cable %d"%cable['_id'])
+            count += 1
+            if count > maxcables: return nodecache
+
         return nodecache
 
     def update_cooccurrences_network(self, nodecache, overwrite=False, minoccs=1, mincoocs=1, maxcables=None):
-        for ngram in self.mongodb.ngrams.find(timeout=False):
+        nodecachedkeys=[int(key) for key in nodecache.keys()]
+        for ngram in self.mongodb.ngrams.find({'nodeid': {"$in": nodecachedkeys}}, timeout=False):
             if ngram['occs'] < minoccs:
                 try:
                     self.graphdb.nodes.delete(ngram['nodeid'])
@@ -131,12 +135,16 @@ class CableNetwork(object):
                 if ngram2['nodeid'] == ngram['nodeid']:
                     logger.warning("not setting relationship on a node itself")
                     continue
+                if ngram2['nodeid'] not in nodecachedkeys:
+                    logger.warning("ngram not in nodecache keys, skipping")
+                    continue
                 if ngram2['occs'] < minoccs: continue
-                #logging.debug("setting cooc from %s to %s = %d"%(ng1,ng1, cooc['value']))
+
                 if str(ngram2['nodeid']) not in nodecache:
                     try:
                         nodecache[str(ngram2['nodeid'])] = self.graphdb.nodes.get(ngram2['nodeid'])
                     except NotFoundError:
                         logging.warn("ngram node %d not found, skipping"%ngram2['nodeid'])
                         continue
+                # inserting the cooccurrence
                 nodecache[str(ngram['nodeid'])].relationships.create("cooccurrence", nodecache[str(ngram2['nodeid'])], weight=cooc['value'])
