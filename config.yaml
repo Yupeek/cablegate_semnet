@@ -5,7 +5,7 @@ general:
     basedirectory: '.'
     # following directories or files a under "basedirectory"
     shared: 'shared'
-    neo4j: "http://localhost:7474/db/data/"
+    neo4j: "data/neo4j"
     mongodb: "localhost"
 # extraction settings
 extraction:

@@ -34,6 +34,7 @@ def get_parser():
     parser.add_option("-c", "--config", dest="config", help="config yaml file path", metavar="FILE")
     parser.add_option("-o", "--overwrite", dest="overwrite", help="overwrite database contents", type="int")
     parser.add_option("-p", "--path", dest="path", help="output path file path", metavar="FILE")
+    parser.add_option("-y", "--year", dest="year", help="year to extract", type="int")
     parser.usage = "bad parameters"
     return parser
 
@@ -49,6 +50,6 @@ if __name__ == "__main__":
     elif options.execute == 'extract':
         extractor = CableExtract( config, bool(options.overwrite), options.maxcables )
     elif options.execute == 'network':
-        extractor = CableNetwork( config, bool(options.overwrite), options.minoccs, options.mincoocs, options.maxcables )
+        extractor = CableNetwork( config, bool(options.overwrite), options.minoccs, options.mincoocs, options.maxcables, options.year )
     else:
         print parser.usage
