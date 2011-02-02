@@ -60,43 +60,62 @@ class CableNetwork(object):
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
         self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.config = config
+        nodecache = self.update_occurrences_network(overwrite, minoccs, mincoocs, maxcables)
+        self.update_cooccurrences_network(nodecache, overwrite, minoccs, mincoocs, maxcables)
+
+    def update_occurrences_network(self, overwrite=False, minoccs=1, mincoocs=1, maxcables=None):
         nodecache = {}
         count=0
         if maxcables is None:
             self.mongodb.cables.count()
         for cable in self.mongodb.cables.find(timeout=False):
-            try:
-                cablenode = self.graphdb.nodes.get(cable['_id'])
-            except NotFoundError:
-                logging.warn("cable node %d not found, skipping"%cable['_id'])
-                continue
+            if overwrite == False:
+                try:
+                    cablenode = self.graphdb.nodes.get(cable['_id'])
+                except NotFoundError:
+                    logging.warning("cable node %d not found, skipping"%cable['_id'])
+                    continue
+            else:
+                cablenode = add_node(self.graphdb, cable)
             for ngid, occs in cable['edges']['NGram'].iteritems():
-                if occs < minoccs: continue
                 ngram = self.mongodb.ngrams.find_one({'_id':ngid})
                 if ngram is None:
-                    logging.warn('ngram %s linked to document %s but not found in mongodb'%(ngid, cable['_id']))
+                    logging.warning('ngram %s linked to document %s but not found in mongodb'%(ngid, cable['_id']))
                     continue
                 if str(ngram['nodeid']) not in nodecache:
-                    try:
-                        nodecache[str(ngram['nodeid'])] = self.graphdb.nodes.get(ngram['nodeid'])
-                    except NotFoundError:
-                        logging.warn("ngram node %d not found, skipping"%ngram['nodeid'])
-                        continue
+                    if overwrite==False:
+                        try:
+                            nodecache[str(ngram['nodeid'])] = self.graphdb.nodes.get(ngram['nodeid'])
+                        except NotFoundError, nfe:
+                            logging.warning("ngram node %d not found, skipping"%ngram['nodeid'])
+                            continue
+                    else:
+                        new_ngramnode = add_node(ngram)
+                        ngram['nodeid'] = new_ngramnode.id
+                        nodecache[str(new_ngramnode.id)] = new_ngramnode
+                        self.mongodb.ngrams.save(ngram)
                 cablenode.relationships.create("occurrence", nodecache[str(ngram['nodeid'])], weight=occs)
             count += 1
-            if count > maxcables: break
+            if count > maxcables: return nodecache
 
+        return nodecache
+
+    def update_cooccurrences_network(self, nodecache, overwrite=False, minoccs=1, mincoocs=1, maxcables=None):
         for ngram in self.mongodb.ngrams.find(timeout=False):
             if ngram['occs'] < minoccs:
-                self.graphdb.nodes.delete(ngram['nodeid'])
+                try:
+                    self.graphdb.nodes.delete(ngram['nodeid'])
+                except NotFoundError, nfe:
+                    logging.warning("ngram node %d not found, skipping DELETE"%ngram['nodeid'])
                 continue
+            # this REGEXP select only edges with source == ngram['_id']
             coocidRE = re.compile("^"+ngram['_id']+"_[a-z0-9]+$")
 
             if str(ngram['nodeid']) not in nodecache:
                 try:
                     nodecache[str(ngram['nodeid'])] = self.graphdb.nodes.get(ngram['nodeid'])
                 except NotFoundError:
-                    logging.warn("ngram node %d not found, skipping"%ngram['nodeid'])
+                    logging.warning("ngram node %d not found, skipping"%ngram['nodeid'])
 
             for cooc in self.mongodb.cooc.find({"_id":{"$regex":coocidRE}}, timeout=False):
                 if cooc['value'] < mincoocs: continue
@@ -106,6 +125,7 @@ class CableNetwork(object):
                     continue
                 ngram2 = self.mongodb.ngrams.find_one({'_id':ngid})
                 if ngram2['nodeid'] == ngram['nodeid']:
+                    logger.warning("not setting relationship on a node itself")
                     continue
                 if ngram2['occs'] < minoccs: continue
                 #logging.debug("setting cooc from %s to %s = %d"%(ng1,ng1, cooc['value']))
