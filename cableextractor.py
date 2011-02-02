@@ -39,7 +39,7 @@ class CableExtract(object):
     - extract and filter NGrams from content
     - write the Document-NGram network
     """
-    def __init__(self, config, overwrite=True, maxcables=None):
+    def __init__(self, config, overwrite=True, maxcables=None, startcable_id=None):
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
         self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.config = config
