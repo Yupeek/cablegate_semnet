@@ -78,17 +78,17 @@ class NGramizer(object):
             ),
             tagger
         )
-        documentnode = get_node(self.graphdb, documentObj['_id'])
-        if documentnode is None:
-            del documentObj["content"]
-            documentnode = add_node(self.graphdb, documentObj)
+        #documentnode = get_node(self.graphdb, documentObj['_id'])
+        #if documentnode is None:
+        #    del documentObj["content"]
+        #    documentnode = add_node(self.graphdb, documentObj)
         try:
             while 1:
                 nextsent = sentenceTaggedTokens.next()
                 # updates the doc's ngrams
                 self.ngramize(
                     documentObj,
-                    documentnode,
+                    #documentnode,
                     minSize = ngramMin,
                     maxSize = ngramMax,
                     tagTokens = nextsent,
@@ -158,7 +158,7 @@ class NGramizer(object):
         """return TAGS from a tagged list like [["the","DET"],["python","NN"]]"""
         return [tagged[1] for tagged in sentence]
 
-    def ngramize(self, document, documentnode, minSize, maxSize, tagTokens, filters, stemmer):
+    def ngramize(self, document, minSize, maxSize, tagTokens, filters, stemmer):
         """
         common tagTokens decomposition method
         returns a dict of filtered NGram instances
@@ -200,15 +200,15 @@ class NGramizer(object):
                             # application defined filtering
                             if filtering.apply_filters(ngram, filters) is True:
                                 # create the node
-                                ngram['postag'] = ",".join(ngram['postag'])
-                                ngramnode = add_node(self.graphdb, ngram)
+                                #ngram['postag'] = ",".join(ngram['postag'])
+                                #ngramnode = add_node(self.graphdb, ngram)
                                 # increment occurrences
                                 document = addEdge(document, 'NGram', sha256ngid, 1)
                                 # save the new NGram
                                 self.mongodb.ngrams.save({
                                     '_id': sha256ngid,
                                     'category': "NGram",
-                                    'nodeid': ngramnode.id,
+                                    #'nodeid': ngramnode.id,
                                     'occs': 1,
                                     #'edges': {
                                     #    'postag' : { label : tags[i:n+i] },

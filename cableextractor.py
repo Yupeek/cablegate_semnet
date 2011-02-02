@@ -93,7 +93,6 @@ class CableExtract(object):
                 continue
             if overwrite is True:
                 cable = initEdges(cable)
-
             # extract and filter ngrams
             ngramizer.extract(
                 cable,
@@ -121,11 +120,11 @@ class CableExtract(object):
                 'rules': re.compile(self.config['extraction']['postag_valid'])
             }
         )]
-        filters += [stopwords.StopWords(
-            "file://%s"%join(
-                self.config['general']['basedirectory'],
-                self.config['general']['shared'],
-                self.config['extraction']['stopwords']
-            )
-        )]
+        #filters += [stopwords.StopWords(
+        #    "file://%s"%join(
+        #        self.config['general']['basedirectory'],
+        #        self.config['general']['shared'],
+        #        self.config['extraction']['stopwords']
+        #    )
+        #)]
         return filters

@@ -67,7 +67,7 @@ class CableNetwork(object):
         nodecache = {}
         count=0
         if maxcables is None:
-            self.mongodb.cables.count()
+            maxcables = self.mongodb.cables.count()
         for cable in self.mongodb.cables.find(timeout=False):
             if overwrite == False:
                 try:
@@ -77,6 +77,9 @@ class CableNetwork(object):
                     continue
             else:
                 cablenode = add_node(self.graphdb, cable)
+                self.mongodb.cables.remove(cable['_id'])
+                cable['_id'] = cablenode.id
+
             for ngid, occs in cable['edges']['NGram'].iteritems():
                 ngram = self.mongodb.ngrams.find_one({'_id':ngid})
                 if ngram is None:
@@ -90,14 +93,15 @@ class CableNetwork(object):
                             logging.warning("ngram node %d not found, skipping"%ngram['nodeid'])
                             continue
                     else:
-                        new_ngramnode = add_node(ngram)
+                        new_ngramnode = add_node(self.graphdb, ngram)
                         ngram['nodeid'] = new_ngramnode.id
                         nodecache[str(new_ngramnode.id)] = new_ngramnode
                         self.mongodb.ngrams.save(ngram)
                 cablenode.relationships.create("occurrence", nodecache[str(ngram['nodeid'])], weight=occs)
             count += 1
             if count > maxcables: return nodecache
-
+            self.mongodb.cables.save(cable)
+            logging.debug("finished the network around cable %d"%cable['_id'])
         return nodecache
 
     def update_cooccurrences_network(self, nodecache, overwrite=False, minoccs=1, mincoocs=1, maxcables=None):
