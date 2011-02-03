@@ -171,7 +171,20 @@
               <h2>from MongoDB to Neo4j</h2>
             </header>
             <ul class="bulleted">
-                <li><p>Exporting the network from using Neo4j Python module : depends on JPype</p></li>
+                <li><p>taked advantage of MongoDB's nice querying features
+                  <ul>
+                    <li>extract all cables between to dates
+                <pre>
+cable_iterator = mongodb.cables.find({"start":{"$gte":datetime(year,1,1,0,0,0),"$lt":datetime(year+1,1,5,0,0,0)}}, timeout=False)
+                </pre>
+                    </li>
+                    <li>extract the heaviest co-occurrences edges from a node
+                <pre>
+cooc_curs = mongodb.cooc.find({"_id":{"$regex":coocidRE}}, timeout=False, sort=[("value",pymongo.DESCENDING)], limit=MAXEDGES)
+                </pre>
+                    </li>
+                  </ul>
+                </p></li>
             </ul>
           </section>
         </div>
