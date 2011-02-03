@@ -16,8 +16,8 @@ extraction:
         - 'content'
         - 'label'
     # extraction size
-    ngramMin: 1
-    ngramMax: 1
+    ngramMin: 2
+    ngramMax: 2
     minWordSize: 3
     # under "basedirectory" directory, delete this file to regenerate a new one
     tagger: "conll2000_aubt.pickle"

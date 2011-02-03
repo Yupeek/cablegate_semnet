@@ -179,8 +179,8 @@ class NGramizer(object):
                         document = addEdge(document, 'NGram', sha256ngid, 1)
                     else:
                         # else if ngram is not already in the corpus
-                        savedngram = self.mongodb.ngrams.find_one({'_id': sha256ngid})
-                        if savedngram is None:
+                        #savedngram = self.mongodb.ngrams.find_one({'_id': sha256ngid})
+                        if self.mongodb.ngrams.find_one({'_id': sha256ngid}) is None:
                             # create NGram object to pass it throug the filters
                             label = getNodeLabel(content[i:n+i])
                             ngram = {
@@ -198,14 +198,15 @@ class NGramizer(object):
                             # application defined filtering
                             if filtering.apply_filters(ngram, filters) is True:
                                 # create the node
-                                #ngram['postag'] = ",".join(ngram['postag'])
-                                #ngramnode = add_node(self.graphdb, ngram)
-                                # increment occurrences
+                                ngram['postag'] = ",".join(ngram['postag'])
+                                # increment document occurrences
                                 document = addEdge(document, 'NGram', sha256ngid, 1)
                                 # save the new NGram
                                 self.mongodb.ngrams.save(ngram)
                         else:
                             # was already in the corpus and not in this document
-                            savedngram['occs'] += 1
-                            self.mongodb.ngrams.save(savedngram)
+                            #savedngram['occs'] += 1
+                            # increments ngram total occurrences
+                            self.mongodb.ngrams.update({'_id': sha256ngid}, {"£inc":{"occs":1}})
+                            #self.mongodb.ngrams.save(savedngram)
                             document = addEdge(document, 'NGram', sha256ngid, 1)

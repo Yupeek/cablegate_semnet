@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 from neo4j import GraphDatabase
 from mongodbhandler import CablegateDatabase
-
+import pymongo
 import re
 from datetime import datetime
 
@@ -28,10 +28,10 @@ class CableNetwork(object):
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
         self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.config = config
-        nodecache = self.update_occurrences_network(overwrite, minoccs, mincoocs, maxcables, year)
-        self.update_cooccurrences_network(nodecache, overwrite, minoccs, mincoocs, maxcables)
+        nodecache = self.update_occurrences_network(minoccs, mincoocs, maxcables, year)
+        self.update_cooccurrences_network(nodecache, minoccs, mincoocs, maxcables)
 
-    def update_occurrences_network(self, overwrite=False, minoccs=1, mincoocs=1, maxcables=None, year=None):
+    def update_occurrences_network(self, minoccs=1, mincoocs=1, maxcables=None, year=None):
         nodecache = {}
         count=0
         if maxcables is None:
@@ -45,7 +45,7 @@ class CableNetwork(object):
         for cable in cable_curs:
             with self.graphdb.transaction as trans:
                 del cable['content']
-                cablenode = self.add_node(cable, trans)
+                #cablenode = self.add_node(cable, trans)
 
                 for ngid, occs in cable['edges']['NGram'].iteritems():
                     ngram = self.mongodb.ngrams.find_one({'_id':ngid})
@@ -59,28 +59,32 @@ class CableNetwork(object):
                         ngram['nodeid'] = new_ngramnode.id
                         nodecache[str(new_ngramnode.id)] = new_ngramnode
                         self.mongodb.ngrams.save(ngram)
-                    with self.graphdb.transaction:
-                        cablenode.occurrence(nodecache[str(ngram['nodeid'])], weight=occs)
+                    #cablenode.occurrence(nodecache[str(ngram['nodeid'])], weight=occs)
 
-                logging.debug("done the network around cable %d"%cablenode.id)
+                logging.debug("done the network around cable %s"%cable["_id"])
                 count += 1
                 if count > maxcables: return nodecache
         return nodecache
 
-    def update_cooccurrences_network(self, nodecache, overwrite=False, minoccs=1, mincoocs=1, maxcables=None):
+    def update_cooccurrences_network(self, nodecache, minoccs=1, mincoocs=1, maxcables=None):
         nodecachedkeys = [int(key) for key in nodecache.keys()]
-        logging.debug("cooccurrences processing for %d ngram nodes"%len(nodecachedkeys))
-        with self.graphdb.transaction:
+        logging.debug("cooccurrences processing for %d ngram nodes"%self.mongodb.ngrams.find({'nodeid': {"$in": nodecachedkeys}}, timeout=False).count())
+        with self.graphdb.transaction as trans:
             for ngram in self.mongodb.ngrams.find({'nodeid': {"$in": nodecachedkeys}}, timeout=False):
                 # this REGEXP select only edges with source == ngram['_id']
                 coocidRE = re.compile("^"+ngram['_id']+"_[a-z0-9]+$")
-                for cooc in self.mongodb.cooc.find({"_id":{"$regex":coocidRE}, "value": { "$gte": mincoocs }}, timeout=False):
+                for cooc in self.mongodb.cooc.find({"_id":{"$regex":coocidRE}}, timeout=False, sort=[("value",pymongo.DESCENDING)], limit=mincoocs):
                     #if cooc['value'] < mincoocs: continue
                     ng1, ng2 = cooc['_id'].split("_")
                     if ng1 == ng2:
                         self.mongodb.cooc.delete({"_id":cooc['_id']})
                         continue
                     ngram2 = self.mongodb.ngrams.find_one({'_id':ng2})
+                    if 'nodeid' not in ngram2:
+                        new_ngramnode = self.add_node(ngram2, trans)
+                        ngram['nodeid'] = new_ngramnode.id
+                        nodecache[str(new_ngramnode.id)] = new_ngramnode
+                        #self.mongodb.ngrams.save(ngram2)
                     if ngram2['nodeid'] == ngram['nodeid']:
                         logging.warning("not setting relationship on a node itself")
                         continue

@@ -46,7 +46,6 @@ class CableExtract(object):
         try:
             while 1:
                 cable = extract_gen.next()
-                self.mongodb.cables.save(cable)
                 self.update_cable_cooc(cable)
         except StopIteration, si:
             return
@@ -55,20 +54,21 @@ class CableExtract(object):
         cooccache={}
         for ng1, ng2 in itertools.combinations(cable['edges']['NGram'].keys(), 2):
             coocid12 = ng1+"_"+ng2
-            cooc12 = self.mongodb.cooc.find_one({'_id': coocid12})
-            if cooc12 is None:
+            #cooc12 = self.mongodb.cooc.find_one({'_id': coocid12})
+            if self.mongodb.cooc.find_one({'_id': coocid12}) is None:
                 coocid21 = ng2+"_"+ng1
-                cooc21 = self.mongodb.cooc.find_one({'_id': coocid21})
-                if cooc21 is None:
+                #cooc21 = self.mongodb.cooc.find_one({'_id': coocid21})
+                if self.mongodb.cooc.find_one({'_id': coocid21}) is None:
+                    # none exist : creates one
                     cooc12 = { '_id': coocid12, 'value': 1 }
                     self.mongodb.cooc.save(cooc12)
                     continue
                 else:
-                    cooc21['value'] += 1
-                    self.mongodb.cooc.save(cooc21)
+                    self.mongodb.cooc.update({'_id': coocid21}, {"$inc":{"value":1}})
                     continue
             else:
-                cooc12['value'] += 1
+                #cooc12['value'] += 1
+                self.mongodb.cooc.update({'_id': coocid12}, {"$inc":{"value":1}})
                 continue
 
     def extract(self, ngramizer, filters, postagger, overwrite, maxcables=None):
@@ -98,7 +98,9 @@ class CableExtract(object):
                 PorterStemmer()
             )
             yield cable
+            self.mongodb.cables.update({"_id":cable['_id']},{"$set":{"edges": cable['edges']}})
             count+=1
+            logging.debug("extracted %d cables topics"%count)
             if count>=maxcables: return
 
     def _get_extraction_filters(self):
@@ -117,11 +119,11 @@ class CableExtract(object):
                 'rules': re.compile(self.config['extraction']['postag_valid'])
             }
         )]
-        filters += [stopwords.StopWords(
-            "file://%s"%join(
-                self.config['general']['basedirectory'],
-                self.config['general']['shared'],
-                self.config['extraction']['stopwords']
-            )
-        )]
+        #filters += [stopwords.StopWords(
+        #    "file://%s"%join(
+        #        self.config['general']['basedirectory'],
+        #        self.config['general']['shared'],
+        #        self.config['extraction']['stopwords']
+        #    )
+        #)]
         return filters
