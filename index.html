@@ -243,8 +243,18 @@ cooc_curs = mongodb.cooc.find(
               <h2>Creating the network : from MongoDB to Neo4j (3)</h2>
             </header>
             <ul class="bulleted">
-                <li><p>millions of inserts into neo4j db done in a few minutes (with the officially supported neo4j.py component)</p></li>
-                <li><p></p></li>
+              <li><p>Writing to Neo4j
+                <ul>
+                  <li><p>using the official neo4j.py component (using python-jpype)</p></li>
+                  <li><p>inserting millions of nodes and properties in a few minutes using transactions
+                  <pre class="prettyprint">
+with graphdb.transaction as trans:
+  node = self.graphdb.node()
+  node[key.encode("ascii","ignore")] = value.encode("ascii","ignore")
+                  </pre>
+                  </p></li>
+                  <li><p>a Gephi plugin, in alpha stage but good enough</p></li>
+                </ul>
             </ul>
           </section>
         </div>
