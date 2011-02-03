@@ -26,8 +26,7 @@
               <h2>Goals</h2>
             </header>
             <ul class="bulleted">
-                <li><p>by analysing cables' full-text</p></li>
-                <li><p>by using meta-data as they are and not as a structure</p></li>
+                <li><p>by analysing cables' full-text and not using meta-data as a structure</p></li>
                 <cite><h2>We want to produce a mixed occurrence and co-occurrence network of topics and cables</h2></cite>
                 <li><p>in order to visualize how the discussions within the cables are composed and relate to each other</p></li>
 
@@ -81,67 +80,72 @@
             </footer>
           </section>
         </div>
-
         <div class="slide">
           <section>
             <header>
-              <h2>Extract topics (1)</h2>
+              <h2>Extract topics (1) : stemming</h2>
             </header>
             <ul class="bulleted">
-                <li><p>decompose text into tokens : nltk.sent_tokenize and nltk.TreebankWordTokenizer</p></li>
-                <li><p>Part of speech tagging with nltk.tag</p>
-                    <ul class="bulleted">
-                        <li>Compose and save a quality tagger object with <i>nltk-trainer</i></li>
-                        <br/>
-                        <code>$ python train_tagger.py --sequential aubt  --default "?" conll2000</code>
-                        <br/>
-                        <li>The <a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.SequentialBackoffTagger-class.html">SequentialBackoffTagger</a>
-                          <ul>
-                            <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.AffixTagger-class.html">nltk.tag.AffixTagger</a> learns from prefix and suffix patterns</li>
-                            <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.UnigramTagger-class.html">nltk.tag.UnigramTagger</a> learns from each letter composing the word</li>
-                            <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.BigramTagger-class.html">nltk.tag.BigramTagger</a> also learns from the preceeding word's tag</li>
-                            <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.TrigramTagger-class.html">nltk.tag.TrigramTagger</a> also learns from the preceeding two words' tag</li>
-                          </ul>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-            <footer>
-              <p>
-              <a href="https://github.com/japerk/nltk-trainer">https://github.com/japerk/nltk-trainer</a><br/>
-              <a href="http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/">http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/</a>
-              </p>
-            </footer>
-          </section>
-        </div>
-
-        <div class="slide">
-          <section>
-            <header>
-              <h2>Extract topics (2)</h2>
-            </header>
-            <ul class="bulleted">
+                <li><p>an easy way to de-duplicate topics</p></li>
                 <li><p>Group topics by their radicals</p></li>
                 <li><p>stemming: nltk.PorterStemmer</p></li>
                 <code>
                 >>> print PorterStemmer().stem("language")
                 'languag'
                 </code>
-                <li><p>compute the sha256 to use it as an index</p></li>
+                <li><p>compute sha256 to use it as a database index</p></li>
             </ul>
           </section>
         </div>
-
+        <div class="slide">
+          <section>
+            <header>
+              <h2>Extract topics (2) : part of speech tags</h2>
+            </header>
+            <ul class="bulleted">
+                <li><p>decompose text into tokens : nltk.sent_tokenize and nltk.TreebankWordTokenizer</p></li>
+                <li><p>Part of speech tagging with nltk.tag
+                    <pre>
+>>> import nltk.tag
+>>> nltk.tag.pos_tag(['Help','Wikileaks','keep','governments','open'])
+[('Help', 'NNP'), ('Wikileaks', 'NNP'), ('keep', 'VB'),
+('governments', 'NNS'), ('open', 'JJ')]
+                    </pre>
+                    <ul class="bulleted">
+                        <li>Compose and save a quality tagger with <a href="https://github.com/japerk/nltk-trainer"><i>nltk-trainer</i></a>
+                          <ul class="bulleted">
+                            <li><pre>$ python train_tagger.py --sequential aubt  --default "?" conll2000</pre></p></li>
+                            <li><p>The <a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.SequentialBackoffTagger-class.html">nltk.tag.SequentialBackoffTagger chains many taggers together</a>
+                              <ul>
+                                <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.AffixTagger-class.html">nltk.tag.AffixTagger</a> learns from prefix and suffix patterns</li>
+                                <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.UnigramTagger-class.html">nltk.tag.UnigramTagger</a> learns from each letter composing the word</li>
+                                <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.BigramTagger-class.html">nltk.tag.BigramTagger</a> also learns from the preceeding word's tag</li>
+                                <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.TrigramTagger-class.html">nltk.tag.TrigramTagger</a> also learns from the preceeding two words' tag</li>
+                              </ul>
+                            </li>
+                          </ul>
+                        </li>
+                    </ul>
+                </p></li>
+            </ul>
+            <footer>
+              <p> more at :<br/>
+              source code : <a href="https://github.com/japerk/nltk-trainer">https://github.com/japerk/nltk-trainer</a><br/>
+              about performances : <a href="http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/">http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/</a>
+              </p>
+            </footer>
+          </section>
+        </div>
         <div class="slide">
           <section>
             <header>
               <h2>Choose relevant topics</h2>
             </header>
             <ul class="bulleted">
-                <li><p>automatic selection of words: a set of DIY and built-in filters</p>
+                <li><p>automatic selection of words: DIY filters and stopwords</p>
                     <ul class="bulleted">
-                        <li>a POS tag regular expression filtering "useless" series of words
-                        <code>
+                        <li>a POS tag regular expression filtering "useless" words
+                        <pre>
 ^(
     (VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?
     (N.?,|\?,)+?
@@ -154,7 +158,7 @@
         (N.?,|\?,)+?
     )+?
 )*?$
-                        </code>
+                        </pre>
                         </li>
                     </ul>
                 </li>
@@ -164,10 +168,10 @@
         <div class="slide">
           <section>
             <header>
-              <h2>Neo4j</h2>
+              <h2>from MongoDB to Neo4j</h2>
             </header>
             <ul class="bulleted">
-                <li>Exporting the network using Neo4j Python module : depends on JPype, </li>
+                <li><p>Exporting the network from using Neo4j Python module : depends on JPype</p></li>
             </ul>
           </section>
         </div>
