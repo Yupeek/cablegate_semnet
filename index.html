@@ -172,34 +172,53 @@
 )*?$
                   </pre>
                 </li>
-                <li><p>TODO a tf-idf score of topics within a generic nltk corpora</p></li>
+                <!--<li><p>a tf-idf score of topics within a generic nltk corpora</p></li>-->
             </ul>
           </section>
         </div>
         <div class="slide">
           <section>
             <header>
-              <h2>Creating the network : from MongoDB to Neo4j (1)</h2>
+              <h2>Create the network : from MongoDB to Neo4j (2)</h2>
             </header>
             <ul class="bulleted">
-                <li><p>taked advantage of MongoDB's nice querying features, integrated with Python
+                <li><p>Writing to MongoDB, a delicate science
+                  <ul class="bulleted">
+                    <li>limit the size of your record : <= 4MB</li>
+                    <li>use update and modifiers as much as possible
+                    <pre>
+mongodb.cooc.update({'_id': some_id}, {"$inc":{"value":1}})
+                    </pre>
+                    </li>
+                  </ul>
+                </p></li>
+            </ul>
+          </section>
+        </div>
+        <div class="slide">
+          <section>
+            <header>
+              <h2>Create the network : from MongoDB to Neo4j (2)</h2>
+            </header>
+            <ul class="bulleted">
+                <li><p>Reading from MongoDB, querying features integrated with Python
                   <ul>
                     <li>extract all cables between to dates
                 <pre>
 cable_iterator = mongodb.cables.find(
   {"datetime":{
-    "$gte":datetime(year,1,1,0,0,0),
-    "$lt":datetime(year+1,1,5,0,0,0)
+      "$gte":datetime(year,1,1,0,0,0), "$lt":datetime(year+1,1,5,0,0,0)
     }
-  },
-  timeout=False)
+  }, timeout=False)
                 </pre>
                     </li>
                     <li>extract the heaviest co-occurrences edges from a node
                 <pre>
-coocidRE = re.compile("^"+ngram['_id']+"_[a-z0-9]+$")
+mystartswith_regexp = re.compile("^"+mysha256+"_[a-z0-9]+$")
 cooc_curs = mongodb.cooc.find(
-  {"_id":{"$regex":coocidRE}},
+  {"_id":{
+      "$regex": mystartswith_regexp
+  }},
   timeout=False,
   sort=[("value",pymongo.DESCENDING)],
   limit=MAXEDGES)
@@ -213,7 +232,7 @@ cooc_curs = mongodb.cooc.find(
         <div class="slide">
           <section>
             <header>
-              <h2>Creating the network : from MongoDB to Neo4j (2)</h2>
+              <h2>Creating the network : from MongoDB to Neo4j (3)</h2>
             </header>
             <ul class="bulleted">
                 <li><p>millions of inserts into neo4j db done in a few minutes (with the officially supported neo4j.py component)</p></li>
@@ -221,8 +240,8 @@ cooc_curs = mongodb.cooc.find(
             </ul>
           </section>
         </div>
-        
-        
+
+
         <div class="slide">
           <section>
             <header>
@@ -237,35 +256,17 @@ cooc_curs = mongodb.cooc.find(
                 <li>Plugin center, with connectors for <b>Neo4J</b>, <b>SQL</b>, some social networks API..</li>
                 <li>To learn more about: http://gephi.org/users/</li>
             </ul>
-            
+
           </section>
         </div>
-        
-        <div class="slide">
-          <section>
-            <header>
-              <h2>Introduction to Gephi (http://gephi.org)</h2>
-            </header>
-            <ul class="bulleted">
-                <li>An AGPL3 desktop app for <b>visualization of complex networks</b></li>
-                <li>Dedicated toolset for <b>social network analysis</b> and <b>network map</b> creation</li>
-                <li>Based on <b>Java</b>, <b>NetBeans Platform</b> and <b>OpenGL</b> (JOGL)</li>
-                <li>Also available as headless library: <b>Gephi Toolkit</b></li>
-                <li>Connect nicely with <b>Jython</b>, <b>JPype</b>..</li>
-                <li>Plugin center, with connectors for <b>Neo4J</b>, <b>SQL</b>, some social networks API..</li>
-                <li>To learn more about: http://gephi.org/users/</li>
-            </ul>
-            
-          </section>
-        </div>
-        
+
         <div class="slide">
           <section>
             <header>
               <h2>Gephi Demo (screencast)</h2>
             </header>
-            
-            
+
+
           </section>
         </div>
         <div class="slide">
@@ -283,17 +284,17 @@ cooc_curs = mongodb.cooc.find(
             </ol>
           </section>
         </div>
-        
+
         <div class="slide">
           <section>
             <header>
                 <h2>To sum up, cablegate_semnet is:</h2>
             </header>
               <ul class="bulleted">
-                  <li><p>~600 lines of code, and 5 external libraries</p></li>
+                  <li><p>~600 lines of GNU/GPL code, depending on 4 external libraries</p></li>
                   <li><p>1 full week coding</p></li>
-                  <li><p>1 process, some RAM, billions of find and insert to Neo4j and MongoDB</p></li>
                   <li><p>1 network of 3,371 + 24,081 nodes and 16,144,100 co-occurrences edges</p></li>
+                  <li><p>1 process, some RAM, billions of reads/inserts/updates to Neo4j and MongoDB</p></li>
                   <li><p>1 talk, 1 FOSDEM, 1 big leak</p></li>
               </ul>
           </section>
@@ -306,8 +307,8 @@ cooc_curs = mongodb.cooc.find(
             <p>A special thank to <a href="http://wikileaks.ch/">Wikileaks</a>
             <ul class="bulleted">
                 <li>any questions ?</li>
-                <li>fork our project <a href="https://github.com/elishowk/cablegate_semnet">http://github.com/elishowk/cablegate_semnet</a></li>
-                <li>follow us on GitHub: <a href="http://github.com/elishowk">@elishowk</a> and <a href="http://github.com/jbilcke">@jbilcke</a> (we're on Twitter too)</li>
+                <li>fork our project on Github <a href="https://github.com/elishowk/cablegate_semnet">http://github.com/elishowk/cablegate_semnet</a></li>
+                <li>follow us : <a href="http://github.com/elishowk">@elishowk</a> and <a href="http://github.com/jbilcke">@jbilcke</a> (we're on Twitter too)</li>
                 <li>Visit the <a href="http://gephi.org">Gephi.org community</a></li>
             <p>Learn more at:</p>
             </ul>
