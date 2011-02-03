@@ -142,10 +142,10 @@
                 <li><p>an easy way to de-duplicate topics</p></li>
                 <li><p>Group topics by their radicals</p></li>
                 <li><p>stemming: nltk.PorterStemmer</p></li>
-                <code>
-                >>> print PorterStemmer().stem("language")
-                'languag'
-                </code>
+                <pre>
+>>> print PorterStemmer().stem("language")
+'languag'
+                </pre>
                 <li><p>compute sha256 to use it as a database index</p></li>
             </ul>
           </section>
@@ -179,16 +179,15 @@
         <div class="slide">
           <section>
             <header>
-              <h2>from MongoDB to Neo4j (1)</h2>
+              <h2>Creating the network : from MongoDB to Neo4j (1)</h2>
             </header>
             <ul class="bulleted">
                 <li><p>taked advantage of MongoDB's nice querying features, integrated with Python
                   <ul>
                     <li>extract all cables between to dates
                 <pre>
-coocidRE = re.compile("^"+ngram['_id']+"_[a-z0-9]+$")
 cable_iterator = mongodb.cables.find(
-  {"start":{
+  {"datetime":{
     "$gte":datetime(year,1,1,0,0,0),
     "$lt":datetime(year+1,1,5,0,0,0)
     }
@@ -198,6 +197,7 @@ cable_iterator = mongodb.cables.find(
                     </li>
                     <li>extract the heaviest co-occurrences edges from a node
                 <pre>
+coocidRE = re.compile("^"+ngram['_id']+"_[a-z0-9]+$")
 cooc_curs = mongodb.cooc.find(
   {"_id":{"$regex":coocidRE}},
   timeout=False,
@@ -213,7 +213,7 @@ cooc_curs = mongodb.cooc.find(
         <div class="slide">
           <section>
             <header>
-              <h2>from MongoDB to Neo4j (2)</h2>
+              <h2>Creating the network : from MongoDB to Neo4j (2)</h2>
             </header>
             <ul class="bulleted">
                 <li><p>millions of inserts into neo4j db done in a few minutes (with the officially supported neo4j.py component)</p></li>
