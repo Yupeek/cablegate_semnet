@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" />
     <title>Mapping Wikileaks' Cablegate</title>
     <link href="http://fonts.googleapis.com/css?family=Droid+Sans|Droid+Sans+Mono" rel="stylesheet" type="text/css" />
+    <link id="prettify-link" href="prettify.css" rel="stylesheet" disabled />
     <link href="html5rocks.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript" src="jquery-1.4.4.min.js" language="javascript"></script>
     <script type="text/javascript" src="html5rocks.js" language="javascript+protovis"></script>
@@ -39,7 +40,7 @@
               <h2>How ?</h2>
             </header>
             <ul class="bulleted">
-                <li><p>by analyse the ~2600 full-texts with Python, and a set of productive libraries</p></li>
+                <li><p>analyse the ~3300 cables with Python, and a set of productive libraries</p></li>
                 <li><p>use MongoDB for document storage and Neo4j for network storage</p></li>
                 <li><p>explore the network with Gephi</p></li>
             </ul>
@@ -51,18 +52,19 @@
               <h2>Import cables to MongoDB</h2>
             </header>
             <ul class="bulleted">
+                <li>Hopefully, Wikileak's archive follows a simple structure, making data hackers' job easy !</p></li>
                 <li><p>BeautifulSoup : html made easy</p>
                     <ul class="bulleted">
-                        <li>automatically decodes to Python's unicode</li>
+                        <li>automatically decodes to unicode</li>
                         <li>quietly handles html's tree errors</li>
-                        <li>traversing methods as Python methods and lists, becoming comparable to Javascript</li>
+                        <li>traversing methods as Python methods and lists</li>
                         <li>SoupStrainer : tells the parser to target a specific part of the document</li>
                     </ul>
                 </p></li>
                 <li><p>NLTK : clean_html() and you're done</p>
                     <ul class="bulleted">
                         <li>but still an effort: to handle decoding manually</li>
-                        <li>Python provides safe built-in functions to manage that</li>
+                        <li>Python provides safe and built-in functions to manage that</li>
                     </ul>
                 </p></li>
                 <li><p>MongoDB : document storage</p>
@@ -71,8 +73,12 @@
                         <li>automatic types serializing/deserializing : unicode, nested lists and dict, datetime...</li>
                     </ul>
                 </p></li>
-                <li>Hopefully, Wikileak's archive respects simple structure, making data hackers' job easy !</p></li>
             </ul>
+            <footer>
+              <p>
+              <a href="https://github.com/anarchivist/cablegate">original project on github</a><br/>
+              </p>
+            </footer>
           </section>
         </div>
 
@@ -94,7 +100,7 @@
                             <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.AffixTagger-class.html">nltk.tag.AffixTagger</a> learns from prefix and suffix patterns</li>
                             <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.UnigramTagger-class.html">nltk.tag.UnigramTagger</a> learns from each letter composing the word</li>
                             <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.BigramTagger-class.html">nltk.tag.BigramTagger</a> also learns from the preceeding word's tag</li>
-                            <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.TrigramTagger-class.html">nltk.tag.TrigramTagger</a> also learns also from the preceeding two words' tag</li>
+                            <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.TrigramTagger-class.html">nltk.tag.TrigramTagger</a> also learns from the preceeding two words' tag</li>
                           </ul>
                         </li>
                     </ul>
@@ -161,7 +167,7 @@
               <h2>Neo4j</h2>
             </header>
             <ul class="bulleted">
-                <li>Exporting the network using Neo4j REST API</li>
+                <li>Exporting the network using Neo4j Python module : depends on JPype, </li>
             </ul>
           </section>
         </div>
@@ -206,7 +212,7 @@
                   <li><a href="http://www.nltk.org">NTLK</a></li>
                   <li><a href="http://www.mongodb.org">MongoDB</a></li>
                   <li><a href="http://neo4j.org/">Neo4j</a></li>
-                  <li><a href="https://github.com/versae/neo4j-rest-client">neo4j-rest-plugin maintainer, Versae on github</a></li>
+                  <li><a href="http://components.neo4j.org/neo4j.py/t">neo4j python</a></li>
                   <li><a href="http://gephi.org/2010/gsoc-2010-mid-term-adding-support-for-neo4j-in-gephi/">Martin Škurl developer of the Neo4j Gephi plugin</a></li>
                   <li><a href="http://slides.html5rocks.com">html5rocks !</a></li>
               </ul>
