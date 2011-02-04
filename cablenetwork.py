@@ -24,15 +24,19 @@ import re
 from datetime import datetime
 
 class CableNetwork(object):
-    def __init__(self, config, overwrite=True, minoccs=1, mincoocs=1, maxcables=None, year=None):
+    def __init__(self, config, graphtype, minoccs=1, maxcoocs=1, maxcables=None, year=None):
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
         self.graphdb = GraphDatabase(config['general']['neo4j'])
         self.config = config
-        nodecache = self.update_occurrences_network(minoccs, mincoocs, maxcables, year)
-        self.update_cooccurrences_network(nodecache, minoccs, mincoocs, maxcables)
+        if graphtype is None or graphtype=="occurrences":
+            self.update_occurrences_network(minoccs, maxcoocs, maxcables, year, documents=False)
+        elif graphtype == "cooccurrences":
+            nodecache, ngramcache = self.update_occurrences_network(minoccs, maxcoocs, maxcables, year, documents=False)
+            self.update_cooccurrences_network(nodecache, ngramcache, minoccs, maxcoocs, maxcables)
 
-    def update_occurrences_network(self, minoccs=1, mincoocs=1, maxcables=None, year=None):
+    def update_occurrences_network(self, minoccs=1, maxcoocs=1, maxcables=None, year=None, documents=True):
         nodecache = {}
+        ngramcache = {}
         count=0
         if maxcables is None:
             maxcables = self.mongodb.cables.count()
@@ -44,55 +48,50 @@ class CableNetwork(object):
             cable_curs = self.mongodb.cables.find({"start":{"$gte":start,"$lt":end}}, timeout=False)
         for cable in cable_curs:
             with self.graphdb.transaction as trans:
-                del cable['content']
-                #cablenode = self.add_node(cable, trans)
+                if documents is True:
+                    del cable['content']
+                    cablenode = self.add_node(cable, trans)
 
                 for ngid, occs in cable['edges']['NGram'].iteritems():
                     ngram = self.mongodb.ngrams.find_one({'_id':ngid})
                     if ngram is None:
-                        logging.warning('ngram %s linked to document %s but not found in mongodb'%(ngid, cable['_id']))
+                        #logging.warning('ngram %s linked to document %s but not found in mongodb'%(ngid, cable['_id']))
                         continue
                     if ngram['occs'] < minoccs: continue
                     ### first time if export this node
-                    if 'nodeid' not in ngram or str(ngram['nodeid']) not in nodecache:
+                    if ngid not in ngramcache.keys():
                         new_ngramnode = self.add_node(ngram, trans)
-                        ngram['nodeid'] = new_ngramnode.id
+                        ngramcache[ngid] = str(new_ngramnode.id)
                         nodecache[str(new_ngramnode.id)] = new_ngramnode
-                        self.mongodb.ngrams.save(ngram)
-                    #cablenode.occurrence(nodecache[str(ngram['nodeid'])], weight=occs)
-
+                    if documents is True:
+                        cablenode.occurrence(ngramcache[ngid], weight=occs)
                 logging.debug("done the network around cable %s"%cable["_id"])
                 count += 1
                 if count > maxcables: return nodecache
-        return nodecache
+        return nodecache, ngramcache
 
-    def update_cooccurrences_network(self, nodecache, minoccs=1, mincoocs=1, maxcables=None):
-        nodecachedkeys = [int(key) for key in nodecache.keys()]
-        logging.debug("cooccurrences processing for %d ngram nodes"%self.mongodb.ngrams.find({'nodeid': {"$in": nodecachedkeys}}, timeout=False).count())
+    def update_cooccurrences_network(self, nodecache, ngramcache, minoccs=1, maxcoocs=1, maxcables=None):
+        logging.debug("cooccurrences processing for %d ngram nodes"%self.mongodb.ngrams.find({'_id': {"$in": ngramcache.keys()}}, timeout=False).count())
         with self.graphdb.transaction as trans:
-            for ngram in self.mongodb.ngrams.find({'nodeid': {"$in": nodecachedkeys}}, timeout=False):
+            for ngram in self.mongodb.ngrams.find({'_id': {"$in": ngramcache.keys()}}, timeout=False):
                 # this REGEXP select only edges with source == ngram['_id']
                 coocidRE = re.compile("^"+ngram['_id']+"_[a-z0-9]+$")
-                for cooc in self.mongodb.cooc.find({"_id":{"$regex":coocidRE}}, timeout=False, sort=[("value",pymongo.DESCENDING)], limit=mincoocs):
-                    #if cooc['value'] < mincoocs: continue
+                for cooc in self.mongodb.cooc.find({"_id":{"$regex":coocidRE}}, sort=[("value",pymongo.DESCENDING)], limit=maxcoocs, timeout=False):
                     ng1, ng2 = cooc['_id'].split("_")
                     if ng1 == ng2:
                         self.mongodb.cooc.delete({"_id":cooc['_id']})
                         continue
                     ngram2 = self.mongodb.ngrams.find_one({'_id':ng2})
-                    if 'nodeid' not in ngram2:
-                        new_ngramnode = self.add_node(ngram2, trans)
-                        ngram['nodeid'] = new_ngramnode.id
-                        nodecache[str(new_ngramnode.id)] = new_ngramnode
-                        #self.mongodb.ngrams.save(ngram2)
-                    if ngram2['nodeid'] == ngram['nodeid']:
+                    if ngramcache[ngram2['_id']] == ngramcache[ngram['_id']]:
                         logging.warning("not setting relationship on a node itself")
                         continue
-                    if ngram2['nodeid'] not in nodecachedkeys:
-                        #logging.warning("ngram not in nodecache keys, skipping")
+                    if ngramcache[ngram['_id']] not in nodecache.keys():
                         continue
-                    # inserting the cooccurrence
-                    nodecache[str(ngram['nodeid'])].cooccurrence(nodecache[str(ngram2['nodeid'])], weight=cooc['value'])
+                    # write the cooccurrence
+                    nodecache[ngramcache[ngram['_id']]].cooccurrence(
+                        nodecache[ngramcache[ngram2['_id']]],
+                        weight=cooc['value']
+                    )
 
     def set_node_attr(self, record, node):
         """

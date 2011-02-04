@@ -28,13 +28,14 @@ def get_parser():
     parser = OptionParser()
     parser.add_option("-e", "--execute", dest="execute", help="execution action")
     parser.add_option("-a", "--archive", dest="archive", help="cablegate archive path")
-    parser.add_option("-m", "--minoccurrences", dest="minoccs", help="minimum keyphrases' occurrences", type="int")
-    parser.add_option("-n", "--mincooccurrences", dest="mincoocs", help="minimum keyphrases' cooccurrences", type="int")
+    parser.add_option("-m", "--minoccurrences", dest="minoccs", help="minimum topic occurrences/weight", type="int")
+    parser.add_option("-n", "--maxcooccurrences", dest="maxcoocs", help="maximum heaviest cooccurrences per node", type="int")
     parser.add_option("-x", "--maxcables", dest="maxcables", help="max cables", type="int")
     parser.add_option("-c", "--config", dest="config", help="config yaml file path", metavar="FILE")
     parser.add_option("-o", "--overwrite", dest="overwrite", help="overwrite database contents", type="int")
     parser.add_option("-p", "--path", dest="path", help="output path file path", metavar="FILE")
     parser.add_option("-y", "--year", dest="year", help="year to extract", type="int")
+    parser.add_option("-g", "--graph", dest="graph", help="graph type to produce")
     parser.usage = "bad parameters"
     return parser
 
@@ -50,6 +51,6 @@ if __name__ == "__main__":
     elif options.execute == 'extract':
         extractor = CableExtract( config, bool(options.overwrite), options.maxcables )
     elif options.execute == 'network':
-        extractor = CableNetwork( config, bool(options.overwrite), options.minoccs, options.mincoocs, options.maxcables, options.year )
+        extractor = CableNetwork( config, options.graph, options.minoccs, options.maxcoocs, options.maxcables, options.year )
     else:
         print parser.usage

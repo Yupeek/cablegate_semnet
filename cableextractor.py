@@ -67,7 +67,6 @@ class CableExtract(object):
                     self.mongodb.cooc.update({'_id': coocid21}, {"$inc":{"value":1}})
                     continue
             else:
-                #cooc12['value'] += 1
                 self.mongodb.cooc.update({'_id': coocid12}, {"$inc":{"value":1}})
                 continue
 
