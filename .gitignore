@@ -1,5 +1,0 @@
-*.pyc
-data/*
-dump/*
-shared/nltk_data
-*.cache
