@@ -207,6 +207,6 @@ class NGramizer(object):
                             # was already in the corpus and not in this document
                             #savedngram['occs'] += 1
                             # increments ngram total occurrences
-                            self.mongodb.ngrams.update({'_id': sha256ngid}, {"£inc":{"occs":1}})
+                            self.mongodb.ngrams.update({'_id': sha256ngid}, {"$inc":{"occs":1}})
                             #self.mongodb.ngrams.save(savedngram)
                             document = addEdge(document, 'NGram', sha256ngid, 1)
