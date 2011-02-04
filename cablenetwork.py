@@ -82,6 +82,7 @@ class CableNetwork(object):
                     limit=maxcoocs,
                     timeout=False):
                     ng1, ng2 = cooc['_id'].split("_")
+                    # clean cooc db from self cooccurrences
                     if ng1 == ng2:
                         self.mongodb.cooc.delete({"_id":cooc['_id']})
                         continue
@@ -92,6 +93,7 @@ class CableNetwork(object):
                         #new_ngramnode = self.add_node(ngram2, trans)
                         #ngramcache[ng2] = str(new_ngramnode.id)
                         #nodecache[str(new_ngramnode.id)] = new_ngramnode
+                    # exclude self relationships
                     if ngramcache[ng2] == ngramcache[ng1]:
                         logging.warning("not setting relationship on a node itself")
                         continue
