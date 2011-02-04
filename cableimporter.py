@@ -20,11 +20,9 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 import os
 from os.path import join
 from datetime import datetime
-import re
-import nltk
-from BeautifulSoup import BeautifulSoup, SoupStrainer
 from datamodel import initEdges
 from mongodbhandler import CablegateDatabase
+from cablemap.core.utils import cables_from_directory
 
 
 class CableImporter(object):
@@ -34,9 +32,6 @@ class CableImporter(object):
     usage : mirror = CableGateMirror(wikileaksdb, 'data/cablegate.wikileaks.org')
     """
 
-    file_regex = re.compile("\.html$")
-    title_regex = re.compile("Viewing cable [0-9]+[A-Z]+[0-9]+,",re.U)
-
     counts = {
       'files_not_processed':0
     }
@@ -44,9 +39,6 @@ class CableImporter(object):
     def __init__(self, config, data_directory, overwrite=False, maxcables=None):
         self.data_directory = join(data_directory, "cable")
         self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
-        # soupstrainers avoiding too much html parsing AND memory usage issues !
-        self.cablemetasoup = SoupStrainer("div", attrs={ "class" : 'pane big' })
-        self.contentsoup = SoupStrainer("pre")
         if overwrite is True and "cables" in self.mongodb.collection_names():
             self.mongodb.drop_collection("cables")
         self.walk_archive(overwrite, maxcables)
@@ -57,74 +49,42 @@ class CableImporter(object):
         """
         self.cable_list=[]
         try:
-            for root, dirs, files in os.walk(self.data_directory):
-                for name in files:
-                    if self.file_regex.search(name) is None: continue
-                    path = join( root, name )
-                    self.read_file(path,overwrite)
-                    if maxcables is not None:
-                        if len(self.cable_list) >= maxcables: return
+            for cable in cable_from_directory(self.data_directory):
+                self.process_cable(cable, overwrite)
+                if maxcables is not None and len(self.cable_list) >= maxcables:
+                    break
         except OSError, oserr:
             logging.error("%s"%oserr)
 
-    def read_file(self, path, overwrite):
-        """
-        Reads the cable file
-        """
-        logging.info('CableImporter.read_file')
-        try:
-            file = open(path)
-        except OSError:
-            logging.warning('Processor.read_file : CANNOT OPEN FILE %s, skipping...s'%path)
-            self.counts['files_not_processed'] += 1
-            return
-        self.extract_content(file.read(), overwrite)
-
-    def extract_content(self, raw, overwrite):
+    def process_cable(self, cb, overwrite):
         """
         Cable Content extractor
         """
-        try:
-            cablemetasoup = BeautifulSoup(raw, parseOnlyThese = self.cablemetasoup)
-            # extract_title
-            title = self.title_regex.sub( "", cablemetasoup.find("h3").contents[0])
-            title = title.strip()
-            title = title.title()
-
-            cable_table = cablemetasoup.find("table")
-            cable_id = cable_table.findAll('tr')[1].findAll('td')[0].contents[1].contents[0]
-            cable = self.mongodb.cables.find_one({'_id': cable_id})
-
-            if overwrite is False and cable is not None:
-                logging.info('CABLE ALREADY EXISTS : SKIPPING')
-                self.cable_list += [cable_id]
-                logging.info("cables processed = %d"%len(self.cable_id))
-                return
-
-            ## updates metas without erasing edges
-            if cable is None:
-                cable = initEdges({})
-
-            contentsoup = BeautifulSoup(raw, parseOnlyThese = self.contentsoup)
-            cablecontent = unicode( nltk.clean_html( str( contentsoup.findAll("pre")[1] ) ), encoding="utf_8", errors="replace" )
-            del raw
-            date_time = datetime.strptime(cable_table.findAll('tr')[1].findAll('td')[1].contents[1].contents[0], "%Y-%m-%d %H:%M")
-            ## overwrite metas informations without erasing edges
-            cable.update({
-                # auto index
-                #'_id' : cablenode.id,
-                '_id' : "%s"%cable_id,
-                'label' : title,
-                'start' : date_time,
-                'classification' : "%s"%cable_table.findAll('tr')[1].findAll('td')[3].contents[1].contents[0],
-                'embassy' : "%s"%cable_table.findAll('tr')[1].findAll('td')[4].contents[1].contents[0],
-                'content' : cablecontent,
-                'category': "Document"
-            })
-            self.mongodb.cables.save(cable)
+        title = cb.subject.title()
+        cable_id = cb.reference_id
+        cable = self.mongodb.cables.find_one({'_id': cable_id})
+        if overwrite is False and cable is not None:
+            logging.info('CABLE ALREADY EXISTS : SKIPPING')
             self.cable_list += [cable_id]
-            logging.info("cables processed = %d"%len(self.cable_list))
-        except Exception, exc:
-            logging.warning("error importing cable : %s"%exc)
-            self.counts['files_not_processed'] += 1
-            logging.info("error importing a cable, total NOT processed = %d"%self.counts['files_not_processed'])
+            logging.info("cables processed = %d"%len(self.cable_id))
+            return
+        ## updates metas without erasing edges
+        if cable is None:
+            cable = initEdges({})
+        cablecontent = cb.content
+        date_time = datetime.strptime(cb.created, "%Y-%m-%d %H:%M")
+        ## overwrite metas informations without erasing edges
+        cable.update({
+            # auto index
+            #'_id' : cablenode.id,
+            '_id' : "%s"%cable_id,
+            'label' : title,
+            'start' : date_time,
+            'classification' : cb.classification,
+            'embassy' : "%s" % cb.origin,
+            'content' : cablecontent,
+            'category': "Document"
+        })
+        self.mongodb.cables.save(cable)
+        self.cable_list += [cable_id]
+        logging.info("cables processed = %d"%len(self.cable_list))
