@@ -63,13 +63,13 @@
                 <li><p>NLTK : clean_html() and you're done</p>
                     <ul class="bulleted">
                         <li>but still an effort: to handle decoding manually</li>
-                        <li>Python provides safe and built-in functions to manage that</li>
+                        <!--<li>Python provides safe and built-in functions to manage that</li>-->
                     </ul>
                 </p></li>
                 <li><p>MongoDB : document storage</p>
                     <ul class="bulleted">
                         <li>transparently inserting and reading records as Python dictionaries</li>
-                        <li>automatic types serializing/deserializing : unicode, nested lists and dict, datetime...</li>
+                        <li>automatic serializing/deserializing : unicode, nested lists and dict, datetime...</li>
                     </ul>
                 </p></li>
             </ul>
@@ -146,7 +146,7 @@
             <footer>
               <p>
               source code : <a href="https://github.com/japerk/nltk-trainer">https://github.com/japerk/nltk-trainer</a><br/>
-              about performances : <a href="http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/">http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/</a>
+              articles about nltk.tag : <a href="http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/">http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/</a>
               </p>
             </footer>
           </section>
@@ -154,7 +154,7 @@
         <div class="slide">
           <section>
             <header>
-              <h2>Choose more relevant topics, the simple way</h2>
+              <h2>Choose more relevant topics</h2>
             </header>
             <ul class="bulleted">
                 <li>a DIY POS tag regular expression filtering "useless" words
@@ -182,7 +182,7 @@ nltk.text.TextCollection( browntokens
               <h2>Create the network : from MongoDB to Neo4j (1)</h2>
             </header>
             <ul class="bulleted">
-                <li><p>Writing and reading with MongoDB
+                <li><p>Writing to MongoDB :
                   <ul class="bulleted">
                     <li><p>key/value storage usage : update and modifiers are the key
                     <pre class="prettyprint">
@@ -193,6 +193,24 @@ mongodb.cooc.update({'_id': some_id}, {"$inc":{"value":1}})
                     <pre class="prettyprint">
 mongodb.cooc.save({'_id': node-source_id +"_"+ node_target_id, "value":1})
                     </pre>
+                    </p></li>
+
+                  </ul>
+                </p></li>
+            </ul>
+            <footer>
+              <p>learn more at : <a href="http://ur1.ca/33p5l">http://ur1.ca/33p5l</a> and <a href="http://ur1.ca/33p59">http://ur1.ca/33p59</a></p>
+            </footer>
+          </section>
+        </div>
+        <div class="slide">
+          <section>
+            <header>
+              <h2>Create the network : from MongoDB to Neo4j (2)</h2>
+            </header>
+            <ul class="bulleted">
+                <li><p>Querying MongoDB :
+                  <ul class="bulleted">
                     </p></li>
                     <li>example : extract the heaviest co-occurrences edges from a node
                       <pre class="prettyprint">
@@ -211,7 +229,7 @@ cooc_curs = mongodb.cooc.find(
 cable_iterator = mongodb.cables.find(
   {"datetime":{
       "$gte":datetime(year,1,1,0,0,0), "$lt":datetime(year+1,1,5,0,0,0)
-    }
+      }
   }, timeout=False)
                 </pre>
                     </li>-->
@@ -229,9 +247,9 @@ cable_iterator = mongodb.cables.find(
               <h2>Creating the network : from MongoDB to Neo4j (3)</h2>
             </header>
             <ul class="bulleted">
-              <li><p>Writing to Neo4j, some advices
+              <li><p>About Neo4j :
                 <ul>
-                  <li><p>better use the official neo4j.py component (using python-jpype) which provides a nearly painless interface</p></li>
+                  <li><p>use the official neo4j.py component (using python-jpype)</p></li>
                   <li><p>use transactions to reach the maximum performance
                   <pre class="prettyprint">
 with graphdb.transaction as trans:
@@ -239,6 +257,8 @@ with graphdb.transaction as trans:
   node[key.encode("ascii","ignore")] = value.encode("ascii","ignore")
                   </pre>
                   </p></li>
+                  <li><p>control types written to nodes properties : ascii</p></li>
+                  <li><p>insertion time example : </p></li>
                   <li><p>Neo4j for Gephi as a plugin : the direct connection</p></li>
                 </ul>
             </ul>
@@ -267,11 +287,11 @@ with graphdb.transaction as trans:
 <header>
 <video id="player" controls>
   <source src="gephi_wikileaks.mov" />
-  To view this video you need the latest version of <a href="http://www.apple.com/safari/">Safari</a>, <a href="http://www.mozilla.com/firefox/">Firefox</a> or <a href="http://www.google.com/chrome">Chrome</a>. Alternatively download the videos and watch them offline. 
+  To view this video you need the latest version of <a href="http://www.apple.com/safari/">Safari</a>, <a href="http://www.mozilla.com/firefox/">Firefox</a> or <a href="http://www.google.com/chrome">Chrome</a>. Alternatively download the videos and watch them offline.
 </video>
 </header>
 <footer>
-<a href="gephi_wikileaks.mov">gephi_wikileaks.mov</a>
+<a href="gephi_wikileaks.mov">movie file link</a>
 </footer>
           </section>
         </div>
@@ -308,7 +328,7 @@ with graphdb.transaction as trans:
                     <li>bigrams co-occurrences only : xx nodes, xx edges</li>
                   </ul>
                   </p></li>
-                  <li><p>4 maps online to be explored by you and topic maps lovers</p></li>
+                  <li><p>2 maps online to be explored by all the topic maps lovers</p></li>
                   <li><p>1 talk, 1 FOSDEM, 1 big leak</p></li>
               </ul>
           </section>
