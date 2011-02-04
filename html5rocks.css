@@ -66,7 +66,7 @@ transform: scale(0.8);
 display: none;
 position: absolute;
 overflow: hidden;
-width: 1000px;
+width: 950px;
 height: 700px;
 left: 50%;
 top: 50%;
@@ -333,8 +333,8 @@ video {
 -webkit-border-radius: 8px;
 border-radius: 8px;
 border: 1px solid rgba(0, 0, 0, 0.2);*/
-width: 90%;
-/*height: 100%;*/
+width: 95%;
+/*height: auto;*/
 }
 
 .key {
@@ -418,4 +418,3 @@ padding-left: 30px;
 ul.ordered {
 padding-left: 30px;
 }
-

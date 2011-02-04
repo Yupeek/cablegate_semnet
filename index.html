@@ -22,7 +22,7 @@
           </section>
         </div>
         <div class="slide">
-          <section class="middle">
+          <section>
             <header>
               <h2>Goals</h2>
             </header>
@@ -216,12 +216,12 @@ mongodb.cooc.save({'_id': node-source_id +"_"+ node_target_id, "value":1})
                       <pre class="prettyprint">
 mystartswith_regexp = re.compile("^"+mysha256+"_[a-z0-9]+$")
 cooc_curs = mongodb.cooc.find(
-  {"_id":{
-      "$regex": mystartswith_regexp
-  }},
-  timeout=False,
-  sort=[("value",pymongo.DESCENDING)],
-  limit=MAXEDGES)
+    {"_id":{
+        "$regex": mystartswith_regexp
+    }},
+    timeout=False,
+    sort=[("value",pymongo.DESCENDING)],
+    limit=MAXEDGES)
                       </pre>
                     </li>
                     <!--<li>extract all cables between to dates
@@ -253,8 +253,8 @@ cable_iterator = mongodb.cables.find(
                   <li><p>use transactions to reach the maximum performance
                   <pre class="prettyprint">
 with graphdb.transaction as trans:
-  node = self.graphdb.node()
-  node[key.encode("ascii","ignore")] = value.encode("ascii","ignore")
+    node = self.graphdb.node()
+    node[key.encode("ascii","ignore")] = value.encode("ascii","ignore")
                   </pre>
                   </p></li>
                   <li><p>control types written to nodes properties : ascii</p></li>
@@ -318,9 +318,9 @@ with graphdb.transaction as trans:
                 <h2>To sum up:</h2>
             </header>
               <ul class="bulleted">
-                  <li><p>~600 lines of GNU/GPL code, 4 external libraries, 2 databases, and 1 Gephi</p></li>
+                  <li><p>~600 lines of GNU/GPL one-shot code, 4 external libraries, 2 databases, and 1 Gephi</p></li>
                   <li><p>~1 full week coding, ~5 hours executing the whole process</p></li>
-                  <li><p>2 networks :
+                  <li><p>2 networks obtained without much science :
                   <ul class="bulleted">
                     <li>bi-grams topics and cables, linked by occurrences : 43179 nodes, 237058 edges</li>
                     <li>bi-grams topics only, linked by co-occurrences : xx nodes, xx edges</li>
