@@ -154,31 +154,23 @@
         <div class="slide">
           <section>
             <header>
-              <h2>Choose relevant topics</h2>
+              <h2>Choose more relevant topics, the simple way</h2>
             </header>
             <ul class="bulleted">
-                <li>DIY POS tag regular expression filtering "useless" words
+                <li>a DIY POS tag regular expression filtering "useless" words
                   <pre class="prettyprint">
 ^(
     (VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?
     (N.?,|\?,)+?
     (CD.,)?
-)+?
-(
-    (PREP.?|DET.?,|IN.?,|CC.?,|\?,)
-    (
-        (VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?
-        (N.?,|\?,)+?
-    )+?
-)*?$
+)+?$
                   </pre>
                 </li>
                 <li><p>a tf-idf score attached to topics, relative to generic nltk corpora
                   <pre class="prettyprint">
 browntokens = nltk.corpus.brown.words(categories=['news','government'])
-nltk.text.TextCollection(
-  browntokens
-  ).tf_idf(ng['label'],browntokens)
+nltk.text.TextCollection( browntokens
+  ).tf_idf(ng['label'], browntokens)
                   </pre>
                 </p></li>
             </ul>
@@ -190,9 +182,8 @@ nltk.text.TextCollection(
               <h2>Create the network : from MongoDB to Neo4j (1)</h2>
             </header>
             <ul class="bulleted">
-                <li><p>Writing to MongoDB, carefully
+                <li><p>Writing and reading to MongoDB
                   <ul class="bulleted">
-                    <li>limit the size of your record : <= 4MB</li>
                     <li>use update and modifiers as much as possible
                     <pre class="prettyprint">
 mongodb.cooc.update({'_id': some_id}, {"$inc":{"value":1}})
@@ -301,7 +292,7 @@ with graphdb.transaction as trans:
             </header>
             <ol class="ordered">
                 <li>Import network from database</li>
-                <li>Basic data laboratory features (sort, delete)</li>                
+                <li>Basic data laboratory features (sort, delete)</li>
                 <li>Rank category and occurrences to colors</li>
                 <li>Filter data on graph topology (degree and weight)</li>
                 <li>Spatialize the network using an OpenOrd layout</li>
