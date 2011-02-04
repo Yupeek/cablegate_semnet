@@ -49,7 +49,7 @@ class CableImporter(object):
         """
         self.cable_list=[]
         try:
-            for cable in cable_from_directory(self.data_directory):
+            for cable in cables_from_directory(self.data_directory):
                 self.process_cable(cable, overwrite)
                 if maxcables is not None and len(self.cable_list) >= maxcables:
                     break
