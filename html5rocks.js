@@ -20,6 +20,8 @@
 */
 
 $(document).ready(function() {
+    //document.getElementsByTagName('video')[0].webkitEnterFullscreen();
+
     var doc = document;
     var disableBuilds = true;
 
