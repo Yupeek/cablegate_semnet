@@ -60,10 +60,9 @@ class CableImporter(object):
         """
         Cable Content extractor
         """
-        title = cb.subject.title()
         cable_id = cb.reference_id
         cable = self.mongodb.cables.find_one({'_id': cable_id})
-        if overwrite is False and cable is not None:
+        if not overwrite and cable is not None:
             logging.info('CABLE ALREADY EXISTS : SKIPPING')
             self.cable_list += [cable_id]
             logging.info("cables processed = %d"%len(self.cable_id))
@@ -71,18 +70,15 @@ class CableImporter(object):
         ## updates metas without erasing edges
         if cable is None:
             cable = initEdges({})
-        cablecontent = cb.content
-        date_time = datetime.strptime(cb.created, "%Y-%m-%d %H:%M")
         ## overwrite metas informations without erasing edges
         cable.update({
             # auto index
-            #'_id' : cablenode.id,
-            '_id' : "%s"%cable_id,
-            'label' : title,
-            'start' : date_time,
+            '_id' : "%s" % cable_id,
+            'label' : cb.subject.title(),
+            'start' : datetime.strptime(cb.created, "%Y-%m-%d %H:%M"),
             'classification' : cb.classification,
             'embassy' : "%s" % cb.origin,
-            'content' : cablecontent,
+            'content' : cb.content,
             'category': "Document"
         })
         self.mongodb.cables.save(cable)
