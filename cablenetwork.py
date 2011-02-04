@@ -31,8 +31,8 @@ class CableNetwork(object):
         if graphtype is None or graphtype=="occurrences":
             self.update_occurrences_network(minoccs, maxcoocs, maxcables, year, documents=False)
         elif graphtype == "cooccurrences":
-            nodecache, ngramcache = self.update_occurrences_network(minoccs, maxcoocs, maxcables, year, documents=False)
-            self.update_cooccurrences_network(nodecache, ngramcache, minoccs, maxcoocs, maxcables)
+            (nodecache, ngramcache) = self.update_occurrences_network(minoccs, maxcoocs, maxcables, year, documents=False)
+            self.update_cooccurrences_network(nodecache, ngramcache, minoccs, maxcoocs)
 
     def update_occurrences_network(self, minoccs=1, maxcoocs=1, maxcables=None, year=None, documents=True):
         nodecache = {}
@@ -67,29 +67,37 @@ class CableNetwork(object):
                         cablenode.occurrence(ngramcache[ngid], weight=occs)
                 logging.debug("done the network around cable %s"%cable["_id"])
                 count += 1
-                if count > maxcables: return nodecache
-        return nodecache, ngramcache
+                if count > maxcables: return (nodecache, ngramcache)
+        return (nodecache, ngramcache)
 
-    def update_cooccurrences_network(self, nodecache, ngramcache, minoccs=1, maxcoocs=1, maxcables=None):
-        logging.debug("cooccurrences processing for %d ngram nodes"%self.mongodb.ngrams.find({'_id': {"$in": ngramcache.keys()}}, timeout=False).count())
+    def update_cooccurrences_network(self, nodecache, ngramcache, minoccs=1, maxcoocs=1):
+        logging.debug("cooccurrences within : %d"%self.mongodb.ngrams.find({'_id': {"$in": ngramcache.keys()}}, timeout=False).count())
         with self.graphdb.transaction as trans:
             for ngram in self.mongodb.ngrams.find({'_id': {"$in": ngramcache.keys()}}, timeout=False):
                 # this REGEXP select only edges with source == ngram['_id']
                 coocidRE = re.compile("^"+ngram['_id']+"_[a-z0-9]+$")
-                for cooc in self.mongodb.cooc.find({"_id":{"$regex":coocidRE}}, sort=[("value",pymongo.DESCENDING)], limit=maxcoocs, timeout=False):
+                for cooc in self.mongodb.cooc.find(
+                    {"_id":{"$regex":coocidRE}},
+                    sort=[("value",pymongo.DESCENDING)],
+                    limit=maxcoocs,
+                    timeout=False):
                     ng1, ng2 = cooc['_id'].split("_")
                     if ng1 == ng2:
                         self.mongodb.cooc.delete({"_id":cooc['_id']})
                         continue
                     ngram2 = self.mongodb.ngrams.find_one({'_id':ng2})
-                    if ngramcache[ngram2['_id']] == ngramcache[ngram['_id']]:
+                    if ng2 not in ngramcache.keys():
+                        new_ngramnode = self.add_node(ngram2, trans)
+                        ngramcache[ng2] = str(new_ngramnode.id)
+                        nodecache[str(new_ngramnode.id)] = new_ngramnode
+                    if ngramcache[ng2] == ngramcache[ng1]:
                         logging.warning("not setting relationship on a node itself")
                         continue
-                    if ngramcache[ngram['_id']] not in nodecache.keys():
-                        continue
+                    #if ngramcache[ng2] not in nodecache.keys():
+                    #    continue
                     # write the cooccurrence
-                    nodecache[ngramcache[ngram['_id']]].cooccurrence(
-                        nodecache[ngramcache[ngram2['_id']]],
+                    nodecache[ngramcache[ng1]].cooccurrence(
+                        nodecache[ngramcache[ng2]],
                         weight=cooc['value']
                     )
 
