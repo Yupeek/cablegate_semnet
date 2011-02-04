@@ -28,7 +28,7 @@
             </header>
             <ul class="bulleted">
                 <li><p>to analyse cables' full-text and not using meta-data as a structure</p></li>
-                <li><cite><h2>to produce a mixed occurrence and co-occurrence network of topics and cables</h2></cite></li>
+                <li><cite><h2>to produce a occurrence and co-occurrence networks of topics and cables</h2></cite></li>
                 <li><p>to visualize how the discussions within the cables are composed and relate to each other</p></li>
             </ul>
           </section>
@@ -320,15 +320,13 @@ with graphdb.transaction as trans:
               <ul class="bulleted">
                   <li><p>~600 lines of GNU/GPL code, 4 external libraries, 2 databases, and 1 Gephi</p></li>
                   <li><p>~1 full week coding, ~5 hours executing the whole process</p></li>
-                  <li><p>4 networks :
+                  <li><p>2 networks :
                   <ul class="bulleted">
-                    <li>unigrams topics and cables : xx nodes, xx edges</li>
-                    <li>unigrams co-occurrences only : xx nodes, xx edges</li>
-                    <li>bigrams topics and cables : xx nodes, xx edges</li>
-                    <li>bigrams co-occurrences only : xx nodes, xx edges</li>
+                    <li>bi-grams topics and cables, linked by occurrences : 43179 nodes, 237058 edges</li>
+                    <li>bi-grams topics only, linked by co-occurrences : xx nodes, xx edges</li>
                   </ul>
                   </p></li>
-                  <li><p>2 maps online to be explored by all the topic maps lovers</p></li>
+                  <li><p>2 maps online to be explored by all topic maps lovers</p></li>
                   <li><p>1 talk, 1 FOSDEM, 1 big leak</p></li>
               </ul>
           </section>
