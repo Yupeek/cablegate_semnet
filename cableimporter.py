@@ -22,7 +22,7 @@ from os.path import join
 from datetime import datetime
 from datamodel import initEdges
 from mongodbhandler import CablegateDatabase
-from cablemap.core.utils import cables_from_directory
+from cablemap.core import cables_from_directory
 
 
 class CableImporter(object):
@@ -64,8 +64,8 @@ class CableImporter(object):
         cable = self.mongodb.cables.find_one({'_id': cable_id})
         if not overwrite and cable is not None:
             logging.info('CABLE ALREADY EXISTS : SKIPPING')
-            self.cable_list += [cable_id]
-            logging.info("cables processed = %d"%len(self.cable_id))
+            self.cable_list.append(cable_id)
+            logging.info("cables processed = %d, %s" % (len(self.cable_id), cb.reference_id))
             return
         ## updates metas without erasing edges
         if cable is None:
@@ -83,5 +83,5 @@ class CableImporter(object):
             'category': "Document"
         })
         self.mongodb.cables.save(cable)
-        self.cable_list += [cable_id]
-        logging.info("cables processed = %d"%len(self.cable_list))
+        self.cable_list.append(cable_id)
+        logging.info(u"cables processed = %d, %s" % (len(cable_id), cb.reference_id))
