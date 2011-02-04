@@ -22,15 +22,14 @@
           </section>
         </div>
         <div class="slide">
-          <section>
+          <section class="middle">
             <header>
               <h2>Goals</h2>
             </header>
             <ul class="bulleted">
-                <li><p>by analysing cables' full-text and not using meta-data as a structure</p></li>
-                <cite><h2>We want to produce a mixed occurrence and co-occurrence network of topics and cables</h2></cite>
-                <li><p>in order to visualize how the discussions within the cables are composed and relate to each other</p></li>
-
+                <li><p>to analyse cables' full-text and not using meta-data as a structure</p></li>
+                <li><cite><h2>to produce a mixed occurrence and co-occurrence network of topics and cables</h2></cite></li>
+                <li><p>to visualize how the discussions within the cables are composed and relate to each other</p></li>
             </ul>
           </section>
         </div>
@@ -40,8 +39,8 @@
               <h2>How ?</h2>
             </header>
             <ul class="bulleted">
-                <li><p>analyse the ~3300 cables with Python, and a set of productive libraries</p></li>
-                <li><p>use MongoDB for document storage and Neo4j for network storage</p></li>
+                <li><p>analyse the ~3300 cables with Python, and a set of productive libraries (NLTK, BeautifulSoup)</p></li>
+                <li><p>use MongoDB and Neo4j for document and network storage</p></li>
                 <li><p>explore the network with Gephi</p></li>
             </ul>
           </section>
@@ -84,34 +83,52 @@
         <div class="slide">
           <section>
             <header>
-              <h2>Extract topics (1) : tokenize and tag</h2>
+              <h2>Extract topics (1) : tokenize</h2>
             </header>
             <ul class="bulleted">
                 <li><p>decompose text into tokens : nltk.sent_tokenize and nltk.TreebankWordTokenizer
                 <pre class="prettyprint">
 >>> sentences = nltk.sent_tokenize("WikiLeaks is a non-profit media organization dedicated to bringing important news and information to the public. We provide an innovative, secure and anonymous way for independent sources around the world to leak information to our journalists.")
 ['WikiLeaks is a [...] to the public.', 'We provide [...] journalists.']
+
+
 >>> nltk.TreebankWordTokenizer().tokenize(sentences[0])
 ['WikiLeaks', 'is', 'a', 'non-profit', 'media', 'organization', 'dedicated', 'to', 'bringing', 'important', 'news', 'and', 'information', 'to', 'the', 'public', '.']
                 </pre>
                 </p></li>
-                <li><p>Part of speech tagging with nltk.tag
-                    <pre class="prettyprint">
->>> nltk.tag.pos_tag(['Help','Wikileaks','keep','governments','open'])
-[('Help', 'NNP'), ('Wikileaks', 'NNP'), ('keep', 'VB'),
-('governments', 'NNS'), ('open', 'JJ')]
-                    </pre>
-              </p></li>
             </ul>
           </section>
         </div>
-
         <div class="slide">
           <section>
             <header>
-              <h2>Extract topics (2) : custom POS tags</h2>
+              <h2>Extract topics (2) : stemming</h2>
             </header>
             <ul class="bulleted">
+                <li><p>easy way to de-duplicate words</p></li>
+                <li><p>group by their radical</p></li>
+                <li><p>use nltk.PorterStemmer</p></li>
+                <pre class="prettyprint" >
+>>> print PorterStemmer().stem("language")
+'languag'
+                </pre>
+                <li><p>compute the sha256 hash to use it as a database index</p></li>
+            </ul>
+          </section>
+        </div>
+        <div class="slide">
+          <section>
+            <header>
+              <h2>Extract topics (3) : part of speech tagging with nltk.tag</h2>
+            </header>
+            <ul class="bulleted">
+              <li><p>
+<pre class="prettyprint">
+>>> nltk.tag.pos_tag(['Help','Wikileaks','keep','governments','open'])
+[('Help', 'NNP'), ('Wikileaks', 'NNP'), ('keep', 'VB'),
+('governments', 'NNS'), ('open', 'JJ')]
+</pre>
+              </p></li>
               <li>Compose and save a quality tagger with <a href="https://github.com/japerk/nltk-trainer"><i>nltk-trainer</i></a>
                 <ul class="bulleted">
                   <li><pre class="prettyprint">$ python train_tagger.py --sequential aubt  --default "?" conll2000</pre></p></li>
@@ -137,27 +154,10 @@
         <div class="slide">
           <section>
             <header>
-              <h2>Extract topics (3) : stemming</h2>
-            </header>
-            <ul class="bulleted">
-                <li><p>an easy way to de-duplicate topics</p></li>
-                <li><p>Group topics by their radicals</p></li>
-                <li><p>stemming: nltk.PorterStemmer</p></li>
-                <pre class="prettyprint" >
->>> print PorterStemmer().stem("language")
-'languag'
-                </pre>
-                <li><p>compute sha256 to use it as a database index</p></li>
-            </ul>
-          </section>
-        </div>
-        <div class="slide">
-          <section>
-            <header>
               <h2>Choose relevant topics</h2>
             </header>
             <ul class="bulleted">
-                <li>a DYI POS tag regular expression filtering "useless" words
+                <li>DIY POS tag regular expression filtering "useless" words
                   <pre class="prettyprint">
 ^(
     (VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?
@@ -187,7 +187,7 @@ nltk.text.TextCollection(
         <div class="slide">
           <section>
             <header>
-              <h2>Create the network : from MongoDB to Neo4j (2)</h2>
+              <h2>Create the network : from MongoDB to Neo4j (1)</h2>
             </header>
             <ul class="bulleted">
                 <li><p>Writing to MongoDB, carefully
@@ -198,7 +198,7 @@ nltk.text.TextCollection(
 mongodb.cooc.update({'_id': some_id}, {"$inc":{"value":1}})
                     </pre>
                     </li>
-                    <li>compose id patterns to organize records, specially when there's is a lot of little records</li>
+                    <li>compose id patterns to organize records, specially when there is a lot of little records</li>
                   </ul>
                 </p></li>
             </ul>
@@ -215,7 +215,7 @@ mongodb.cooc.update({'_id': some_id}, {"$inc":{"value":1}})
             <ul class="bulleted">
                 <li><p>Reading from MongoDB, querying features integrated with Python
                   <ul>
-                    <li>extract all cables between to dates
+                    <!--<li>extract all cables between to dates
                 <pre class="prettyprint">
 cable_iterator = mongodb.cables.find(
   {"datetime":{
@@ -223,7 +223,7 @@ cable_iterator = mongodb.cables.find(
     }
   }, timeout=False)
                 </pre>
-                    </li>
+                    </li>-->
                     <li>extract the heaviest co-occurrences edges from a node
                 <pre class="prettyprint">
 mystartswith_regexp = re.compile("^"+mysha256+"_[a-z0-9]+$")
