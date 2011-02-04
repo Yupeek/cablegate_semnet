@@ -182,30 +182,30 @@ nltk.text.TextCollection( browntokens
               <h2>Create the network : from MongoDB to Neo4j (1)</h2>
             </header>
             <ul class="bulleted">
-                <li><p>Writing and reading to MongoDB
+                <li><p>Writing and reading with MongoDB
                   <ul class="bulleted">
-                    <li>use update and modifiers as much as possible
+                    <li><p>key/value storage usage : update and modifiers are the key
                     <pre class="prettyprint">
 mongodb.cooc.update({'_id': some_id}, {"$inc":{"value":1}})
                     </pre>
+                    </p></li>
+                    <li><p>compose id patterns to organize records : the edge example
+                    <pre class="prettyprint">
+mongodb.cooc.save({'_id': node-source_id +"_"+ node_target_id, "value":1})
+                    </pre>
+                    </p></li>
+                    <li>example : extract the heaviest co-occurrences edges from a node
+                      <pre class="prettyprint">
+mystartswith_regexp = re.compile("^"+mysha256+"_[a-z0-9]+$")
+cooc_curs = mongodb.cooc.find(
+  {"_id":{
+      "$regex": mystartswith_regexp
+  }},
+  timeout=False,
+  sort=[("value",pymongo.DESCENDING)],
+  limit=MAXEDGES)
+                      </pre>
                     </li>
-                    <li>compose id patterns to organize records, specially when there is a lot of little records</li>
-                  </ul>
-                </p></li>
-            </ul>
-            <footer>
-              <p>learn more at : <a href="http://ur1.ca/33p5l">http://ur1.ca/33p5l</a></p>
-            </footer>
-          </section>
-        </div>
-        <div class="slide">
-          <section>
-            <header>
-              <h2>Create the network : from MongoDB to Neo4j (2)</h2>
-            </header>
-            <ul class="bulleted">
-                <li><p>Reading from MongoDB, querying features integrated with Python
-                  <ul>
                     <!--<li>extract all cables between to dates
                 <pre class="prettyprint">
 cable_iterator = mongodb.cables.find(
@@ -215,23 +215,11 @@ cable_iterator = mongodb.cables.find(
   }, timeout=False)
                 </pre>
                     </li>-->
-                    <li>extract the heaviest co-occurrences edges from a node
-                <pre class="prettyprint">
-mystartswith_regexp = re.compile("^"+mysha256+"_[a-z0-9]+$")
-cooc_curs = mongodb.cooc.find(
-  {"_id":{
-      "$regex": mystartswith_regexp
-  }},
-  timeout=False,
-  sort=[("value",pymongo.DESCENDING)],
-  limit=MAXEDGES)
-                </pre>
-                    </li>
                   </ul>
                 </p></li>
             </ul>
             <footer>
-              <p>learn more at : <a href="http://ur1.ca/33p59">http://ur1.ca/33p59</a></p>
+              <p>learn more at : <a href="http://ur1.ca/33p5l">http://ur1.ca/33p5l</a> and <a href="http://ur1.ca/33p59">http://ur1.ca/33p59</a></p>
             </footer>
           </section>
         </div>
@@ -241,23 +229,21 @@ cooc_curs = mongodb.cooc.find(
               <h2>Creating the network : from MongoDB to Neo4j (3)</h2>
             </header>
             <ul class="bulleted">
-              <li><p>Writing to Neo4j
+              <li><p>Writing to Neo4j, some advices
                 <ul>
-                  <li><p>using the official neo4j.py component (using python-jpype)</p></li>
-                  <li><p>inserting millions of nodes and properties in a few minutes using transactions
+                  <li><p>better use the official neo4j.py component (using python-jpype) which provides a nearly painless interface</p></li>
+                  <li><p>use transactions to reach the maximum performance
                   <pre class="prettyprint">
 with graphdb.transaction as trans:
   node = self.graphdb.node()
   node[key.encode("ascii","ignore")] = value.encode("ascii","ignore")
                   </pre>
                   </p></li>
-                  <li><p>a Gephi plugin, in alpha stage but good enough</p></li>
+                  <li><p>Neo4j for Gephi as a plugin : the direct connection</p></li>
                 </ul>
             </ul>
           </section>
         </div>
-
-
         <div class="slide">
           <section>
             <header>
@@ -291,28 +277,34 @@ with graphdb.transaction as trans:
               <h2>Summary of our Gephi workflow</h2>
             </header>
             <ol class="ordered">
-                <li>Import network from database</li>
-                <li>Basic data laboratory features (sort, delete)</li>
-                <li>Rank category and occurrences to colors</li>
-                <li>Filter data on graph topology (degree and weight)</li>
-                <li>Spatialize the network using an OpenOrd layout</li>
-                <li>Remove artifacts direclty from the visualization</li>
-                <li>Preview the final map, to tweak appearance</li>
-                <li>Finally export the map to PDF and GEXF</li>
+                <li><p>Import network from database</p></li>
+                <li><p>Basic data laboratory features (sort, delete)</p></li>
+                <li><p>Rank category and occurrences to colors</p></li>
+                <li><p>Filter data on graph topology (degree and weight)</p></li>
+                <li><p>Spatialize the network using an OpenOrd layout</p></li>
+                <li><p>Remove artifacts direclty from the visualization</p></li>
+                <li><p>Preview the final map, to tweak appearance</p></li>
+                <li><p>Finally export the map to PDF and GEXF</p></li>
             </ol>
           </section>
         </div>
-
         <div class="slide">
           <section>
             <header>
-                <h2>To sum up, cablegate_semnet is:</h2>
+                <h2>To sum up:</h2>
             </header>
               <ul class="bulleted">
-                  <li><p>~600 lines of GNU/GPL code, depending on 4 external libraries</p></li>
-                  <li><p>~1 full week coding, ~4 hours executing the whole process</p></li>
-                  <li><p>creating 3 networks, with one mixed, of xx nodes and xx edges</p></li>
-                  <li><p>1 process, some RAM, billions of reads/inserts/updates to Neo4j and MongoDB</p></li>
+                  <li><p>~600 lines of GNU/GPL code, 4 external libraries, 2 databases, and 1 Gephi</p></li>
+                  <li><p>~1 full week coding, ~5 hours executing the whole process</p></li>
+                  <li><p>4 networks :
+                  <ul class="bulleted">
+                    <li>unigrams topics and cables : xx nodes, xx edges</li>
+                    <li>unigrams co-occurrences only : xx nodes, xx edges</li>
+                    <li>bigrams topics and cables : xx nodes, xx edges</li>
+                    <li>bigrams co-occurrences only : xx nodes, xx edges</li>
+                  </ul>
+                  </p></li>
+                  <li><p>4 maps online to be explored by you and topic maps lovers</p></li>
                   <li><p>1 talk, 1 FOSDEM, 1 big leak</p></li>
               </ul>
           </section>
@@ -335,7 +327,6 @@ with graphdb.transaction as trans:
                   <li><a href="http://www.nltk.org">NTLK</a></li>
                   <li><a href="http://www.mongodb.org">MongoDB</a></li>
                   <li><a href="http://neo4j.org/">Neo4J</a></li>
-                  <li><a href="http://components.neo4j.org/neo4j.py/t">Neo4J for Python</a></li>
                   <li><a href="http://gephi.org/2010/gsoc-2010-mid-term-adding-support-for-neo4j-in-gephi/">Martin Škurl (Neo4j Gephi Plugin)</a></li>
                   <li><a href="http://slides.html5rocks.com">html5rocks!</a></li>
               </ul>
