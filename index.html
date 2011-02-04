@@ -173,7 +173,14 @@
 )*?$
                   </pre>
                 </li>
-                <!--<li><p>a tf-idf score of topics within a generic nltk corpora</p></li>-->
+                <li><p>a tf-idf score attached to topics, relative to generic nltk corpora
+                  <pre class="prettyprint">
+browntokens = nltk.corpus.brown.words(categories=['news','government'])
+nltk.text.TextCollection(
+  browntokens
+  ).tf_idf(ng['label'],browntokens)
+                  </pre>
+                </p></li>
             </ul>
           </section>
         </div>
@@ -183,7 +190,7 @@
               <h2>Create the network : from MongoDB to Neo4j (2)</h2>
             </header>
             <ul class="bulleted">
-                <li><p>Writing to MongoDB, a delicate science
+                <li><p>Writing to MongoDB, carefully
                   <ul class="bulleted">
                     <li>limit the size of your record : <= 4MB</li>
                     <li>use update and modifiers as much as possible
@@ -310,8 +317,8 @@ with graphdb.transaction as trans:
             </header>
               <ul class="bulleted">
                   <li><p>~600 lines of GNU/GPL code, depending on 4 external libraries</p></li>
-                  <li><p>1 full week coding</p></li>
-                  <li><p>1 network of 3,371 + 24,081 nodes and 16,144,100 co-occurrences edges</p></li>
+                  <li><p>~1 full week coding, ~4 hours executing the whole process</p></li>
+                  <li><p>creating 3 networks, with one mixed, of xx nodes and xx edges</p></li>
                   <li><p>1 process, some RAM, billions of reads/inserts/updates to Neo4j and MongoDB</p></li>
                   <li><p>1 talk, 1 FOSDEM, 1 big leak</p></li>
               </ul>
