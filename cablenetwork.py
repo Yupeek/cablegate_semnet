@@ -86,15 +86,15 @@ class CableNetwork(object):
                         self.mongodb.cooc.delete({"_id":cooc['_id']})
                         continue
                     ngram2 = self.mongodb.ngrams.find_one({'_id':ng2})
+                    # exclude ngram2 if not in the previously selected
                     if ng2 not in ngramcache.keys():
-                        new_ngramnode = self.add_node(ngram2, trans)
-                        ngramcache[ng2] = str(new_ngramnode.id)
-                        nodecache[str(new_ngramnode.id)] = new_ngramnode
+                        continue
+                        #new_ngramnode = self.add_node(ngram2, trans)
+                        #ngramcache[ng2] = str(new_ngramnode.id)
+                        #nodecache[str(new_ngramnode.id)] = new_ngramnode
                     if ngramcache[ng2] == ngramcache[ng1]:
                         logging.warning("not setting relationship on a node itself")
                         continue
-                    #if ngramcache[ng2] not in nodecache.keys():
-                    #    continue
                     # write the cooccurrence
                     nodecache[ngramcache[ng1]].cooccurrence(
                         nodecache[ngramcache[ng2]],
