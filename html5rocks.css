@@ -21,7 +21,6 @@
 
 */
 
-
 body {
 font: 20px "Lucida Grande", "Trebuchet MS", Verdana, sans-serif;
 padding: 0;
@@ -67,7 +66,7 @@ transform: scale(0.8);
 display: none;
 position: absolute;
 overflow: hidden;
-width: 900px;
+width: 1000px;
 height: 700px;
 left: 50%;
 top: 50%;
@@ -329,11 +328,13 @@ border: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 video {
--moz-border-radius: 8px;
+/*-moz-border-radius: 8px;
 -khtml-border-radius: 8px;
 -webkit-border-radius: 8px;
 border-radius: 8px;
-border: 1px solid rgba(0, 0, 0, 0.2);
+border: 1px solid rgba(0, 0, 0, 0.2);*/
+width: 90%;
+/*height: 100%;*/
 }
 
 .key {
