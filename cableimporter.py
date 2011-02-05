@@ -65,7 +65,7 @@ class CableImporter(object):
         if not overwrite and cable is not None:
             logging.info('CABLE ALREADY EXISTS : SKIPPING')
             self.cable_list.append(cable_id)
-            logging.info("cables processed = %d, %s" % (len(self.cable_id), cb.reference_id))
+            logging.info("cables processed = %d, %s" % (len(self.cable_list), cb.reference_id))
             return
         ## updates metas without erasing edges
         if cable is None:
@@ -84,4 +84,4 @@ class CableImporter(object):
         })
         self.mongodb.cables.save(cable)
         self.cable_list.append(cable_id)
-        logging.info(u"cables processed = %d, %s" % (len(cable_id), cb.reference_id))
+        logging.info(u"cables processed = %d, %s" % (len(self.cable_list), cb.reference_id))
