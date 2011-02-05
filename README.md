@@ -1,6 +1,9 @@
 #Mapping Wikileaks' Cablegate thematics using Python, MongoDB and Gephi
 
-Talk proposal for [FOSDEM's data dev room](http://datadevroom.couch.it/), Brussels, Feb 5 2011, 
+Talk proposal for [FOSDEM's data dev room](http://datadevroom.couch.it/), Brussels, Feb 5 2011,
+
+ - [Talk slides and video are here](http://elishowk.github.com/cablegate_semnet)
+ - [Some data sets are here](http://tina.iscpif.fr/htdocs/fosdem2011)
 
 ##Speakers
 
@@ -23,7 +26,7 @@ The presentation will focus on Wikileaks' cablegate data, and specially on the f
 
  - thematics nodes linked by co-occurrences, automatically extracted from full-text
  - leaked cables nodes linked by a custom similarity index (adaptation of [Jaccard similarity index](http://en.wikipedia.org/wiki/Jaccard_index)).
- 
+
 Both categories will be linked by occurrences.
 
 ###1st Part : Information extraction, internals of a simple python software
