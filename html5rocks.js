@@ -401,6 +401,12 @@ $(document).ready(function() {
         }
       });
     }
-    
+    Seadragon.Config.imagePath = "seadragon_cooc/img/";
+    //Seadragon.Config.debugMode = true;
+    // Start the viewer
+    function start() {
+        var viewer = new Seadragon.Viewer("seadragon_cooc");
+        viewer.openDzi("seadragon_cooc/map/map.xml");
+    }
     //toggleSize();
 });
