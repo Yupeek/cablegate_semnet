@@ -20,8 +20,8 @@
           <section class="middle">
             <header><h2>Mapping Wikileaks' Cablegate topics using Python, MongoDB, Neo4j and Gephi</h2></header>
             <p><img src="images/200px-Wikileaks_logo.png" width="160" height="370" />
-              <img src="images/mongo-db.jpg" width="200" height="67" />
-              <img src="images/python_logo.png" width="180" height="61" />
+              <!--<img src="images/mongo-db.jpg" width="200" height="67" />
+              <img src="images/python_logo.png" width="180" height="61" />-->
             </p>
             <p>FOSDEM's data devroom, Brussels, Feb 5 2011</p>
           </section>
@@ -48,6 +48,14 @@
                 <li><p>use MongoDB and Neo4j for document and network storage</p></li>
                 <li><p>explore the network with Gephi</p></li>
             </ul>
+          </section>
+        </div>
+        <div class="slide">
+          <section>
+            <header>
+              <h2>A preview of the result</h2>
+            </header>
+            <img src="images/global.png"/>
           </section>
         </div>
         <div class="slide">
@@ -252,7 +260,7 @@ cable_iterator = mongodb.cables.find(
               <h2>Creating the network : from MongoDB to Neo4j (3)</h2>
             </header>
             <ul class="bulleted">
-              <li><p>About Neo4j :
+              <li><p>About <img src="images/neo4j_logo200.png" /> :
                 <ul>
                   <li><p>use the official neo4j.py component (using python-jpype)</p></li>
                   <li><p>use transactions to reach the maximum performance
@@ -267,7 +275,7 @@ with graphdb.transaction as trans:
                   <li><p>Neo4j for Gephi as a plugin : the direct connection</p></li>
                 </ul>
             </ul>
-                          <img src="images/neo4j_logo200.png" />
+
           </section>
         </div>
         <div class="slide">
@@ -346,7 +354,11 @@ with graphdb.transaction as trans:
           </section>
         </div>
         <div class="slide">
-          <section id="seadragon_cooc">
+          <section>
+            <header>
+              <h2>A zoom on egypt's cables</h2>
+            </header>
+            <img src="images/zoom_egypt.png"/>
           </section>
         </div>
         <div class="slide">
