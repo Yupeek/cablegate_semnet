@@ -26,12 +26,9 @@ from cablemap.core import cables_from_directory
 
 
 class CableImporter(object):
-
     """
     Reads and parses all available cables and updates the mongodb
-    usage : mirror = CableGateMirror(wikileaksdb, 'data/cablegate.wikileaks.org')
     """
-
     counts = {
       'files_not_processed':0
     }
