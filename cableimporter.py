@@ -23,6 +23,7 @@ from datetime import datetime
 from datamodel import initEdges
 from mongodbhandler import CablegateDatabase
 from cablemap.core import cables_from_directory
+from cablemap.core.utils import titlefy
 
 
 class CableImporter(object):
@@ -67,15 +68,15 @@ class CableImporter(object):
         ## updates metas without erasing edges
         if cable is None:
             cable = initEdges({})
-        cable_title = cb.subject.title() if cb.subject else u''
+        cable_title = cb.subject if cb.subject else u''
         ## overwrite metas informations without erasing edges
         cable.update({
             # auto index
             '_id' : "%s" % cable_id,
-            'label' : cable_title,
+            'label' : titlefy(cable_title),
             'start' : datetime.strptime(cb.created, "%Y-%m-%d %H:%M"),
             'classification' : cb.classification,
-            'embassy' : "%s" % cb.origin,
+            'embassy' : cb.origin,
             'content' : cb.content,
             'category': "Document"
         })
