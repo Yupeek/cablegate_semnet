@@ -8,7 +8,7 @@
     <link href="prettify.css" type="text/css" rel="stylesheet" />
     <script type="text/javascript" src="prettify.js"></script>
     <link href="html5rocks.css" rel="stylesheet" type="text/css" />
-    <script src="seadragon-min.js" type="text/javascript"></script>
+    <!--<script src="seadragon-min.js" type="text/javascript"></script>-->
     <script src="jquery-1.4.4.min.js" type="text/javascript"></script>
     <script type="text/javascript" src="html5rocks.js" language="javascript+protovis"></script>
   </head>
@@ -65,13 +65,13 @@
             </header>
             <ul class="bulleted">
                 <li>Hopefully, Wikileak's archive follows a simple structure, making data hackers' job easy !</p></li>
-                <li><p>BeautifulSoup : html made easy</p>
-                    <ul class="bulleted">
+                <li><p>first used BeautifulSoup which is easy to use then switched to <a href="https://github.com/heuer/cablemap">Cablemap based on regular expressions and very fast</a></p>
+                    <!--<ul class="bulleted">
                         <li>automatically decodes to unicode</li>
                         <li>quietly handles html's tree errors</li>
                         <li>traversing methods as Python methods and lists</li>
                         <li>SoupStrainer : tells the parser to target a specific part of the document</li>
-                    </ul>
+                    </ul>-->
                 </p></li>
                 <li><p>NLTK : clean_html() and you're done</p>
                     <ul class="bulleted">
@@ -299,12 +299,12 @@ with graphdb.transaction as trans:
           <section>
 <header>
 <video id="player" controls>
-  <source src="gephi_wikileaks.mov" />
+  <source src="gephi_wikileaks.webm" />
   To view this video you need the latest version of <a href="http://www.apple.com/safari/">Safari</a>, <a href="http://www.mozilla.com/firefox/">Firefox</a> or <a href="http://www.google.com/chrome">Chrome</a>. Alternatively download the videos and watch them offline.
 </video>
 </header>
 <footer>
-<a href="gephi_wikileaks.mov">movie file link</a>
+<a href="gephi_wikileaks.webm">movie file link</a>
 </footer>
           </section>
         </div>
@@ -342,7 +342,7 @@ with graphdb.transaction as trans:
                   <li><p>2 maps online to be explored by all topic maps lovers
                   <!--  -->
                   </p></li>
-                  <li><p>1 talk, 1 FOSDEM, 1 big leak</p></li>
+                  <li><p>1 talk, 1 FOSDEM, 1 big leak ;-)</p></li>
               </ul>
           </section>
         </div>
@@ -369,8 +369,8 @@ with graphdb.transaction as trans:
             <p>Learn more at:</p>
             </ul>
               <ul class="bulleted">
-                  <li><a href="http://www.crummy.com/software/BeautifulSoup/">BeautifulSoup</a></li>
-                  <li><a href="http://www.nltk.org">NTLK</a></li>
+                  <li><a href="http://www.crummy.com/software/BeautifulSoup/">BeautifulSoup</a> and <a href="https://github.com/heuer/cablemap">Cablemap</a></li>
+                  <li><a href="http://www.nltk.org">NTLK</a> and <a href="https://github.com/japerk/nltk-trainer">nltk trainer</a><br/></li>
                   <li><a href="http://www.mongodb.org">MongoDB</a></li>
                   <li><a href="http://neo4j.org/">Neo4J</a></li>
                   <li><a href="http://gephi.org/2010/gsoc-2010-mid-term-adding-support-for-neo4j-in-gephi/">Martin Škurl (Neo4j Gephi Plugin)</a></li>
