@@ -68,12 +68,11 @@ class CableImporter(object):
         ## updates metas without erasing edges
         if cable is None:
             cable = initEdges({})
-        cable_title = cb.subject if cb.subject else u''
         ## overwrite metas informations without erasing edges
         cable.update({
             # auto index
             '_id' : "%s" % cable_id,
-            'label' : titlefy(cable_title),
+            'label' : titlefy(cb.subject),
             'start' : datetime.strptime(cb.created, "%Y-%m-%d %H:%M"),
             'classification' : cb.classification,
             'embassy' : cb.origin,
