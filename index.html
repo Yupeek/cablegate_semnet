@@ -23,7 +23,8 @@
               <!--<img src="images/mongo-db.jpg" width="200" height="67" />
               <img src="images/python_logo.png" width="180" height="61" />-->
             </p>
-            <p>FOSDEM's data devroom, Brussels, Feb 5 2011</p>
+            <!--<p>FOSDEM's data devroom, Brussels, Feb 5 2011</p>-->
+            <p>French Perl Mongueurs meeting, march 16th 2011</p>
           </section>
         </div>
         <div class="slide">
@@ -32,21 +33,9 @@
               <h2>Goals</h2>
             </header>
             <ul class="bulleted">
-                <li><p>to analyse cables' full-text and not using meta-data as a structure</p></li>
-                <li><cite><h2>to produce a occurrence and co-occurrence networks of topics and cables</h2></cite></li>
+                <li><p>to analyse cables' full-text, not using meta-data as a structure</p></li>
+                <li><cite><h2>to produce occurrence networks of bi-grams and cables</h2></cite></li>
                 <li><p>to visualize how the discussions within the cables are composed and relate to each other</p></li>
-            </ul>
-          </section>
-        </div>
-        <div class="slide">
-          <section>
-            <header>
-              <h2>How ?</h2>
-            </header>
-            <ul class="bulleted">
-                <li><p>analyse the ~3300 cables with Python, and a set of productive libraries (NLTK, BeautifulSoup)</p></li>
-                <li><p>use MongoDB and Neo4j for document and network storage</p></li>
-                <li><p>explore the network with Gephi</p></li>
             </ul>
           </section>
         </div>
@@ -61,34 +50,44 @@
         <div class="slide">
           <section>
             <header>
+              <h2>How ?</h2>
+            </header>
+            <ul class="bulleted">
+                <li><p>analyse the ~3300 cables with Python, and a set of productive libraries (NLTK)</p></li>
+                <li><p>use MongoDB and Neo4j for document and network storage</p></li>
+                <li><p>explore the network with Gephi</p></li>
+            </ul>
+          </section>
+        </div>
+        <div class="slide">
+          <section>
+            <header>
               <h2>Import cables to MongoDB</h2>
             </header>
             <ul class="bulleted">
                 <li>Hopefully, Wikileak's archive follows a simple structure, making data hackers' job easy !</p></li>
-                <li><p>first used BeautifulSoup which is easy to use then switched to <a href="https://github.com/heuer/cablemap">Cablemap based on regular expressions and very fast</a></p>
-                    <!--<ul class="bulleted">
-                        <li>automatically decodes to unicode</li>
-                        <li>quietly handles html's tree errors</li>
-                        <li>traversing methods as Python methods and lists</li>
-                        <li>SoupStrainer : tells the parser to target a specific part of the document</li>
-                    </ul>-->
+                <li><p>first used BeautifulSoup then switched to <a href="https://github.com/heuer/cablemap">Cablemap</a></p>
+                    <ul class="bulleted">
+                        <li>based on regular expressions and very fast</li>
+                        <li>automatically decodes to <b>unicode</b>, a type in Python, same api as <b>string</b></li>
+                    </ul>
                 </p></li>
                 <li><p>NLTK : clean_html() and you're done</p>
                     <ul class="bulleted">
-                        <li>but still an effort: to handle decoding manually</li>
-                        <!--<li>Python provides safe and built-in functions to manage that</li>-->
+                        <li>but still an effort: to handle re-encoding manually</li>
+                        <li>Python provides safe and built-in functions to manage that : <b>unicode()</b>, <b>encode</b></li>
                     </ul>
                 </p></li>
                 <li><p>MongoDB : document storage</p>
                     <ul class="bulleted">
-                        <li>transparently inserting and reading records as Python dictionaries</li>
-                        <li>automatic serializing/deserializing : unicode, nested lists and dict, datetime...</li>
+                        <li>transparently inserting and reading records as Python <b>dict</b>, a hash-map type without type constraint</li>
+                        <li>automatic serializing/deserializing built-in types : unicode, nested lists and dict, datetime, reg-exp objects...</li>
                     </ul>
                 </p></li>
             </ul>
             <footer>
               <p>
-              <a href="https://github.com/anarchivist/cablegate">original project on github</a><br/>
+              <a href="https://github.com/anarchivist/cablegate">anarchivist/cablegate, the forked project on github for cable importing</a><br/>
               </p>
             </footer>
           </section>
@@ -99,16 +98,18 @@
               <h2>Extract topics (1) : tokenize</h2>
             </header>
             <ul class="bulleted">
-                <li><p>decompose text into tokens : nltk.sent_tokenize and nltk.TreebankWordTokenizer
-                <pre class="prettyprint">
+                <li>
+                    <p>decompose text into tokens : nltk.sent_tokenize and nltk.TreebankWordTokenizer
+                        <pre class="prettyprint">
 >>> sentences = nltk.sent_tokenize("WikiLeaks is a non-profit media organization dedicated to bringing important news and information to the public. We provide an innovative, secure and anonymous way for independent sources around the world to leak information to our journalists.")
 ['WikiLeaks is a [...] to the public.', 'We provide [...] journalists.']
 
 
 >>> nltk.TreebankWordTokenizer().tokenize(sentences[0])
 ['WikiLeaks', 'is', 'a', 'non-profit', 'media', 'organization', 'dedicated', 'to', 'bringing', 'important', 'news', 'and', 'information', 'to', 'the', 'public', '.']
-                </pre>
-                </p></li>
+                        </pre>
+                    </p>
+                </li>
             </ul>
           </section>
         </div>
@@ -118,14 +119,14 @@
               <h2>Extract topics (2) : stemming</h2>
             </header>
             <ul class="bulleted">
-                <li><p>easy way to de-duplicate words</p></li>
-                <li><p>group by their radical</p></li>
+                <li><p>an easy way to de-duplicate words</p></li>
+                <li><p>group words by their radical</p></li>
                 <li><p>use nltk.PorterStemmer</p></li>
                 <pre class="prettyprint" >
 >>> print PorterStemmer().stem("language")
 'languag'
                 </pre>
-                <li><p>compute the sha256 hash to use it as a database index</p></li>
+                <li><p>compute the built-in sha256 hash method to use it as a database index</p></li>
             </ul>
           </section>
         </div>
@@ -159,7 +160,7 @@
             <footer>
               <p>
               source code : <a href="https://github.com/japerk/nltk-trainer">https://github.com/japerk/nltk-trainer</a><br/>
-              articles about nltk.tag : <a href="http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/">http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/</a>
+              articles about nltk tagging : <a href="http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/">http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/</a>
               </p>
             </footer>
           </section>
@@ -170,7 +171,7 @@
               <h2>Choose more relevant topics</h2>
             </header>
             <ul class="bulleted">
-                <li>a DIY POS tag regular expression filtering "useless" words
+                <li>a DIY regular expression for filtering tags, or "useless" n-grams
                   <pre class="prettyprint">
 ^(
     (VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?
@@ -190,7 +191,7 @@
             <ul class="bulleted">
                 <li><p>Writing to MongoDB :
                   <ul class="bulleted">
-                    <li><p>key/value storage usage : update and modifiers are the key
+                    <li><p>(mis-)used as key/value storage : <i>update</i> and </i>modifiers</i> are the key to success
                     <pre class="prettyprint">
 mongodb.cooc.update({'_id': some_id}, {"$inc":{"value":1}})
                     </pre>
@@ -256,7 +257,7 @@ cable_iterator = mongodb.cables.find(
               <li><p>About <img src="images/neo4j_logo200.png" /> :
                 <ul>
                   <li><p>use the official neo4j.py component (using python-jpype)</p></li>
-                  <li><p>use transactions to reach the maximum performance
+                  <li><p>use wide transactions to reach the maximum performance
                   <pre class="prettyprint">
 with graphdb.transaction as trans:
     node = self.graphdb.node()
@@ -324,7 +325,7 @@ with graphdb.transaction as trans:
                 <h2>To sum up:</h2>
             </header>
               <ul class="bulleted">
-                  <li><p>~600 lines of GNU/GPL one-shot code, 4 external libraries, 2 databases, and 1 Gephi</p></li>
+                  <li><p>~600 lines of GNU/GPL one-shot code, 5 external libraries, 2 databases, and 1 Gephi</p></li>
                   <li><p>~1 full week coding, ~5 hours executing the whole process</p></li>
                   <li><p>2 networks obtained without much science :
                   <ul class="bulleted">
@@ -370,12 +371,12 @@ with graphdb.transaction as trans:
             <p>Learn more at:</p>
             </ul>
               <ul class="bulleted">
-                  <li><a href="http://www.crummy.com/software/BeautifulSoup/">BeautifulSoup</a> and <a href="https://github.com/heuer/cablemap">Cablemap</a></li>
+                  <li><a href="https://github.com/heuer/cablemap">Cablemap on github</a></li>
                   <li><a href="http://www.nltk.org">NTLK</a> and <a href="https://github.com/japerk/nltk-trainer">nltk trainer</a><br/></li>
                   <li><a href="http://www.mongodb.org">MongoDB</a></li>
                   <li><a href="http://neo4j.org/">Neo4J</a></li>
                   <li><a href="http://gephi.org/2010/gsoc-2010-mid-term-adding-support-for-neo4j-in-gephi/">Martin Škurl (Neo4j Gephi Plugin)</a></li>
-                  <li><a href="http://slides.html5rocks.com">html5rocks!</a></li>
+                  <li><a href="http://slides.html5rocks.com">and html5rocks!</a></li>
               </ul>
           </section>
         </div>
