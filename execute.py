@@ -20,7 +20,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 from cableimporter import CableImporter
-from cableextractor import CableExtract
+import cableextractor
 from cablenetwork import CableNetwork
 import yaml
 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     if options.execute == 'import':
         importer = CableImporter( config, options.archive, bool(options.overwrite), options.maxcables )
     elif options.execute == 'extract':
-        extractor = CableExtract( config, bool(options.overwrite), options.maxcables )
+        extractor = cableextractor.extract( config, bool(options.overwrite), options.maxcables )
     elif options.execute == 'network':
         extractor = CableNetwork( config, options.graph, options.minoccs, options.maxcoocs, options.maxcables, options.year )
     else:

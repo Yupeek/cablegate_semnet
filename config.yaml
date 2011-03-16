@@ -7,12 +7,11 @@ general:
     shared: 'shared'
     neo4j: "data/neo4j"
     mongodb: "localhost"
+    processes: 2
 # extraction settings
 extraction:
-    # stopwords are under share
-    stopwords: 'stopwords/en.txt'
     doc_extraction:
-        # the following values can be document object fields:
+        # the following values are some document object attr:
         - 'content'
         - 'label'
     # extraction size
@@ -20,7 +19,7 @@ extraction:
     ngramMax: 2
     minWordSize: 3
     # under "basedirectory" directory, delete this file to regenerate a new one
-    tagger: "conll2000_aubt.pickle"
+    tagger: "tagger.pickle"
     # Reg Expression for NGram extraction
     #postag_valid: '^((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,)+?(CD.,)?)+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VB,|VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?,|\?,)+?)+?)*?$'
-    postag_valid: '^((VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?.?,|\?,)+?(CD.,)??)+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VBD,|VBG,|VBN,|CD.?,|JJ.?,|\?,){0,2}?(N.?.?,|\?,)+?)+?)*?$'
+    postag_valid: '^((VBD,|VBG,|VBN,|JJ.?,|\?,){0,2}?(N.?.?,|\?,)+?)+?((PREP.?|DET.?,|IN.?,|CC.?,|\?,)((VBD,|VBG,|VBN,|JJ.?,|\?,){0,2}?(N.?.?,|\?,)+?)+?)*?$'

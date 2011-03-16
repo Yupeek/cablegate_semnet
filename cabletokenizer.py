@@ -41,10 +41,6 @@ punct_subst = ur"\1 \2"
 multisign_re = re.compile(ur"-+", re.IGNORECASE|re.VERBOSE)
 multisign_subst = ur" \. "
 
-# A regexp to match non-alphanumeric
-#nonalphanum_re = re.compile(ur"[^ \w\s]", re.IGNORECASE|re.VERBOSE)
-#nonalphanum_subst = ur""
-
 # A regexp to match html entities like '&#x000A;'
 htmlentities_re = re.compile(ur"\&\#x[\d]{1,3}[A-Za-z]{1}\;", re.IGNORECASE|re.VERBOSE)
 htmlentities_subst = ur" "
@@ -75,10 +71,6 @@ class NGramizer(object):
             ),
             tagger
         )
-        #documentnode = get_node(self.graphdb, documentObj['_id'])
-        #if documentnode is None:
-        #    del documentObj["content"]
-        #    documentnode = add_node(self.graphdb, documentObj)
         try:
             while 1:
                 nextsent = sentenceTaggedTokens.next()
@@ -114,7 +106,6 @@ class NGramizer(object):
         @input content text to sanitize
         @return str: text
         """
-        # TODO ?
         # Put blanks before and after '...' (extract ellipsis).
         # Put space between punctuation ;!?:, and following text if space missing.
         # Put space between text and punctuation ;!?:, if space missing.
@@ -203,6 +194,7 @@ class NGramizer(object):
                                 document = addEdge(document, 'NGram', sha256ngid, 1)
                                 # save the new NGram
                                 self.mongodb.ngrams.save(ngram)
+                                print "saving ngram %s"%ngram['postag']
                         else:
                             # was already in the corpus and not in this document
                             #savedngram['occs'] += 1
