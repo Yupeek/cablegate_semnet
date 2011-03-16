@@ -24,7 +24,7 @@
               <img src="images/python_logo.png" width="180" height="61" />-->
             </p>
             <!--<p>FOSDEM's data devroom, Brussels, Feb 5 2011</p>-->
-            <p>French Perl Mongueurs meeting, march 16th 2011</p>
+            <p>Paris.pm, march 16th 2011</p>
           </section>
         </div>
         <div class="slide">
@@ -34,7 +34,7 @@
             </header>
             <ul class="bulleted">
                 <li><p>to analyse cables' full-text, not using meta-data as a structure</p></li>
-                <li><cite><h2>to produce occurrence networks of bi-grams and cables</h2></cite></li>
+                <li><p><b><i>to produce occurrence networks of bi-grams and cables</i></b></p></li>
                 <li><p>to visualize how the discussions within the cables are composed and relate to each other</p></li>
             </ul>
           </section>
@@ -53,7 +53,7 @@
               <h2>How ?</h2>
             </header>
             <ul class="bulleted">
-                <li><p>analyse the ~3300 cables with Python, and a set of productive libraries (NLTK)</p></li>
+                <li><p>analyse the ~5500 released cables with Python, and a set of productive libraries (NLTK)</p></li>
                 <li><p>use MongoDB and Neo4j for document and network storage</p></li>
                 <li><p>explore the network with Gephi</p></li>
             </ul>
@@ -143,26 +143,21 @@
 ('governments', 'NNS'), ('open', 'JJ')]
 </pre>
               </p></li>
-              <li>Compose and save a quality tagger with <a href="https://github.com/japerk/nltk-trainer"><i>nltk-trainer</i></a>
+              <li>Compose and save a quality tagger</a>
                 <ul class="bulleted">
-                  <li><pre class="prettyprint">$ python train_tagger.py --sequential aubt  --default "?" conll2000</pre></p></li>
+                  <li><p>nltk comes with many pre-tagged corpora to learn from. we used 2 corpora = ~68000 sentences</p></li>
                   <li><p>The <a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.SequentialBackoffTagger-class.html">nltk.tag.SequentialBackoffTagger</a> chains many taggers together
                     <ul>
-                      <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.AffixTagger-class.html">nltk.tag.AffixTagger</a> learns from prefix and suffix patterns</li>
-                      <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.UnigramTagger-class.html">nltk.tag.UnigramTagger</a> learns from each letter composing the word</li>
-                      <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.BigramTagger-class.html">nltk.tag.BigramTagger</a> also learns from the preceeding word's tag</li>
                       <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.TrigramTagger-class.html">nltk.tag.TrigramTagger</a> also learns from the preceeding two words' tag</li>
+                      <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.BigramTagger-class.html">nltk.tag.BigramTagger</a> also learns from the preceeding word's tag</li>
+                      <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.UnigramTagger-class.html">nltk.tag.UnigramTagger</a> learns from each letter composing the word</li>
+                      <li><a href="http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.sequential.AffixTagger-class.html">nltk.tag.AffixTagger</a> learns from prefix and suffix patterns</li>
                     </ul>
                   </li>
+                  <li>machine learning is long, so saved the serialized object</li>
                 </ul>
               </li>
             </ul>
-            <footer>
-              <p>
-              source code : <a href="https://github.com/japerk/nltk-trainer">https://github.com/japerk/nltk-trainer</a><br/>
-              articles about nltk tagging : <a href="http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/">http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/</a>
-              </p>
-            </footer>
           </section>
         </div>
         <div class="slide">
@@ -181,6 +176,12 @@
                   </pre>
                 </li>
             </ul>
+            <footer>
+              <p>
+              ready to use taggers : <a href="https://github.com/japerk/nltk-trainer">github.com/japerk/nltk-trainer</a><br/>
+              nice articles about nltk tagging : <a href="http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/">http://streamhacker.com/2010/04/12/pos-tag-nltk-brill-classifier/</a>
+              </p>
+            </footer>
           </section>
         </div>
         <div class="slide">
