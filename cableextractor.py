@@ -16,11 +16,9 @@
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
-import math
-from os.path import join
 import re
 import itertools
-import nltk
+
 import cPickle
 from nltk import PorterStemmer
 
@@ -29,7 +27,7 @@ from mongodbhandler import CablegateDatabase
 from cabletokenizer import NGramizer
 from datamodel import initEdges, addEdge
 import filtering
-import stopwords
+#import stopwords
 
 class CableExtract(object):
     """
