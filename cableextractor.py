@@ -19,7 +19,6 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 import re
 import itertools
 
-import cPickle
 from nltk import PorterStemmer
 
 from mongodbhandler import CablegateDatabase
@@ -27,33 +26,8 @@ from mongodbhandler import CablegateDatabase
 from cabletokenizer import NGramizer
 from datamodel import initEdges, addEdge
 import filtering
+from buildtagger import SequentialPosTagger
 from multiprocessing import pool
-
-#class CableExtract(object):
-#    """
-#    Reads all database entries to :
-#    - extract and filter NGrams from content
-#    - write the Document-NGram network
-#    """
-#    def __init__(self, config, overwrite=True, maxcables=None):
-#        self.mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
-#        self.config = config
-#        filters = self._get_extraction_filters()
-#        postagger = cPickle.load(open(self.config['extraction']['tagger'],"r"))
-#
-#        if overwrite is True and "ngrams" in self.mongodb.collection_names():
-#            self.mongodb.drop_collection("ngrams")
-#
-#        if overwrite is True and "cooc" in self.mongodb.collection_names():
-#            self.mongodb.drop_collection("cooc")
-#
-#        extract_gen = self.extract(NGramizer(self.config), filters, postagger, overwrite, maxcables)
-#        try:
-#            while 1:
-#                cable = extract_gen.next()
-#                self.update_cable_cooc(cable)
-#        except StopIteration, si:
-#            return
 
 def worker(config, cable, filters, postagger, overwrite):
     mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
@@ -102,8 +76,8 @@ def extract(config, overwrite=True, maxcables=None):
     gets the all cables from storage then extract ngrams and produce networks edges and weights
     """
     mongodb = CablegateDatabase(config['general']['mongodb'])["cablegate"]
-    filters = _get_extraction_filters(config)
-    postagger = cPickle.load(open(config['extraction']['tagger'],"r"))
+    filters = get_extraction_filters(config)
+    postagger = SequentialPosTagger(None, config['extraction']['tagger'])
 
     if overwrite is True and "ngrams" in mongodb.collection_names():
         mongodb.drop_collection("ngrams")
@@ -114,16 +88,18 @@ def extract(config, overwrite=True, maxcables=None):
     count=0
     if maxcables is None:
         maxcables = mongodb.cables.count()
+
     extractionpool = pool.Pool(processes=config['general']['processes'])
     for cable in mongodb.cables.find(timeout=False):
+        ## just a hack
+        if len(cable['edges']['NGram'].keys())>0: continue
         extractionpool.apply_async(worker, (config, cable, filters, postagger, overwrite))
         count+=1
-        logging.debug("extracting %d cables topics"%count)
         if count>=maxcables: break
     extractionpool.close()
     extractionpool.join()
 
-def _get_extraction_filters(config):
+def get_extraction_filters(config):
     """
     returns extraction filters
     """
